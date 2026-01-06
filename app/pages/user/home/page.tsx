@@ -102,7 +102,9 @@ const Home: React.FC = () => {
         )}
         {activeTab === "eventos" && <EventDetails event={currentEvent} />}
 
-        {activeTab === "foto" && <div><PhotoAI  /></div>}
+        {activeTab === "foto" && currentEvent && (
+          <PhotoAI eventId={currentEvent.id} />
+        )}
 
         {activeTab === "enredo" && currentEvent && (
           <Enredo eventId={currentEvent.id} />

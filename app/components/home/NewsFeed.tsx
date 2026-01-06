@@ -111,7 +111,6 @@ export default function NewsFeed({ eventId }: Props) {
           {featured && (
             <Card
               sx={{
-                
                 backgroundColor: "transparent",
                 boxShadow: "none",
                 color: "#fff",
@@ -148,67 +147,67 @@ export default function NewsFeed({ eventId }: Props) {
               </CardContent>
             </Card>
           )}
-<Divider
-  sx={{
-    borderColor: "rgba(255,255,255,0.35)",
-    borderWidth: "1px",
-    marginY: 1.5,
-  }}
-/>
-
-          {/* 📰 OUTRAS NOTÍCIAS */}
-         <Box display="flex" flexDirection="column">
-  {others.map((item, index) => (
-    <Box key={item.id}>
-      <Card
-        sx={{
-          display: "flex",
-          gap: 2,
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          color: "#fff",
-          paddingBottom: 1,
-        }}
-      >
-        {item.image_url && (
-          <CardMedia
-            component="img"
-            image={item.image_url}
-            alt={item.title}
-            sx={{ width: 120, borderRadius: 1 }}
+          <Divider
+            sx={{
+              borderColor: "rgba(255,255,255,0.35)",
+              borderWidth: "1px",
+              marginY: 1.5,
+            }}
           />
-        )}
+          <Box display="flex" flexDirection="column">
+            {others.map((item, index) => (
+              <Box key={item.id}>
+                <Card
+                  sx={{
+                    display: "flex",
+                    gap: 2,
+                    backgroundColor: "transparent",
+                    boxShadow: "none",
+                    color: "#fff",
+                    paddingBottom: 1,
+                  }}
+                >
+                  {item.image_url && (
+                    <CardMedia
+                      component="img"
+                      image={item.image_url}
+                      alt={item.title}
+                      sx={{ width: 120, borderRadius: 1 }}
+                    />
+                  )}
 
-        <CardContent sx={{ padding: 1 }}>
-          <Typography fontWeight={600} sx={{ color: "#fff" }}>
-            {item.title}
-          </Typography>
+                  <CardContent sx={{ padding: 1 }}>
+                    <Typography fontWeight={600} sx={{ color: "#fff" }}>
+                      {item.title}
+                    </Typography>
 
-          <Typography fontSize={12} sx={{ color: "rgba(255,255,255,0.6)" }}>
-            {new Date(item.created_at).toLocaleDateString("pt-BR")}
-          </Typography>
-        </CardContent>
-      </Card>
+                    <Typography
+                      fontSize={12}
+                      sx={{ color: "rgba(255,255,255,0.6)" }}
+                    >
+                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                    </Typography>
+                  </CardContent>
+                </Card>
 
-      {/* Linha separadora */}
-      {index !== others.length - 1 && (
-        <Divider
-          sx={{
-            borderColor: "rgba(255,255,255,0.15)",
-            marginY: 1,
-          }}
-        />
-      )}
-    </Box>
-  ))}
+                {/* Linha separadora */}
+                {index !== others.length - 1 && (
+                  <Divider
+                    sx={{
+                      borderColor: "rgba(255,255,255,0.15)",
+                      marginY: 1,
+                    }}
+                  />
+                )}
+              </Box>
+            ))}
 
-  {/* Skeleton ao carregar mais */}
-  {loading &&
-    Array.from({ length: 2 }).map((_, i) => (
-      <NewsItemSkeleton key={i} />
-    ))}
-</Box>
-
+            {/* Skeleton ao carregar mais */}
+            {loading &&
+              Array.from({ length: 2 }).map((_, i) => (
+                <NewsItemSkeleton key={i} />
+              ))}
+          </Box>
         </>
       )}
 
