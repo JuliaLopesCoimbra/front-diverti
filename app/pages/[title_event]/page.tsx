@@ -124,7 +124,7 @@ export default function EventPage() {
         {/* LOGO + TEXTO */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Image
-            src="/logo/logon1.png"
+            src="/logo/logo-n1.png"
             alt="Camarote N1"
             width={60}
             height={60}
