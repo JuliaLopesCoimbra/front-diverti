@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import {
   Box,
   Button,
@@ -14,7 +14,7 @@ import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { firstAccess } from "@/app/services/auth/authAdminService";
 
-export default function FirstAccessPage() {
+function FirstAccessContent() {
   const params = useSearchParams();
   const token = params.get("token");
   const router = useRouter();
@@ -274,6 +274,29 @@ export default function FirstAccessPage() {
         </Button>
       </Box>
     </Box>
+  );
+}
+
+export default function FirstAccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            height: "100vh",
+            backgroundImage: "url(/background/dashboard.png)",
+            padding: "20px",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ color: "#fff" }}>Carregando...</Typography>
+        </Box>
+      }
+    >
+      <FirstAccessContent />
+    </Suspense>
   );
 }
 

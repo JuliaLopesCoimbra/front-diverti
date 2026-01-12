@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import {
   Box,
   Button,
@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const params = useSearchParams();
   const token = params.get("token");
   const router = useRouter();
@@ -281,5 +281,28 @@ export default function ResetPasswordPage() {
         </Typography>
       </Box>
     </Box>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            height: "100vh",
+            backgroundImage: "url(/background/dashboard.png)",
+            padding: "20px",
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ color: "#fff" }}>Carregando...</Typography>
+        </Box>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

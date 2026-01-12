@@ -180,15 +180,17 @@ export default function EditEventForm({
     >
       {/* Header com botão de voltar */}
       <Box
-        display="flex"
-        alignItems="center"
-        gap={1.5}
-        p={2}
-        borderBottom="1px solid rgba(255,255,255,0.1)"
-        position="sticky"
-        top={0}
-        backgroundColor="#000"
-        zIndex={10}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+          p: 2,
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
+          position: "sticky",
+          top: 0,
+          backgroundColor: "#000",
+          zIndex: 10,
+        }}
       >
         <IconButton
           onClick={() => router.back()}

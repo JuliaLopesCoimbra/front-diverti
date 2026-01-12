@@ -5,7 +5,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Grid,
   Typography,
   Stack,
 } from "@mui/material";
@@ -22,7 +21,11 @@ interface SearchResult {
   label?: string;
 }
 
-export default function PhotoAIPage() {
+interface PhotoAIPageProps {
+  eventId: number;
+}
+
+export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
   const [stage, setStage] = useState<Stage>("intro");
   const [isRequestingCamera, setIsRequestingCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -351,31 +354,36 @@ export default function PhotoAIPage() {
           Nenhuma foto encontrada. Tente novamente com outra imagem.
         </Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 2,
+          }}
+        >
           {results.map((item, idx) => (
-            <Grid item xs={6} key={idx}>
-              <Box
-                sx={{
-                  borderRadius: 2,
-                  overflow: "hidden",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                  background: "#fff",
+            <Box
+              key={idx}
+              sx={{
+                borderRadius: 2,
+                overflow: "hidden",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+                background: "#fff",
+              }}
+            >
+              <img
+                src={item.url}
+                alt={item.label || `Foto ${idx + 1}`}
+                style={{
+                  width: "100%",
+                  display: "block",
+                  aspectRatio: "3 / 4",
+                  objectFit: "cover",
                 }}
-              >
-                <img
-                  src={item.url}
-                  alt={item.label || `Foto ${idx + 1}`}
-                  style={{
-                    width: "100%",
-                    display: "block",
-                    aspectRatio: "3 / 4",
-                    objectFit: "cover",
-                  }}
-                />
-              </Box>
-            </Grid>
+              />
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <Button

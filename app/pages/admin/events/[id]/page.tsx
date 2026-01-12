@@ -33,6 +33,7 @@ import {
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
 import DeleteEventModal from "@/app/components/admin/events/DeleteEventModal";
+import { formatEventDates } from "@/app/utils/eventDateFormatter";
 
 export default function EventDetailsPage() {
   const params = useParams();

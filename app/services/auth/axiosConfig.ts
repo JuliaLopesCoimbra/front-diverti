@@ -1,6 +1,6 @@
 // /services/axiosConfig.ts
 
-import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
+import axios from "axios";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -48,7 +48,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 ================================ */
 
 api.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
+  (config) => {
     if (typeof window !== "undefined") {
       const accessToken = localStorage.getItem("access_token");
       if (accessToken) {
@@ -67,8 +67,8 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
+  async (error: any) => {
+    const originalRequest = error.config as any & {
       _retry?: boolean;
     };
 

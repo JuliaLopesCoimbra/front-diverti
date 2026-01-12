@@ -118,12 +118,7 @@ const login = useCallback(
     }
   }, []);
 
-  console.log("[AuthContext] STATE:", {
-    isAuthenticated,
-    role,
-    isAdmin: role === "admin",
-    authReady,
-  });
+  
 
   return (
     <AuthContext.Provider

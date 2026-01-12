@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { verifyEmail } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
@@ -7,7 +7,7 @@ import { Box, Typography, Button } from "@mui/material";
 
 type Status = "loading" | "success" | "error";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const router = useRouter();
@@ -131,5 +131,40 @@ export default function VerifyEmailPage() {
         )}
       </Box>
     </Box>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            height: "100vh",
+            backgroundImage: "url(/background/dashboard.png)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+          }}
+        >
+          <Box
+            sx={{
+              maxWidth: 420,
+              width: "100%",
+              textAlign: "center",
+              color: "#fff",
+              padding: "30px",
+            }}
+          >
+            <Typography variant="h6" mb={2}>
+              Carregando...
+            </Typography>
+          </Box>
+        </Box>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

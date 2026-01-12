@@ -2,9 +2,9 @@
 
 import { Box, Typography, Button } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 
-export default function PrizeWinPage() {
+function PrizeWinContent() {
   const router = useRouter();
   const params = useSearchParams();
   const [prize, setPrize] = useState<{
@@ -102,6 +102,28 @@ export default function PrizeWinPage() {
         Resgatar Cupom
       </Button>
     </Box>
+  );
+}
+
+export default function PrizeWinPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: "100vh",
+            backgroundImage: "url(/background/dashboard.png)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Typography color="white">Carregando...</Typography>
+        </Box>
+      }
+    >
+      <PrizeWinContent />
+    </Suspense>
   );
 }
 
