@@ -6,7 +6,7 @@ import { Box } from "@mui/material";
 import HomeHeader from "@/app/components/home/HeaderHome";
 import HomeTabs from "@/app/components/home/HomeTabs";
 import BottomNav from "@/app/components/layout/BottomNav";
-import { EventResponse, getEvents } from "@/app/services/events/eventservice";
+import { EventResponse, getEvents } from "@/app/services/events/eventService";
 import { CircularProgress, Typography } from "@mui/material";
 import NewsFeed from "@/app/components/home/NewsFeed";
 import CTVAd from "@/app/components/ads/CTVAd";

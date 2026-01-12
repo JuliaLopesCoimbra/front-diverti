@@ -32,9 +32,9 @@ import BlockIcon from "@mui/icons-material/Block";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import { EventResponse } from "@/app/services/events/eventservice";
-import { activateEvent } from "@/app/services/events/eventservice";
-import { deactivateEvent } from "@/app/services/events/eventservice";
+import { EventResponse } from "@/app/services/events/eventService";
+import { activateEvent } from "@/app/services/events/eventService";
+import { deactivateEvent } from "@/app/services/events/eventService";
 import ActivateEventModal from "@/app/components/admin/events/ActivateEventModal";
 import DeactivateEventModal from "@/app/components/admin/events/DeactivateEventModal";
 

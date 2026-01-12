@@ -4,6 +4,7 @@ import { Box, Typography, Avatar } from "@mui/material";
 import { useEffect, useState } from "react";
 import { getMe, MeResponse } from "@/app/services/auth/authService";
 import { EventResponse } from "@/app/services/events/eventService";
+import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 import HamburgerMenu from "@/app/components/layout/HamburgerMenu";
 
 interface Props {
