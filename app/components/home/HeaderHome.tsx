@@ -2,7 +2,7 @@
 
 import { Box, Typography, Avatar } from "@mui/material";
 import { useEffect, useState } from "react";
-import { getMe, MeResponse } from "@/app/services/auth/authService";
+import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 import { EventResponse } from "@/app/services/events/eventService";
 import HamburgerMenu from "@/app/components/layout/HamburgerMenu";
 
@@ -19,10 +19,14 @@ export default function HomeHeader({
   onSelectEvent,
   currentEvent,
 }: Props) {
-  const [user, setUser] = useState<MeResponse | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
 
   useEffect(() => {
-    getMe().then(setUser).catch(console.error);
+    getProfile()
+      .then(setProfile)
+      .catch((error) => {
+        console.error("Erro ao buscar perfil:", error);
+      });
   }, []);
 
   // const today = new Date().toLocaleDateString("pt-BR", {
@@ -31,7 +35,7 @@ export default function HomeHeader({
   //   month: "long",
   // });
 
-  if (!user) return null;
+  if (!profile) return null;
 
   return (
     <Box
@@ -59,13 +63,22 @@ export default function HomeHeader({
             onSelectEvent={onSelectEvent}
           />
 
-          <Typography variant="h6" fontWeight={700}>
-            {user.name}
+          <Typography variant="h6" fontWeight={700} sx={{ color: "white" }}>
+            {profile.name || profile.email}
           </Typography>
         </Box>
 
         {/* DIREITA: AVATAR */}
-        <Avatar src={user.photo_url} sx={{ width: 40, height: 40 }} />
+        <Avatar 
+          src={profile.profile_photo || undefined} 
+          sx={{ 
+            width: 40, 
+            height: 40,
+            border: "2px solid #FFD600",
+          }}
+        >
+          {!profile.profile_photo && (profile.name?.[0] || profile.email[0]).toUpperCase()}
+        </Avatar>
       </Box>
 
       {/* DATA */}

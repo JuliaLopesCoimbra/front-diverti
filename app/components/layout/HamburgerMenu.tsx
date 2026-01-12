@@ -364,20 +364,19 @@ export default function HamburgerMenu({
               })}
             </Box>
           </Collapse>
-
           <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
           <ListItem disablePadding>
             <ListItemButton
               onClick={() => {
-                console.log("Ir para perfil");
-                // router.push("/profile")
+                router.push("/pages/user/profile");
+                setOpen(false);
               }}
             >
-              <AccountCircleIcon sx={{ mr: 2, color: "white" }} />
+              <PersonIcon sx={{ mr: 2, color: "white" }} />
 
               <ListItemText
                 primary="Perfil"
-                secondary="Ver e editar perfil"
+                secondary=" Ver e editar perfil"
                 primaryTypographyProps={{ fontWeight: 600 }}
                 secondaryTypographyProps={{
                   sx: { color: "rgba(255,255,255,0.6)" },
@@ -385,6 +384,8 @@ export default function HamburgerMenu({
               />
             </ListItemButton>
           </ListItem>
+         
+  
           <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
           <ListItem disablePadding>
             <ListItemButton
@@ -432,26 +433,7 @@ export default function HamburgerMenu({
              
              </>
            )}
-         <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
-          <ListItem disablePadding>
-            <ListItemButton
-              onClick={() => {
-                console.log("Ir para conta");
-                // router.push("/account/profile")
-              }}
-            >
-              <PersonIcon sx={{ mr: 2, color: "white" }} />
-
-              <ListItemText
-                primary="Conta"
-                secondary="Dados do perfil"
-                primaryTypographyProps={{ fontWeight: 600 }}
-                secondaryTypographyProps={{
-                  sx: { color: "rgba(255,255,255,0.6)" },
-                }}
-              />
-            </ListItemButton>
-          </ListItem>
+      
 
           <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
 

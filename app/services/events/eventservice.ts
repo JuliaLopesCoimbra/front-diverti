@@ -10,7 +10,8 @@ export interface EventResponse {
   starts_at: string;
   ends_at: string;
   created_at: string;
-  is_active: boolean; 
+  is_active: boolean;
+  event_dates?: string; // Campo opcional para múltiplas datas (formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21" ou "09,10,20,21 de janeiro")
 }
 
 export interface CreateEventData {
@@ -19,6 +20,7 @@ export interface CreateEventData {
   location?: string;
   starts_at?: string;
   ends_at?: string;
+  event_dates?: string; // Formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21"
   banner_image?: File;
 }
 
@@ -28,6 +30,7 @@ export interface UpdateEventData {
   location: string;
   start_date: string;
   end_date: string;
+  event_dates?: string; // Formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21"
   banner_image?: File;
 }
 
@@ -48,6 +51,7 @@ export const createEvent = async (data: CreateEventData): Promise<EventResponse>
   if (data.location) formData.append("location", data.location);
   if (data.starts_at) formData.append("starts_at", data.starts_at);
   if (data.ends_at) formData.append("ends_at", data.ends_at);
+  if (data.event_dates) formData.append("event_dates", data.event_dates);
   if (data.banner_image) formData.append("banner_image", data.banner_image);
 
   const response = await api.post<EventResponse>("/admin/events", formData, {
@@ -68,6 +72,7 @@ export const updateEvent = async (
   formData.append("location", data.location);
   formData.append("start_date", data.start_date);
   formData.append("end_date", data.end_date);
+  if (data.event_dates) formData.append("event_dates", data.event_dates);
   if (data.banner_image) formData.append("banner_image", data.banner_image);
 
   const response = await api.put<EventResponse>(

@@ -1,14 +1,68 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import EventIcon from "@mui/icons-material/Event";
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { Button, Box } from "@mui/material";
+import { useRouter } from "next/navigation";
+import { getEvents, EventResponse } from "./services/events/eventService";
+import EventIndisponivel from "./components/event/EventIndisponivel";
 
-export default function Home() {
+export default function HomePage() {
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Função para normalizar título para URL
+  const normalizeForUrl = (str: string): string => {
+    return str
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+      .replace(/ /g, "-")
+      .trim();
+  };
+
+  // Carrega os eventos ao montar o componente
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const events = await getEvents(); // Chama o serviço para pegar os eventos
+        const activeEvents = events.filter((event: EventResponse) => event.is_active); // Filtra eventos ativos
+        setEvents(activeEvents);
+      } catch (error) {
+        console.error("Erro ao buscar eventos:", error);
+        setEvents([]); // Em caso de erro, define como array vazio
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  if (loading) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#f4f7fc",
+          backgroundImage: "url(/background/dashboard.png)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+        }}
+      >
+        Carregando eventos...
+      </div>
+    );
+  }
+
+  // Se não houver eventos ou todos estiverem indisponíveis, mostra o componente EventIndisponivel
+  if (events.length === 0) {
+    return <EventIndisponivel />;
+  }
+
   return (
     <div
       style={{
@@ -28,14 +82,13 @@ export default function Home() {
         {/* LOGO + TEXTO */}
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <Image
-            src="/logo/logon1.png" // coloque sua logo em /public/logo.png
+            src="/logo/logon1.png"
             alt="Camarote N1"
             width={60}
             height={60}
           />
           <strong style={{ fontSize: 22, color: "white" }}>Camarote N1</strong>
         </div>
-
         <Button
           onClick={() => router.push("/pages/auth/login")}
           sx={{
@@ -56,109 +109,100 @@ export default function Home() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-
-          textAlign: "center",
+          padding: "32px",
         }}
       >
-        <Image
-          src="/components/dashboard-component.png"
-          alt="Camarote N1"
-          width={900}
-          height={400}
-          style={{ borderRadius: 12 }}
-        />
+    
 
-        <p
+        <div
           style={{
-            maxWidth: 700,
-            marginTop: 16,
-            fontSize: 13,
-            padding: "30px",
-            color: "white",
-            textAlign: "left",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 24,
+            width: "100%",
+            maxWidth: 900,
           }}
         >
-          Está chegando a hora de viver o inesquecível no Camarote Nº1 2026!
-          Serão quatro dias para aproveitar cada alegoria, batida e momento do
-          maior espetáculo da Terra. E pra você só se preocupar em #Sapucar,
-          teremos nosso serviço de transfer exclusivo, oferecendo comodidade e
-          segurança do início ao fim.
-        </p>
-
-        <p
-          style={{
-            maxWidth: 700,
-            marginTop: 2,
-            fontSize: 16,
-            padding: "30px",
-            color: "#000",
-            textAlign: "left",
-            lineHeight: 1.6,
-          }}
-        >
-          <span
-            style={{
-              backgroundColor: "#ffffff",
-              padding: "6px 10px",
-              fontWeight: 600,
-              display: "inline",
-              boxDecorationBreak: "clone",
-              WebkitBoxDecorationBreak: "clone",
-            }}
-          >
-            Prepare-se para sapucar como nunca antes. Te esperamos na Avenida!
-          </span>
-        </p>
-        <Box
-          sx={{
-            maxWidth: 700,
-            padding: "30px",
-            alignSelf: "flex-start",
-            color: "white",
-          }}
-          // className="border border-amber-600"
-        >
-          {/* DATA */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <EventIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              15, 16, 17 e 21 de fevereiro
-            </p>
-          </Box>
-
-          {/* HORÁRIO */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <AccessTimeIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>19h</p>
-          </Box>
-
-          {/* LOCAL */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <LocationOnIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              Setor 2 - Marquês de Sapucaí
-            </p>
-          </Box>
-        </Box>
-        <Button
-          onClick={() => router.push("/comprar")} // ajuste a rota se quiser
-          sx={{
-            marginTop: 3,
-            backgroundColor: "#FFD600", // amarelo forte
-            color: "#000", // texto preto
-            fontWeight: 700,
-            padding: "12px 32px",
-            borderRadius: "30px",
-            textTransform: "none",
-            fontSize: 16,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-            "&:hover": {
-              backgroundColor: "#FFC400", // hover um pouco mais escuro
-            },
-          }}
-        >
-          Comprar ingressos
-        </Button>
+          {events.map((event) => (
+            <Box
+              key={event.id}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 3,
+                width: "100%",
+                cursor: "pointer",
+                transition: "transform 0.2s",
+                "&:hover": {
+                  transform: "translateY(-4px)",
+                },
+              }}
+              onClick={() => {
+                router.push(`/pages/${normalizeForUrl(event.title)}`);
+              }}
+            >
+              <Image
+                src={event.banner_image || "/components/dashboard-component.png"}
+                alt={event.title}
+                width={900}
+                height={400}
+                style={{
+                  borderRadius: 12,
+                  objectFit: "cover",
+                  width: "100%",
+                  height: "auto",
+                }}
+              />
+              <h2
+                style={{
+                  marginTop: 16,
+                  marginBottom: 8,
+                  fontSize: 24,
+                  fontWeight: 700,
+                  color: "white",
+                  textAlign: "center",
+                }}
+              >
+                {event.title}
+              </h2>
+              {event.description && (
+                <p
+                  style={{
+                    marginTop: 8,
+                    marginBottom: 16,
+                    fontSize: 14,
+                    color: "white",
+                    textAlign: "center",
+                    maxWidth: 700,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {event.description}
+                </p>
+              )}
+              <Button
+                sx={{
+                  marginTop: 2,
+                  backgroundColor: "#FFD600",
+                  color: "#000",
+                  fontWeight: 700,
+                  padding: "12px 32px",
+                  borderRadius: "30px",
+                  textTransform: "none",
+                  fontSize: 16,
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                  "&:hover": {
+                    backgroundColor: "#FFC400",
+                  },
+                }}
+              >
+                Ver Evento
+              </Button>
+            </Box>
+          ))}
+        </div>
       </main>
     </div>
   );

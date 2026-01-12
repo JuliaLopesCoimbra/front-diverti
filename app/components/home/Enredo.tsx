@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   Divider,
-  Grid,
 } from "@mui/material";
 
 import {
@@ -49,16 +48,18 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
   }
 
   return (
-    <Box px={2} pb={4}>
+    <Box px={2} pb={4} >
       {/* ================= ESCOLAS ================= */}
       <Typography 
-        variant="h6" 
         fontWeight={700} 
+        mt={2}
         mb={3}
         sx={{
           color: "#fff",
           textAlign: "center",
+          fontSize: "1.05rem",
         }}
+        
       >
         Escolas de Samba presentes no Camarote
       </Typography>
@@ -74,22 +75,24 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
           Nenhuma escola de samba cadastrada.
         </Typography>
       ) : (
-        <Grid container spacing={2}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2, 1fr)" },
+            gap: 2,
+            
+          }}
+        >
           {schools.map((school) => (
-            <Grid item xs={6} key={school.id}>
+            <Box key={school.id}>
               <Card
                 sx={{
-                  borderRadius: 3,
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  backgroundColor: "transparent",
                   height: "100%",
                   display: "flex",
                   flexDirection: "column",
-                  transition: "all 0.3s",
-                  "&:hover": {
-                    transform: "translateY(-4px)",
-                    boxShadow: "0 8px 16px rgba(0,0,0,0.3)",
-                  },
+                  boxShadow: "none",
+                  border: "none",
                 }}
               >
                 <CardContent
@@ -101,19 +104,18 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                     pb: 2,
                   }}
                 >
-                  {/* Logo Circular */}
+                  {/* Logo Quadrado */}
                   <Box
                     sx={{
                       width: 120,
                       height: 120,
-                      borderRadius: "50%",
-                      backgroundColor: "#fff",
+                      borderRadius: 2,
+                      backgroundColor: "transparent",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       mb: 2,
-                      border: "3px solid rgba(255,255,255,0.2)",
-                      overflow: "hidden",
+                   
                     }}
                   >
                     {school.image_url ? (
@@ -131,7 +133,7 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                       <Typography
                         variant="h6"
                         sx={{
-                          color: "#000",
+                          color: "#fff",
                           fontWeight: 700,
                           textAlign: "center",
                           fontSize: "0.9rem",
@@ -177,49 +179,115 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                   )}
                 </CardContent>
               </Card>
-            </Grid>
+            </Box>
           ))}
-        </Grid>
+        </Box>
       )}
 
       <Divider sx={{ my: 4 }} />
 
       {/* ================= MÚSICAS ================= */}
-      <Typography variant="h6" fontWeight={700} mb={2}>
+      <Typography 
+        variant="h6" 
+        fontWeight={700} 
+        mb={2}
+        sx={{
+          color: "#fff",
+          textAlign: "center",
+        }}
+      >
         🎵 Letras de Música
       </Typography>
 
       {musics.length === 0 ? (
-        <Typography color="text.secondary">
+        <Typography 
+          sx={{
+            color: "rgba(255,255,255,0.6)",
+            textAlign: "center",
+          }}
+        >
           Nenhuma música cadastrada.
         </Typography>
       ) : (
-        musics.map((music) => (
-          <Card key={music.id} sx={{ mb: 2, borderRadius: 3 }}>
-            <CardContent>
-              <Typography fontWeight={700}>
-                {music.song_name}
-              </Typography>
+        musics.map((music) => {
+          // Divide a letra por linhas (quebras de linha)
+          const lyricsLines = music.lyrics
+            ? music.lyrics.split('\n').filter(line => line.trim() !== '')
+            : [];
 
-              {music.singer && (
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
+          return (
+            <Card 
+              key={music.id} 
+              sx={{ 
+                mb: 3, 
+                borderRadius: 3,
+                backgroundColor: "transparent",
+                boxShadow: "none",
+                border: "none",
+              }}
+            >
+              <CardContent>
+                {/* Nome da música e cantor centralizados */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    mb: 3,
+                  }}
                 >
-                  Intérprete: {music.singer}
-                </Typography>
-              )}
+                  <Typography 
+                    fontWeight={700}
+                    sx={{
+                      color: "#fff",
+                      textAlign: "center",
+                      fontSize: "1.1rem",
+                      mb: 0.5,
+                    }}
+                  >
+                    {music.song_name}
+                  </Typography>
 
-              <Typography
-                variant="body2"
-                whiteSpace="pre-line"
-                mt={1}
-              >
-                {music.lyrics}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))
+                  {music.singer && (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "rgba(255,255,255,0.7)",
+                        textAlign: "center",
+                      }}
+                    >
+                      {music.singer}
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* Letra formatada linha por linha */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1.5,
+                  }}
+                >
+                  {lyricsLines.map((line, index) => (
+                    <Typography
+                      key={index}
+                      variant="body2"
+                      sx={{
+                        color: "#fff",
+                        textAlign: "left",
+                        lineHeight: 1.8,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      {line.trim()}
+                    </Typography>
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          );
+        })
       )}
     </Box>
   );

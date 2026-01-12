@@ -16,6 +16,7 @@ export default function Roulette() {
   const [roulette, setRoulette] = useState<RouletteResponse | null>(null);
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
+  const [pointerFalling, setPointerFalling] = useState(false);
   const params = useParams();
   const router = useRouter();
   const eventId = Number(params.eventId);
@@ -31,10 +32,13 @@ export default function Roulette() {
     }
 
     const spins = 6; // voltas completas
+    // Offset para corrigir o alinhamento quando o ponteiro cair no prêmio
+    // Se a roleta começa na metade do primeiro prêmio, precisamos compensar
+    const alignmentOffset = SLICE_ANGLE / 2;
     const finalAngle =
-      spins * 360 + (360 - pos * SLICE_ANGLE - SLICE_ANGLE / 2);
+      spins * 360 + (360 - pos * SLICE_ANGLE - SLICE_ANGLE / 2) + alignmentOffset;
 
-    setRotation(finalAngle); // ✅ SEM prev
+    setRotation(finalAngle);
   };
 
   console.log("Rotação atual:", rotation);
@@ -44,29 +48,36 @@ export default function Roulette() {
 
     setSpinning(true);
     setRotation(0);
+    setPointerFalling(false);
 
     try {
       const result = await spinRoulette(eventId);
 
       spinToPosition(result.prize.position);
 
-      // Após a animação (4 segundos), navegar para a página de prêmio
+      // Após a roleta parar (4 segundos), ativar animação do ponteiro caindo
       setTimeout(() => {
-        const params = new URLSearchParams({
-          prize_id: result.prize.id.toString(),
-          prize_name: result.prize.name,
-          prize_position: result.prize.position.toString(),
-        });
+        setPointerFalling(true);
 
-        if (result.prize.image_url) {
-          params.append("prize_image", result.prize.image_url);
-        }
+        // Após a animação do ponteiro (1.5 segundos), navegar para a página de prêmio
+        setTimeout(() => {
+          const params = new URLSearchParams({
+            prize_id: result.prize.id.toString(),
+            prize_name: result.prize.name,
+            prize_position: result.prize.position.toString(),
+          });
 
-        router.push(`/pages/roulette/prize/prize-win?${params.toString()}`);
+          if (result.prize.image_url) {
+            params.append("prize_image", result.prize.image_url);
+          }
+
+          router.push(`/pages/user/roulette/prize/prize-win?${params.toString()}`);
+        }, 1500);
       }, 4000);
     } catch (err) {
       console.error("Erro ao girar roleta", err);
       setSpinning(false);
+      setPointerFalling(false);
     }
   };
   useEffect(() => {
@@ -211,6 +222,31 @@ export default function Roulette() {
             transform: "translateX(-50%)",
             width: 90,
             zIndex: 2,
+            transition: pointerFalling
+              ? "top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)"
+              : "none",
+            ...(pointerFalling && {
+              top: 20,
+              animation: "pointerBounce 1.5s ease-in-out",
+              "@keyframes pointerBounce": {
+                "0%": {
+                  top: -30,
+                  transform: "translateX(-50%) rotate(0deg)",
+                },
+                "50%": {
+                  top: 25,
+                  transform: "translateX(-50%) rotate(-5deg)",
+                },
+                "70%": {
+                  top: 20,
+                  transform: "translateX(-50%) rotate(2deg)",
+                },
+                "100%": {
+                  top: 20,
+                  transform: "translateX(-50%) rotate(0deg)",
+                },
+              },
+            }),
           }}
         />
 

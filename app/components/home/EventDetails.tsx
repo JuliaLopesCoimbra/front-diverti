@@ -5,6 +5,7 @@ import { EventResponse } from "@/app/services/events/eventService";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
+import { formatEventDates } from "@/app/utils/eventDateFormatter";
 
 interface Props {
   event: EventResponse;
@@ -13,12 +14,6 @@ interface Props {
 export default function EventDetails({ event }: Props) {
     const startDate = new Date(event.starts_at);
 const endDate = new Date(event.ends_at);
-
-const dateFormatter = new Intl.DateTimeFormat("pt-BR", {
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-});
 
 const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   hour: "2-digit",
@@ -121,9 +116,8 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <EventIcon style={{ color: "yellow" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
-  {dateFormatter.format(startDate)} até {dateFormatter.format(endDate)}
-</p>
-
+                  {formatEventDates(event)}
+                </p>
               </Box>
     
               {/* HORÁRIO */}

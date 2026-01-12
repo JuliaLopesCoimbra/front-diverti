@@ -15,7 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "N1 - Application Roulette",
+  title: "N1 - Application Event",
+  icons: {
+    icon: "/logo/logo-n1.png", // Caminho do ícone
+  },
 
 };
 

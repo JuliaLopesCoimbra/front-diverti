@@ -22,6 +22,7 @@ import {
   EventResponse, 
   deleteEvent 
 } from "@/app/services/events/eventService";
+import { formatEventDates } from "@/app/utils/eventDateFormatter";
 import {
   getSambaSchoolsByEvent,
   SambaSchoolResponse,
@@ -293,47 +294,49 @@ export default function EventDetailsPage() {
           )}
 
           {/* DATAS */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-              gap: 2,
-            }}
-          >
-            <Box>
-              <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
-                Data de Início
-              </Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
-                {event.starts_at
-                  ? new Date(event.starts_at).toLocaleString("pt-BR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "-"}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
-                Data de Término
-              </Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
-                {event.ends_at
-                  ? new Date(event.ends_at).toLocaleString("pt-BR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "-"}
-              </Typography>
-            </Box>
+          <Box sx={{ mb: 3 }}>
+            <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+              Datas do Evento
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "1.1rem" }}>
+              {formatEventDates(event)}
+            </Typography>
           </Box>
+
+          {/* HORÁRIOS */}
+          {event.starts_at && event.ends_at && (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              <Box>
+                <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+                  Horário de Início
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+                  {new Date(event.starts_at).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography>
+              </Box>
+
+              <Box>
+                <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+                  Horário de Término
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+                  {new Date(event.ends_at).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Typography>
+              </Box>
+            </Box>
+          )}
         </Paper>
 
         {/* AÇÕES ADMIN - CRIAR ESCOLA DE SAMBA E MÚSICA/LETRA */}
