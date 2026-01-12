@@ -29,9 +29,17 @@ export default function HomePage() {
         const events = await getEvents(); // Chama o serviço para pegar os eventos
         const activeEvents = events.filter((event: EventResponse) => event.is_active); // Filtra eventos ativos
         setEvents(activeEvents);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Erro ao buscar eventos:", error);
-        setEvents([]); // Em caso de erro, define como array vazio
+        
+        // Se for 401 e não houver token, trata como não autenticado (normal para página pública)
+        // Isso evita que o interceptor cause loop infinito ao tentar redirecionar
+        if (error?.response?.status === 401 && typeof window !== "undefined" && !localStorage.getItem("access_token")) {
+          // Endpoint público retornou 401 - trata como array vazio (sem eventos disponíveis)
+          setEvents([]);
+        } else {
+          setEvents([]); // Em caso de outro erro, define como array vazio
+        }
       } finally {
         setLoading(false);
       }
