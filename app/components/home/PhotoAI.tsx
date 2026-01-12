@@ -1,22 +1,11 @@
-import { Button } from "@mui/material";
-import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
-interface Props {
-  eventId: number;
-}
+// Carrega a experiência completa da aba Foto IA (camera + resultados)
+const PhotoAIClient = dynamic(
+  () => import("@/app/pages/user/photoAI/page"),
+  { ssr: false }
+);
 
-export default function PhotoAI({ eventId }: Props) {
-  const router = useRouter();
-
-  return (
-    <>
-      <div>PhotoAI Component</div>
-      <Button
-        variant="contained"
-        onClick={() => router.push(`/pages/user/roulette/${eventId}`)}
-      >
-        Generate Photo
-      </Button>
-    </>
-  );
+export default function PhotoAI() {
+  return <PhotoAIClient />;
 }

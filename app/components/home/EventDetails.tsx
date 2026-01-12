@@ -1,7 +1,7 @@
 "use client";
 
 import { Box } from "@mui/material";
-import { EventResponse } from "@/app/services/events/eventService";
+import { EventResponse } from "@/app/services/events/eventservice";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";

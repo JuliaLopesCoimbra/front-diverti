@@ -22,7 +22,6 @@ import {
   EventResponse, 
   deleteEvent 
 } from "@/app/services/events/eventService";
-import { formatEventDates } from "@/app/utils/eventDateFormatter";
 import {
   getSambaSchoolsByEvent,
   SambaSchoolResponse,
