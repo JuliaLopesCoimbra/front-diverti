@@ -15,11 +15,15 @@ interface SearchFaceResponse {
   message?: string;
 }
 
-export async function searchFace(file: File): Promise<SearchFaceResponse> {
+export async function searchFace(
+  file: File,
+  collectionId?: string
+): Promise<SearchFaceResponse> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("threshold", "70");
   formData.append("max_faces", "8");
+  if (collectionId) formData.append("collection_id", collectionId);
 
   const { data } = await api.post<SearchFaceResponse>(
     "/photo-ai/search-face",
