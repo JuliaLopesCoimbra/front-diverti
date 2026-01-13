@@ -1,10 +1,16 @@
 import api from "../auth/axiosConfig";
 
+export interface NewsImage {
+  id: number;
+  image_url: string;
+  image_order: number;
+}
+
 export interface NewsResponse {
   id: number;
   title: string;
   content: string;
-  image_url?: string;
+  images: NewsImage[];
   created_at: string;
   event_id?: number;
 }
@@ -42,7 +48,7 @@ export interface NewsDetailsResponse {
   id: number;
   title: string;
   content: string;
-  image_url?: string;
+  images: NewsImage[];
   event_id: number;
   created_at: string;
   updated_at?: string;
@@ -97,14 +103,15 @@ export const createComment = async (
 export interface CreateNewsRequest {
   title: string;
   content: string;
-  image: File;
+  images: File[];  // Agora aceita múltiplas imagens
   event_id: number;
 }
 
 export interface UpdateNewsRequest {
   title: string;
   content: string;
-  image?: File;
+  images?: File[];
+  replace_all?: boolean;
 }
 
 export const createNews = async (
@@ -114,7 +121,11 @@ export const createNews = async (
   const formData = new FormData();
   formData.append("title", data.title);
   formData.append("content", data.content);
-  formData.append("image", data.image);
+  
+  // Adiciona todas as imagens
+  data.images.forEach((image) => {
+    formData.append("images", image);
+  });
 
   const response = await api.post(
     `/admin/events/${eventId}/news`,
@@ -136,8 +147,13 @@ export const updateNews = async (
   const formData = new FormData();
   formData.append("title", data.title);
   formData.append("content", data.content);
-  if (data.image) {
-    formData.append("image", data.image);
+  formData.append("replace_all", data.replace_all ? "true" : "false");
+  
+  // Adiciona todas as imagens
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((image) => {
+      formData.append("images", image);
+    });
   }
 
   const response = await api.put(
@@ -157,4 +173,22 @@ export const deleteNews = async (
   newsId: number
 ): Promise<void> => {
   await api.delete(`/admin/events/${eventId}/news/${newsId}`);
+};
+
+// Endpoints para posts pendentes
+export const getPendingPosts = async (): Promise<NewsResponse[]> => {
+  const response = await api.get("/admin/events/news/pending");
+  return response.data as NewsResponse[];
+};
+
+export const approvePost = async (postId: number): Promise<void> => {
+  await api.post(`/admin/events/news/${postId}/approve`);
+};
+
+export const rejectPost = async (postId: number): Promise<void> => {
+  await api.post(`/admin/events/news/${postId}/reject`);
+};
+
+export const deactivatePost = async (postId: number): Promise<void> => {
+  await api.post(`/admin/events/news/${postId}/deactivate`);
 };

@@ -88,7 +88,6 @@ export default function CreateSambaSchoolForm({
         minHeight: "100vh",
         height: "100vh",
         overflowY: "auto",
-        backgroundColor: "#000",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
@@ -104,18 +103,19 @@ export default function CreateSambaSchoolForm({
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           position: "sticky",
           top: 0,
-          backgroundColor: "#000",
+          backgroundColor: "rgba(0, 0, 0, 0.3)",
+          backdropFilter: "blur(10px)",
           zIndex: 10,
         }}
       >
         <IconButton
-          onClick={() => router.push("/pages/user/home")}
+          onClick={() => router.back()}
           size="small"
           sx={{ color: "#fff" }}
         >
           <ArrowBackIosIcon />
         </IconButton>
-        <Typography variant="h5" fontWeight={700} sx={{ color: "#fff" }}>
+        <Typography fontWeight={700} sx={{ color: "#fff", fontSize: "1.2rem" }}>
           Criar Nova Escola de Samba
         </Typography>
       </Box>
@@ -138,12 +138,14 @@ export default function CreateSambaSchoolForm({
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: "rgba(255,255,255,0.05)",
-            borderRadius: 2,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
             p: 3,
             display: "flex",
             flexDirection: "column",
-            gap: 2,
+            gap: 2.5,
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
           <TextField
@@ -153,22 +155,23 @@ export default function CreateSambaSchoolForm({
             onChange={(e) => setName(e.target.value)}
             disabled={loading}
             required
+            variant="standard"
             sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "rgba(255,255,255,0.05)",
+              "& .MuiInput-underline:before": {
+                borderBottomColor: "rgba(255,255,255,0.2)",
+              },
+              "& .MuiInput-underline:hover:before": {
+                borderBottomColor: "rgba(255,255,255,0.3)",
+              },
+              "& .MuiInput-underline:after": {
+                borderBottomColor: "#ffc91f",
+              },
+              "& .MuiInputBase-input": {
                 color: "#fff",
-                "& fieldset": {
-                  borderColor: "rgba(255,255,255,0.1)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "rgba(255,255,255,0.2)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#ffc91f",
-                },
+                fontSize: "1rem",
               },
               "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.7)",
+                color: "rgba(255,255,255,0.6)",
                 "&.Mui-focused": {
                   color: "#ffc91f",
                 },
@@ -184,22 +187,23 @@ export default function CreateSambaSchoolForm({
             multiline
             rows={4}
             disabled={loading}
+            variant="standard"
             sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "rgba(255,255,255,0.05)",
+              "& .MuiInput-underline:before": {
+                borderBottomColor: "rgba(255,255,255,0.2)",
+              },
+              "& .MuiInput-underline:hover:before": {
+                borderBottomColor: "rgba(255,255,255,0.3)",
+              },
+              "& .MuiInput-underline:after": {
+                borderBottomColor: "#ffc91f",
+              },
+              "& .MuiInputBase-input": {
                 color: "#fff",
-                "& fieldset": {
-                  borderColor: "rgba(255,255,255,0.1)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "rgba(255,255,255,0.2)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#ffc91f",
-                },
+                fontSize: "1rem",
               },
               "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.7)",
+                color: "rgba(255,255,255,0.6)",
                 "&.Mui-focused": {
                   color: "#ffc91f",
                 },
@@ -210,7 +214,7 @@ export default function CreateSambaSchoolForm({
           <Box>
             <Typography
               variant="body2"
-              sx={{ mb: 1, color: "rgba(255,255,255,0.7)" }}
+              sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}
             >
               Imagem da Escola de Samba
             </Typography>
@@ -232,6 +236,8 @@ export default function CreateSambaSchoolForm({
                   borderColor: "rgba(255,255,255,0.2)",
                   color: "#fff",
                   py: 1.5,
+                  textTransform: "none",
+                  borderRadius: "14px",
                   "&:hover": {
                     borderColor: "#ffc91f",
                     backgroundColor: "rgba(255,201,31,0.1)",
@@ -267,6 +273,9 @@ export default function CreateSambaSchoolForm({
               flex: 1,
               borderColor: "rgba(255,255,255,0.2)",
               color: "rgba(255,255,255,0.7)",
+              textTransform: "none",
+              borderRadius: "14px",
+              py: 1.5,
               "&:hover": {
                 borderColor: "rgba(255,255,255,0.3)",
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -284,6 +293,9 @@ export default function CreateSambaSchoolForm({
               backgroundColor: "#ffc91f",
               color: "#000",
               fontWeight: 600,
+              textTransform: "none",
+              borderRadius: "14px",
+              py: 1.5,
               "&:hover": {
                 backgroundColor: "#e6b800",
               },

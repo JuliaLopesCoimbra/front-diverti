@@ -42,7 +42,13 @@ export default function SambaSchoolDetailsPage() {
       try {
         const data = await getSambaSchoolById(eventId, schoolId);
         setSchool(data);
-      } catch (err) {
+      } catch (err: any) {
+        // Se for 404, redireciona imediatamente para a página do evento
+        if (err?.response?.status === 404 || err?.response?.statusCode === 404) {
+          showToast("Escola de samba não encontrada", "error");
+          router.replace(`/pages/admin/events/${eventId}`);
+          return;
+        }
         console.error("Erro ao buscar escola de samba", err);
         showToast("Erro ao carregar escola de samba", "error");
       } finally {
@@ -51,7 +57,7 @@ export default function SambaSchoolDetailsPage() {
     };
 
     fetchSchool();
-  }, [eventId, schoolId, showToast]);
+  }, [eventId, schoolId, showToast, router]);
 
   const handleDelete = async () => {
     if (!school) return;
@@ -129,7 +135,10 @@ export default function SambaSchoolDetailsPage() {
         minHeight: "100vh",
         height: "100vh",
         overflowY: "auto",
-        backgroundColor: "#000",
+        backgroundImage: "url(/background/dashboard.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
@@ -145,19 +154,20 @@ export default function SambaSchoolDetailsPage() {
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           position: "sticky",
           top: 0,
-          backgroundColor: "#000",
+          backgroundColor: "rgba(0, 0, 0, 0.3)",
+          backdropFilter: "blur(10px)",
           zIndex: 10,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <IconButton
-            onClick={() => router.push("/pages/user/home")}
+            onClick={() => router.push(`/pages/admin/events/${eventId}`)}
             size="small"
             sx={{ color: "#fff" }}
           >
             <ArrowBackIosIcon />
           </IconButton>
-          <Typography variant="h5" fontWeight={700} sx={{ color: "#fff" }}>
+          <Typography fontWeight={700} sx={{ color: "#fff", fontSize: "1.2rem" }}>
             Detalhes da Escola de Samba
           </Typography>
         </Box>
@@ -200,10 +210,11 @@ export default function SambaSchoolDetailsPage() {
               src={school.image_url}
               alt={school.name}
               sx={{
-                width: 280,
-                height: 280,
+                width: 200,
+                height: 200,
                 objectFit: "cover",
                 borderRadius: "50%",
+                border: "3px solid rgba(255, 201, 31, 0.3)",
               }}
             />
           </Box>
@@ -213,11 +224,13 @@ export default function SambaSchoolDetailsPage() {
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: "rgba(255,255,255,0.05)",
-            borderRadius: 2,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
             p: 3,
             maxWidth: 900,
             mx: "auto",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
           {/* TÍTULO */}
@@ -229,20 +242,20 @@ export default function SambaSchoolDetailsPage() {
 
           {/* DESCRIÇÃO */}
           <Box mb={3}>
-            <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+            <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Descrição
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
               {school.description || "Sem descrição"}
             </Typography>
           </Box>
 
           {/* DATA DE CRIAÇÃO */}
           <Box>
-            <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+            <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Data de Criação
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
               {new Date(school.created_at).toLocaleString("pt-BR", {
                 day: "2-digit",
                 month: "long",

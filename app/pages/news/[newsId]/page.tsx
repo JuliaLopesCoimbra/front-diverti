@@ -11,6 +11,12 @@ import {
   Divider,
   CircularProgress,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  Button,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import FavoriteIcon from "@mui/icons-material/Favorite";
@@ -22,10 +28,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ReplyIcon from "@mui/icons-material/Reply";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import CloseIcon from "@mui/icons-material/Close";
 import {
   getNewsDetails,
   NewsDetailsResponse,
   deleteNews,
+  deactivatePost,
 } from "@/app/services/news/newsService";
 import {
   likeNews,
@@ -45,7 +55,6 @@ import {
 } from "@/app/services/comments/commentService";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
-import EditNewsModal from "@/app/components/admin/news/EditNewsModal";
 import DeleteNewsModal from "@/app/components/admin/news/DeleteNewsModal";
 import DeleteCommentModal from "@/app/components/comments/DeleteCommentModal";
 import { getMe } from "@/app/services/auth/authService";
@@ -55,7 +64,7 @@ export default function NewsDetailPage() {
   const params = useParams();
   const router = useRouter();
   const newsId = Number(params.newsId);
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -63,7 +72,6 @@ export default function NewsDetailPage() {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [liking, setLiking] = useState(false);
   const [isAuthor, setIsAuthor] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [currentUser, setCurrentUser] = useState<ProfileResponse | null>(null);
@@ -77,6 +85,11 @@ export default function NewsDetailPage() {
   const [deleteCommentModalOpen, setDeleteCommentModalOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<{ id: number; content: string } | null>(null);
   const [deletingComment, setDeletingComment] = useState(false);
+  const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [deactivating, setDeactivating] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
 
   const loadNewsDetails = async () => {
     if (!newsId) return;
@@ -297,9 +310,6 @@ export default function NewsDetailPage() {
     }
   };
 
-  const handleEditSuccess = () => {
-    loadNewsDetails();
-  };
 
   const handleLikeComment = async (commentId: number, parentCommentId?: number | null) => {
     if (!isAuthenticated || !news || likingComment[commentId]) return;
@@ -501,6 +511,24 @@ export default function NewsDetailPage() {
     }
   };
 
+  const handleDeactivate = async () => {
+    if (!newsId) return;
+
+    setDeactivating(true);
+    try {
+      await deactivatePost(newsId);
+      showToast("Post desativado com sucesso!", "success");
+      setDeactivateModalOpen(false);
+      router.push("/pages/user/home");
+    } catch (error: any) {
+      console.error("Erro ao desativar post", error);
+      const message = error.response?.data?.detail || "Erro ao desativar post";
+      showToast(message, "error");
+    } finally {
+      setDeactivating(false);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -519,6 +547,45 @@ export default function NewsDetailPage() {
       month: "short",
     });
   };
+
+  const images = news?.images || [];
+  const sortedImages = [...images].sort((a, b) => a.image_order - b.image_order);
+
+  const handlePreviousImage = () => {
+    setCurrentImageIndex((prev) => (prev === 0 ? sortedImages.length - 1 : prev - 1));
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prev) => (prev === sortedImages.length - 1 ? 0 : prev + 1));
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe && sortedImages.length > 1) {
+      handleNextImage();
+    }
+    if (isRightSwipe && sortedImages.length > 1) {
+      handlePreviousImage();
+    }
+  };
+
+  useEffect(() => {
+    if (news && images.length > 0) {
+      setCurrentImageIndex(0);
+    }
+  }, [news, images.length]);
 
   if (loading) {
     return (
@@ -551,7 +618,7 @@ export default function NewsDetailPage() {
         }}
       >
         <Typography>Notícia não encontrada.</Typography>
-        <IconButton onClick={() => router.back()} sx={{ color: "#fff" }}>
+        <IconButton onClick={() =>  router.push("/pages/user/home")} sx={{ color: "#fff" }}>
           <ArrowBackIosIcon />
         </IconButton>
       </Box>
@@ -564,12 +631,40 @@ export default function NewsDetailPage() {
         minHeight: "100vh",
         height: "100vh",
         overflowY: "auto",
-        backgroundColor: "#000",
+        backgroundImage: "url(/background/dashboard.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
       }}
     >
+      {/* Botão X para desativar (apenas admin master e subadmin) - Posicionado absolutamente */}
+      {(isAdminMaster || isSubadmin) && (
+        <IconButton
+          onClick={() => setDeactivateModalOpen(true)}
+          size="small"
+          disabled={deactivating}
+          sx={{
+            color: "#ff3040",
+            position: "fixed",
+            top: 16,
+            right: 16,
+            zIndex: 1000,
+           
+            backdropFilter: "blur(10px)",
+            width: 40,
+            height: 40,
+            "&:hover": {
+              backgroundColor: "rgba(255, 48, 64, 0.3)",
+            },
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+      )}
+
       {/* Header com botão de voltar */}
       <Box
         sx={{
@@ -580,13 +675,14 @@ export default function NewsDetailPage() {
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           position: "sticky",
           top: 0,
-          backgroundColor: "#000",
+          backgroundColor: "rgba(0, 0, 0, 0.3)",
+          backdropFilter: "blur(10px)",
           zIndex: 10,
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <IconButton
-            onClick={() => router.back()}
+            onClick={() =>  router.push("/pages/user/home")}
             size="small"
             sx={{ color: "#fff" }}
           >
@@ -613,7 +709,7 @@ export default function NewsDetailPage() {
         {isAuthor && isAdmin && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <IconButton
-              onClick={() => setEditModalOpen(true)}
+              onClick={() => router.push(`/pages/news/edit?newsId=${newsId}`)}
               size="small"
               disabled={deleting}
               sx={{ color: "#ffc91f" }}
@@ -634,19 +730,112 @@ export default function NewsDetailPage() {
 
       {/* Conteúdo */}
       <Box sx={{ pb: 2, flex: 1, overflowY: "auto" }}>
-        {/* Imagem */}
-        {news.image_url && (
+        {/* Carrossel de imagens */}
+        {sortedImages.length > 0 && (
           <Box
-            component="img"
-            src={news.image_url}
-            alt={news.title}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
             sx={{
+              position: "relative",
               width: "100%",
-              aspectRatio: "1 / 1",
-              objectFit: "cover",
-              display: "block",
+              borderRadius: 0,
+              overflow: "hidden",
+              backgroundColor: "transparent",
+              touchAction: "pan-y",
+              userSelect: "none",
             }}
-          />
+          >
+            {/* Imagem atual */}
+            <Box
+              component="img"
+              src={sortedImages[currentImageIndex]?.image_url}
+              alt={news.title}
+              sx={{
+                width: "100%",
+                aspectRatio: "1 / 1",
+                objectFit: "cover",
+                display: "block",
+              }}
+            />
+
+            {/* Botões de navegação (apenas se tiver mais de 1 imagem) */}
+            {sortedImages.length > 1 && (
+              <>
+                <IconButton
+                  onClick={handlePreviousImage}
+                  sx={{
+                    position: "absolute",
+                    left: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    color: "#fff",
+                    width: 32,
+                    height: 32,
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    },
+                    zIndex: 2,
+                  }}
+                >
+                  <NavigateBeforeIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <IconButton
+                  onClick={handleNextImage}
+                  sx={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
+                    color: "#fff",
+                    width: 32,
+                    height: 32,
+                    "&:hover": {
+                      backgroundColor: "rgba(0, 0, 0, 0.7)",
+                    },
+                    zIndex: 2,
+                  }}
+                >
+                  <NavigateNextIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              </>
+            )}
+
+            {/* Indicadores de página (dots) */}
+            {sortedImages.length > 1 && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: 12,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex",
+                  gap: 0.75,
+                  zIndex: 2,
+                }}
+              >
+                {sortedImages.map((_, index) => (
+                  <Box
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    sx={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      backgroundColor:
+                        index === currentImageIndex
+                          ? "#fff"
+                          : "rgba(255, 255, 255, 0.4)",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  />
+                ))}
+              </Box>
+            )}
+          </Box>
         )}
 
         {/* Conteúdo */}
@@ -1090,17 +1279,6 @@ export default function NewsDetailPage() {
         </Box>
       </Box>
 
-      {/* Modal de Edição */}
-      {news && news.event_id && (
-        <EditNewsModal
-          open={editModalOpen}
-          eventId={news.event_id}
-          news={news}
-          onClose={() => setEditModalOpen(false)}
-          onSuccess={handleEditSuccess}
-        />
-      )}
-
       {/* Modal de Exclusão */}
       {news && (
         <DeleteNewsModal
@@ -1125,6 +1303,79 @@ export default function NewsDetailPage() {
           loading={deletingComment}
         />
       )}
+
+      {/* Modal de Desativação de Post */}
+      <Dialog
+        open={deactivateModalOpen}
+        onClose={() => !deactivating && setDeactivateModalOpen(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(26, 26, 26, 0.95)",
+            backdropFilter: "blur(20px)",
+            color: "white",
+            borderRadius: 3,
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+          },
+        }}
+      >
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <CloseIcon sx={{ fontSize: 28, color: "#ff3040" }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Desativar Post
+            </Typography>
+          </Box>
+        </DialogTitle>
+        <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.1)", mx: 3 }} />
+        <DialogContent sx={{ pt: 3 }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.9)", fontSize: "1rem" }}>
+            Tem certeza que deseja <strong style={{ color: "#ff3040" }}>desativar</strong> este post?
+            <br />
+            <br />
+            <Box
+              component="span"
+              sx={{
+                display: "block",
+                p: 2,
+                mt: 2,
+                backgroundColor: "rgba(255, 68, 68, 0.1)",
+                borderRadius: 2,
+                border: "1px solid rgba(255, 68, 68, 0.2)",
+              }}
+            >
+              O post será desativado e não será mais visível no feed.
+            </Box>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 2 }}>
+          <Button
+            onClick={() => setDeactivateModalOpen(false)}
+            disabled={deactivating}
+            sx={{
+              color: "rgba(255,255,255,0.7)",
+              textTransform: "none",
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleDeactivate}
+            disabled={deactivating}
+            variant="contained"
+            startIcon={deactivating ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <CloseIcon />}
+            sx={{
+              backgroundColor: "#ff3040",
+              color: "white",
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: "#cc0000",
+              },
+            }}
+          >
+            {deactivating ? "Desativando..." : "Desativar"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

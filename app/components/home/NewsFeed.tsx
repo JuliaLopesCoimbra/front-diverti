@@ -14,9 +14,9 @@ import {
 import { useAuth } from "@/app/context/AuthContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
 import EmptyNews from "./EmptyNews";
-import CreateNewsModal from "@/app/components/admin/news/CreateNewsModal";
 import { useRouter } from "next/navigation";
 import CTVAd from "@/app/components/ads/CTVAd";
+import PendingPostsNotification from "@/app/components/admin/pending-posts/PendingPostsNotification";
 
 interface Props {
   eventId: number;
@@ -25,15 +25,16 @@ interface Props {
 const LIMIT = 5;
 
 export default function NewsFeed({ eventId }: Props) {
-  const { isAdmin, authVersion } = useAuth();
+  const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
   const router = useRouter();
   const [news, setNews] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  
+  const canApprovePosts = isAdminMaster || isSubadmin;
 
   const loadNews = async (reset = false) => {
     if (loading) return;
@@ -106,11 +107,12 @@ export default function NewsFeed({ eventId }: Props) {
   return (
     <Box padding={2} key={authVersion}>
           {/* AÇÕES ADMIN — SEMPRE NO TOPO */}
-      {isAdmin && (
-        <Box display="flex" justifyContent="flex-end" marginBottom={2}>
+      {canCreatePost && (
+        <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
+          {canApprovePosts && <PendingPostsNotification />}
           <Button
             variant="contained"
-            onClick={() => setCreateModalOpen(true)}
+            onClick={() => router.push(`/pages/news/create?eventId=${eventId}`)}
             sx={{
               backgroundColor: "#ffcc01",
               color: "#000",
@@ -151,10 +153,10 @@ export default function NewsFeed({ eventId }: Props) {
                 },
               }}
             >
-              {featured.image_url && (
+              {featured.images && featured.images.length > 0 && (
                 <CardMedia
                   component="img"
-                  image={featured.image_url}
+                  image={featured.images[0].image_url}
                   alt={featured.title}
                   sx={{
                     width: "100%",
@@ -212,10 +214,10 @@ export default function NewsFeed({ eventId }: Props) {
                     },
                   }}
                 >
-                  {item.image_url && (
+                  {item.images && item.images.length > 0 && (
                     <CardMedia
                       component="img"
-                      image={item.image_url}
+                      image={item.images[0].image_url}
                       alt={item.title}
                       sx={{
                         width: 100,
@@ -276,16 +278,6 @@ export default function NewsFeed({ eventId }: Props) {
       )}
 
       {hasMore && <div ref={loaderRef} />}
-
-      {/* Modal de criar news */}
-      {isAdmin && (
-        <CreateNewsModal
-          open={createModalOpen}
-          eventId={eventId}
-          onClose={() => setCreateModalOpen(false)}
-          onSuccess={handleUpdate}
-        />
-      )}
     </Box>
   );
 }

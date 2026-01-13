@@ -10,14 +10,24 @@ import React, {
 import { jwtDecode } from "jwt-decode";
 interface TokenPayload {
   sub: string;
-  role: "admin" | "user";
+  role: "admin_master" | "subadmin" | "colunista" | "user" | "admin"; // Mantém "admin" para compatibilidade
   exp: number;
 }
 
+type UserRole = "admin_master" | "subadmin" | "colunista" | "user" | "admin" | null;
+
 interface AuthContextType {
   isAuthenticated: boolean;
-  role: "admin" | "user" | null;
-  isAdmin: boolean;
+  role: UserRole;
+  isAdminMaster: boolean;
+  isSubadmin: boolean;
+  isColunista: boolean;
+  isAdmin: boolean; // Mantido para compatibilidade (admin_master ou subadmin)
+  canCreatePost: boolean;
+  canApprovePost: boolean;
+  canCreateEvent: boolean;
+  canInviteSubadmin: boolean;
+  canInviteColunista: boolean;
   authReady: boolean;
   authVersion: number;
   login: (accessToken: string, refreshToken: string) => void;
@@ -63,9 +73,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   const [isAuthenticated, setIsAuthenticated] = useState(
     initialState.isAuthenticated
   );
-  const [role, setRole] = useState<"admin" | "user" | null>(initialState.role);
+  const [role, setRole] = useState<UserRole>(initialState.role);
   const [authReady, setAuthReady] = useState(false);
   const [authVersion, setAuthVersion] = useState(0);
+
+  // Computed permissions
+  const isAdminMaster = role === "admin_master";
+  const isSubadmin = role === "subadmin";
+  const isColunista = role === "colunista";
+  const isAdmin = role === "admin_master" || role === "subadmin" || role === "admin"; // Compatibilidade
+  const canCreatePost = role === "admin_master" || role === "subadmin" || role === "colunista";
+  const canApprovePost = role === "admin_master" || role === "subadmin";
+  const canCreateEvent = role === "admin_master" || role === "subadmin";
+  const canInviteSubadmin = role === "admin_master";
+  const canInviteColunista = role === "admin_master" || role === "subadmin";
 
   /* Marca o contexto como pronto após o boot inicial */
   useEffect(() => {
@@ -125,7 +146,15 @@ const login = useCallback(
       value={{
         isAuthenticated,
         role,
-        isAdmin: role === "admin",
+        isAdminMaster,
+        isSubadmin,
+        isColunista,
+        isAdmin,
+        canCreatePost,
+        canApprovePost,
+        canCreateEvent,
+        canInviteSubadmin,
+        canInviteColunista,
         authReady,
         authVersion,
         login,

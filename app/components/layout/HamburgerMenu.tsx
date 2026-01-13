@@ -49,7 +49,7 @@ export default function HamburgerMenu({
   currentEvent,
   onSelectEvent,
 }: Props) {
-  const { isAdmin, logout } = useAuth();
+  const { isAdmin, isAdminMaster, isSubadmin, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [openEvents, setOpenEvents] = useState(false);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
@@ -412,22 +412,22 @@ export default function HamburgerMenu({
             </ListItemButton>
           </ListItem>
         
-                {/* ───────── ADICIONAR ADMINISTRADOR (ADMIN ONLY) ───────── */}
-                {isAdmin && (
+                {/* ───────── PERMISSÕES (ADMIN MASTER E SUBADMIN) ───────── */}
+                {(isAdminMaster || isSubadmin) && (
              <>
                <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
                <ListItem disablePadding>
                  <ListItemButton
                    onClick={() => {
-                     router.push("/pages/admin/invite");
+                     router.push("/pages/admin/permissions");
                      setOpen(false);
                    }}
                  >
                    <AdminPanelSettingsIcon sx={{ mr: 2, color: "white" }} />
 
                    <ListItemText
-                     primary="Adicionar Administrador"
-                     secondary="Convidar novo admin"
+                     primary="Permissões"
+                     secondary="Gerenciar usuários e permissões"
                      primaryTypographyProps={{ fontWeight: 600 }}
                      secondaryTypographyProps={{
                        sx: { color: "rgba(255,255,255,0.6)" },
@@ -517,9 +517,11 @@ export default function HamburgerMenu({
           paper: {
             sx: {
               zIndex: 1501,
-              minWidth: 10,
+              minWidth: 180,
+              backgroundColor: "rgba(26, 26, 26, 0.95)",
+              backdropFilter: "blur(20px)",
               borderRadius: 3,
-              border: "1px solid rgba(255,255,255,0.12)",
+              border: "1px solid rgba(255,255,255,0.1)",
               boxShadow: "0 10px 30px rgba(0,0,0,0.45)",
             },
           },
@@ -534,26 +536,34 @@ export default function HamburgerMenu({
         }}
       >
         <MenuItem
-          sx={{ zIndex: 1500 }}
           onClick={() => {
             if (!menuEvent) return;
             handleCloseMenu();
-
-            
             router.push(`/pages/admin/events/${menuEvent.id}`);
+          }}
+          sx={{
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.08)",
+            },
           }}
         >
           <ListItemIcon>
-            <VisibilityIcon fontSize="small" />
+            <VisibilityIcon fontSize="small" sx={{ color: "#fff" }} />
           </ListItemIcon>
-          <ListItemText>Detalhes</ListItemText>
+          <ListItemText 
+            primary="Detalhes"
+            primaryTypographyProps={{
+              sx: { color: "#fff", fontSize: "0.875rem" }
+            }}
+          />
         </MenuItem>
         <Divider
           sx={{
-            my: 0.3, // espaçamento vertical mínimo
-            mx: 1.5, // afasta das laterais
-            borderBottomWidth: "0.5px", // linha mais fina
-            borderColor: "rgba(0,0,0,0.35)", // preto suave
+            my: 0.3,
+            mx: 1.5,
+            borderBottomWidth: "0.5px",
+            borderColor: "rgba(255,255,255,0.1)",
           }}
         />
 
@@ -561,16 +571,26 @@ export default function HamburgerMenu({
           <MenuItem
             onClick={() => {
               if (!menuEvent) return;
-
               setSelectedEvent(menuEvent);
               setDeactivateModalOpen(true);
               handleCloseMenu();
             }}
+            sx={{
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "rgba(255, 68, 68, 0.1)",
+              },
+            }}
           >
             <ListItemIcon>
-              <BlockIcon fontSize="small" />
+              <BlockIcon fontSize="small" sx={{ color: "#ff3040" }} />
             </ListItemIcon>
-            <ListItemText>Desativar evento</ListItemText>
+            <ListItemText 
+              primary="Desativar evento"
+              primaryTypographyProps={{
+                sx: { color: "#fff", fontSize: "0.875rem" }
+              }}
+            />
           </MenuItem>
         )}
       </Menu>

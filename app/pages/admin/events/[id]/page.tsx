@@ -155,7 +155,10 @@ export default function EventDetailsPage() {
         minHeight: "100vh",
         height: "100vh",
         overflowY: "auto",
-        backgroundColor: "#000",
+        backgroundImage: "url(/background/dashboard.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
         color: "#fff",
         display: "flex",
         flexDirection: "column",
@@ -171,7 +174,8 @@ export default function EventDetailsPage() {
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           position: "sticky",
           top: 0,
-          backgroundColor: "#000",
+          backgroundColor: "rgba(0, 0, 0, 0.3)",
+          backdropFilter: "blur(10px)",
           zIndex: 10,
         }}
       >
@@ -183,7 +187,7 @@ export default function EventDetailsPage() {
           >
             <ArrowBackIosIcon />
           </IconButton>
-          <Typography variant="h5" fontWeight={700} sx={{ color: "#fff" }}>
+          <Typography  fontWeight={700} sx={{ color: "#fff", fontSize: "1.2rem" }}>
             Detalhes do Evento
           </Typography>
         </Box>
@@ -222,10 +226,11 @@ export default function EventDetailsPage() {
               src={event.banner_image}
               alt={event.title}
               sx={{
-                width: 280,
-                height: 280,
+                width: 200,
+                height: 200,
                 objectFit: "cover",
                 borderRadius: "50%",
+                border: "3px solid rgba(255, 201, 31, 0.3)",
               }}
             />
           </Box>
@@ -235,11 +240,13 @@ export default function EventDetailsPage() {
         <Paper
           elevation={0}
           sx={{
-            backgroundColor: "rgba(255,255,255,0.05)",
-            borderRadius: 2,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 3,
             p: 3,
             maxWidth: 900,
             mx: "auto",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
           {/* TÍTULO + STATUS */}
@@ -261,10 +268,11 @@ export default function EventDetailsPage() {
               label={event.is_active ? "Ativo" : "Inativo"}
               sx={{
                 backgroundColor: event.is_active
-                  ? "rgba(76, 175, 80, 0.2)"
+                  ? "rgba(46, 204, 113, 0.2)"
                   : "rgba(158, 158, 158, 0.2)",
-                color: event.is_active ? "#4caf50" : "#9e9e9e",
+                color: event.is_active ? "#2ecc71" : "#9e9e9e",
                 fontWeight: 600,
+                border: `1px solid ${event.is_active ? "rgba(46, 204, 113, 0.3)" : "rgba(158, 158, 158, 0.3)"}`,
               }}
             />
           </Box>
@@ -273,10 +281,10 @@ export default function EventDetailsPage() {
 
           {/* DESCRIÇÃO */}
           <Box sx={{ mb: 3 }}>
-            <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+            <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Descrição
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
               {event.description || "Sem descrição"}
             </Typography>
           </Box>
@@ -284,10 +292,10 @@ export default function EventDetailsPage() {
           {/* LOCALIZAÇÃO */}
           {event.location && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 Localização
               </Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
                 {event.location}
               </Typography>
             </Box>
@@ -295,10 +303,10 @@ export default function EventDetailsPage() {
 
           {/* DATAS */}
           <Box sx={{ mb: 3 }}>
-            <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+            <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Datas do Evento
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "1.1rem" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "1rem", lineHeight: 1.6 }}>
               {formatEventDates(event)}
             </Typography>
           </Box>
@@ -313,10 +321,10 @@ export default function EventDetailsPage() {
               }}
             >
               <Box>
-                <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+                <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Horário de Início
                 </Typography>
-                <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
                   {new Date(event.starts_at).toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -325,10 +333,10 @@ export default function EventDetailsPage() {
               </Box>
 
               <Box>
-                <Typography fontWeight={600} mb={1} sx={{ color: "#ffc91f" }}>
+                <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                   Horário de Término
                 </Typography>
-                <Typography sx={{ color: "rgba(255,255,255,0.9)" }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
                   {new Date(event.ends_at).toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -361,6 +369,8 @@ export default function EventDetailsPage() {
                 color: "#000",
                 fontWeight: 600,
                 py: 1.5,
+                borderRadius: "14px",
+                textTransform: "none",
                 "&:hover": {
                   backgroundColor: "#e6b800",
                 },
@@ -378,6 +388,8 @@ export default function EventDetailsPage() {
                 color: "#000",
                 fontWeight: 600,
                 py: 1.5,
+                borderRadius: "14px",
+                textTransform: "none",
                 "&:hover": {
                   backgroundColor: "#e6b800",
                 },
@@ -418,10 +430,12 @@ export default function EventDetailsPage() {
             <Paper
               elevation={0}
               sx={{
-                backgroundColor: "rgba(255,255,255,0.05)",
-                borderRadius: 2,
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 3,
                 p: 3,
                 textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
               }}
             >
               <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
@@ -434,15 +448,18 @@ export default function EventDetailsPage() {
                 key={school.id}
                 elevation={0}
                 sx={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  borderRadius: 2,
+                  backgroundColor: "rgba(0, 0, 0, 0.4)",
+                  backdropFilter: "blur(10px)",
+                  borderRadius: 3,
                   p: 2,
                   mb: 2,
                   cursor: "pointer",
                   transition: "all 0.2s",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                   "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.08)",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
                     transform: "translateY(-2px)",
+                    border: "1px solid rgba(255, 201, 31, 0.3)",
                   },
                 }}
                 onClick={() =>
@@ -526,10 +543,12 @@ export default function EventDetailsPage() {
             <Paper
               elevation={0}
               sx={{
-                backgroundColor: "rgba(255,255,255,0.05)",
-                borderRadius: 2,
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 3,
                 p: 3,
                 textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
               }}
             >
               <Typography sx={{ color: "rgba(255,255,255,0.6)" }}>
@@ -542,15 +561,18 @@ export default function EventDetailsPage() {
                 key={music.id}
                 elevation={0}
                 sx={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  borderRadius: 2,
+                  backgroundColor: "rgba(0, 0, 0, 0.4)",
+                  backdropFilter: "blur(10px)",
+                  borderRadius: 3,
                   p: 2,
                   mb: 2,
                   cursor: "pointer",
                   transition: "all 0.2s",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                   "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.08)",
+                    backgroundColor: "rgba(0, 0, 0, 0.5)",
                     transform: "translateY(-2px)",
+                    border: "1px solid rgba(255, 201, 31, 0.3)",
                   },
                 }}
                 onClick={() =>
