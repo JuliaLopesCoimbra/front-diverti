@@ -2,25 +2,39 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Typography, Divider, Skeleton } from "@mui/material";
+import { Box, Typography, Skeleton, IconButton } from "@mui/material";
+import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { useAuth } from "@/app/context/AuthContext";
 import BottomNav from "@/app/components/layout/BottomNav";
 import HomeHeader from "@/app/components/home/HeaderHome";
 import { EventResponse, getEvents } from "@/app/services/events/eventService";
 import MyPosts from "@/app/components/my-posts/MyPosts";
 import MyPhotos from "@/app/components/my-photos/MyPhotos";
+import MyPendingPosts from "@/app/components/my-posts/MyPendingPosts";
+import MenuOptions from "@/app/components/my-photos/MenuOptions";
+
+type ViewMode = "menu" | "posts" | "photos" | "pending";
 
 export default function MyPhotosPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin, isColunista } = useAuth();
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<ViewMode>("menu");
+  
+  // Para usuários comuns, sempre mostrar fotos diretamente
+  const isRegularUser = !isAdminMaster && !isSubadmin && !isColunista;
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/pages/auth/login");
       return;
+    }
+
+    // Para usuários comuns, definir viewMode como "photos" diretamente
+    if (isRegularUser) {
+      setViewMode("photos");
     }
 
     // Carrega eventos para o header
@@ -37,7 +51,81 @@ export default function MyPhotosPage() {
       .finally(() => {
         setLoading(false);
       });
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, isRegularUser]);
+
+  const handleSelectOption = (option: string) => {
+    setViewMode(option as ViewMode);
+  };
+
+  const handleBackToMenu = () => {
+    setViewMode("menu");
+  };
+
+  const renderContent = () => {
+    if (isRegularUser) {
+      // Usuários comuns veem apenas fotos compradas
+      return <MyPhotos />;
+    }
+
+    // Admin, subadmin e colunistas veem menu ou conteúdo específico
+    switch (viewMode) {
+      case "menu":
+        return <MenuOptions onSelectOption={handleSelectOption} />;
+      case "posts":
+        return (
+          <Box>
+            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+              <IconButton
+                onClick={handleBackToMenu}
+                sx={{ color: "#fff" }}
+              >
+                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                Meus Posts
+              </Typography>
+            </Box>
+            <MyPosts hideTitle currentEvent={currentEvent} />
+          </Box>
+        );
+      case "photos":
+        return (
+          <Box>
+            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+              <IconButton
+                onClick={handleBackToMenu}
+                sx={{ color: "#fff" }}
+              >
+                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                Fotos Compradas
+              </Typography>
+            </Box>
+            <MyPhotos hideTitle />
+          </Box>
+        );
+      case "pending":
+        return (
+          <Box>
+            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+              <IconButton
+                onClick={handleBackToMenu}
+                sx={{ color: "#fff" }}
+              >
+                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+              </IconButton>
+              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                Posts Pendentes
+              </Typography>
+            </Box>
+            <MyPendingPosts hideTitle />
+          </Box>
+        );
+      default:
+        return <MenuOptions onSelectOption={handleSelectOption} />;
+    }
+  };
 
   if (!isAuthenticated || loading) {
     return (
@@ -248,27 +336,7 @@ export default function MyPhotosPage() {
         />
 
         {/* Conteúdo baseado no tipo de usuário */}
-        {isAdmin ? (
-          <>
-            {/* Para admin: mostra posts primeiro */}
-            <MyPosts />
-            
-            {/* Divisor */}
-            <Divider
-              sx={{
-                borderColor: "rgba(255,255,255,0.35)",
-                borderWidth: "1px",
-                marginY: 2,
-              }}
-            />
-
-            {/* Depois mostra histórico de compras */}
-            <MyPhotos />
-          </>
-        ) : (
-          // Para usuário: mostra apenas fotos compradas
-          <MyPhotos />
-        )}
+        {renderContent()}
       </Box>
       <BottomNav />
     </>

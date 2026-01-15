@@ -142,6 +142,35 @@ export default function EditEventForm({
       return;
     }
 
+    // Validação de datas: não permitir datas no passado
+    if (startDate) {
+      const startDateObj = new Date(startDate);
+      const now = new Date();
+      if (startDateObj <= now) {
+        showToast("A data de início deve ser no futuro", "error");
+        return;
+      }
+    }
+
+    if (endDate) {
+      const endDateObj = new Date(endDate);
+      const now = new Date();
+      if (endDateObj <= now) {
+        showToast("A data de término deve ser no futuro", "error");
+        return;
+      }
+    }
+
+    // Validação: data de término deve ser após data de início
+    if (startDate && endDate) {
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      if (endDateObj <= startDateObj) {
+        showToast("A data de término deve ser posterior à data de início", "error");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -360,6 +389,9 @@ export default function EditEventForm({
             onChange={(e) => setStartDate(e.target.value)}
             disabled={loading}
             required
+            inputProps={{
+              min: new Date().toISOString().slice(0, 16),
+            }}
             InputLabelProps={{
               shrink: true,
             }}
@@ -395,6 +427,9 @@ export default function EditEventForm({
             onChange={(e) => setEndDate(e.target.value)}
             disabled={loading}
             required
+            inputProps={{
+              min: startDate || new Date().toISOString().slice(0, 16),
+            }}
             InputLabelProps={{
               shrink: true,
             }}

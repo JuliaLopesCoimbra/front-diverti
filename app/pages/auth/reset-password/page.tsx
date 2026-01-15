@@ -13,6 +13,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import axios from "axios";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
+import { validatePassword } from "@/app/utils/passwordValidator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -26,6 +27,7 @@ function ResetPasswordContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const { showToast } = useToast();
 
   const passwordsMatch =
@@ -34,8 +36,9 @@ function ResetPasswordContent() {
     new_password === confirmPassword;
 
   const handleReset = async () => {
-    if (new_password.length < 6) {
-      showToast("A senha deve ter no mínimo 6 caracteres.", "error");
+    const passwordValidation = validatePassword(new_password);
+    if (!passwordValidation.isValid) {
+      showToast(`Senha inválida: ${passwordValidation.errors.join(", ")}`, "error");
       return;
     }
 
@@ -114,11 +117,17 @@ function ResetPasswordContent() {
           variant="outlined"
           type={showPassword ? "text" : "password"}
           value={new_password}
-          onChange={(e) => setNewPassword(e.target.value)}
-          error={Boolean(new_password && new_password.length < 6)}
+          onChange={(e) => {
+            setNewPassword(e.target.value);
+            const validation = validatePassword(e.target.value);
+            setPasswordErrors(validation.errors);
+          }}
+          error={new_password.length > 0 && passwordErrors.length > 0}
           helperText={
-            new_password && new_password.length < 6
-              ? "A senha deve ter no mínimo 6 caracteres"
+            new_password.length > 0 && passwordErrors.length > 0
+              ? passwordErrors.join(", ")
+              : new_password.length > 0
+              ? "A senha deve ter: mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial"
               : ""
           }
           InputLabelProps={{
@@ -131,7 +140,7 @@ function ResetPasswordContent() {
             },
           }}
           FormHelperTextProps={{
-            sx: { color: "#ff6b6b", fontSize: 12 },
+            sx: { color: "#ff6b6b", fontSize: "0.75rem" },
           }}
           InputProps={{
             endAdornment: (
@@ -152,13 +161,13 @@ function ResetPasswordContent() {
               color: "#fff",
               borderRadius: "14px",
               "& fieldset": {
-                borderColor: new_password && new_password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: new_password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&:hover fieldset": {
-                borderColor: new_password && new_password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: new_password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&.Mui-focused fieldset": {
-                borderColor: new_password && new_password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: new_password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&.Mui-error fieldset": {
                 borderColor: "#ff6b6b",

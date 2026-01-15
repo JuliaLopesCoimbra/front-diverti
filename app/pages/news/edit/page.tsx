@@ -20,7 +20,7 @@ import { getEvents, EventResponse } from "@/app/services/events/eventService";
 function EditNewsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { canCreatePost } = useAuth();
+  const { canCreatePost, isColunista } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -45,12 +45,20 @@ function EditNewsPageContent() {
       return;
     }
 
-    // Pega newsId da URL
+    // Pega newsId e eventId da URL
     const newsIdParam = searchParams.get("newsId");
+    const eventIdParam = searchParams.get("eventId");
     if (newsIdParam) {
       const id = parseInt(newsIdParam, 10);
       setNewsId(id);
-      loadNews(id);
+      if (eventIdParam) {
+        const eventId = parseInt(eventIdParam, 10);
+        setEventId(eventId);
+        loadNews(eventId, id);
+      } else {
+        // Se não tiver eventId, tenta carregar primeiro para obter o event_id
+        loadNewsWithoutEventId(id);
+      }
     } else {
       showToast("ID da notícia não fornecido", "error");
       router.back();
@@ -71,10 +79,17 @@ function EditNewsPageContent() {
     loadEvents();
   }, [canCreatePost, router, searchParams, showToast]);
 
-  const loadNews = async (id: number) => {
+  const loadNewsWithoutEventId = async (id: number) => {
+    // Primeiro tenta obter o event_id usando o endpoint básico
+    // Mas como não temos esse endpoint no front, vamos exigir que o eventId seja passado
+    showToast("Evento não encontrado. Por favor, acesse a página através do evento.", "error");
+    router.back();
+  };
+
+  const loadNews = async (eventId: number, id: number) => {
     setLoadingNews(true);
     try {
-      const data = await getNewsDetails(id);
+      const data = await getNewsDetails(id, eventId);
       setNews(data);
       setTitle(data.title);
       setContent(data.content);
@@ -224,8 +239,22 @@ function EditNewsPageContent() {
         replace_all: hasRemovals, // Se removeu alguma, substitui todas
       });
 
-      showToast("Notícia atualizada com sucesso!", "success");
-      router.push(`/pages/news/${newsId}`);
+      // Verifica se é colunista editando um post aprovado
+      // Se for, redireciona para a lista de pending
+      if (isColunista && news?.status === "approved") {
+        showToast("Notícia atualizada! Post enviado para aprovação novamente.", "success");
+        const redirectUrl = eventId 
+          ? `/pages/admin/pending-posts?eventId=${eventId}`
+          : "/pages/admin/pending-posts";
+        router.push(redirectUrl);
+      } else {
+        showToast("Notícia atualizada com sucesso!", "success");
+        // Inclui o eventId na URL ao redirecionar
+        const redirectUrl = eventId 
+          ? `/pages/news/${newsId}?eventId=${eventId}`
+          : `/pages/news/${newsId}`;
+        router.push(redirectUrl);
+      }
     } catch (error: any) {
       const message =
         error.response?.data?.detail || "Erro ao atualizar notícia";

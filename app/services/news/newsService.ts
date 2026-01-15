@@ -12,7 +12,11 @@ export interface NewsResponse {
   content: string;
   images: NewsImage[];
   created_at: string;
+  approved_at?: string;
+  deleted_at?: string;
+  deleted_by_id?: number;
   event_id?: number;
+  status?: "pending" | "approved" | "rejected" | "deleted";
 }
 
 export interface NewsAuthor {
@@ -27,6 +31,7 @@ export interface NewsComment {
   created_at: string;
   parent_comment_id?: number | null;
   deleted_at?: string | null;
+  deleted_by_user_id?: number | null;
   likes: {
     count: number;
     user_liked: boolean;
@@ -50,8 +55,13 @@ export interface NewsDetailsResponse {
   content: string;
   images: NewsImage[];
   event_id: number;
+  status?: "pending" | "approved" | "rejected" | "deleted";
   created_at: string;
   updated_at?: string;
+  approved_at?: string;
+  approved_by_id?: number;
+  deleted_at?: string;
+  deleted_by_id?: number;
   author: NewsAuthor | null;
   likes: NewsLikes;
   comments: NewsComment[];
@@ -74,9 +84,11 @@ export const getEventNews = async (
 };
 
 export const getNewsDetails = async (
-  newsId: number
+  newsId: number,
+  eventId?: number
 ): Promise<NewsDetailsResponse> => {
-  const response = await api.get(`/news/${newsId}/details`);
+  const params = eventId ? { event_id: eventId } : {};
+  const response = await api.get(`/news/${newsId}/details`, { params });
   return response.data as NewsDetailsResponse;
 };
 
@@ -176,8 +188,9 @@ export const deleteNews = async (
 };
 
 // Endpoints para posts pendentes
-export const getPendingPosts = async (): Promise<NewsResponse[]> => {
-  const response = await api.get("/admin/events/news/pending");
+export const getPendingPosts = async (eventId?: number): Promise<NewsResponse[]> => {
+  const params = eventId ? { event_id: eventId } : {};
+  const response = await api.get("/admin/events/news/pending", { params });
   return response.data as NewsResponse[];
 };
 

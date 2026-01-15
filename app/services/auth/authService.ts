@@ -127,6 +127,32 @@ export const verifyEmail = async (token: string) => {
   const response = await api.post("/auth/verify-email", { token });
   return response.data;
 };
+
+export const resendVerificationEmail = async (email: string): Promise<void> => {
+  try {
+    await axios.post(`${API_URL}/auth/resend-verification`, { email });
+  } catch (error: unknown) {
+    const err = error as {
+      response?: {
+        data?: {
+          detail?: string;
+          message?: string;
+        };
+        status?: number;
+      };
+      message?: string;
+    };
+
+    const message =
+      err.response?.data?.detail ||
+      err.response?.data?.message ||
+      err.message ||
+      "Erro ao reenviar email de verificação";
+
+    throw new Error(message);
+  }
+};
+
 export const getMe = async (): Promise<MeResponse> => {
   const response = await api.get<MeResponse>("/auth/me");
   return response.data;

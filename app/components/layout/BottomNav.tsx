@@ -3,7 +3,6 @@
 import { Box, IconButton } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import StoreIcon from "@mui/icons-material/Store";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -14,7 +13,7 @@ export default function BottomNav() {
   const items = [
     { path: "/pages/user/home", icon: <HomeIcon /> },
     { path: "/pages/user/liked", icon: <FavoriteIcon /> },
-    { path: "/notifications", icon: <NotificationsIcon /> },
+  
     { path: "/pages/user/my-photos", icon: <StoreIcon /> },
   ];
 

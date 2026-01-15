@@ -13,18 +13,16 @@ import {
   Chip,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
-import { getMyPosts } from "@/app/services/myPosts/myPostsService";
+import { getMyPendingPosts } from "@/app/services/myPosts/myPostsService";
 import { NewsResponse } from "@/app/services/news/newsService";
-import { EventResponse } from "@/app/services/events/eventService";
 
 const LIMIT = 10;
 
-interface MyPostsProps {
+interface MyPendingPostsProps {
   hideTitle?: boolean;
-  currentEvent?: EventResponse | null;
 }
 
-export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProps) {
+export default function MyPendingPosts({ hideTitle = false }: MyPendingPostsProps) {
   const router = useRouter();
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
@@ -39,10 +37,13 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     setLoading(true);
 
     const nextOffset = reset ? 0 : offset;
-    const eventId = currentEvent?.id;
+    
+    // Obtém o eventId do localStorage (evento selecionado no ambiente)
+    const selectedEventId = localStorage.getItem("selectedEventId");
+    const eventId = selectedEventId ? parseInt(selectedEventId, 10) : undefined;
 
     try {
-      const data = await getMyPosts(eventId, LIMIT, nextOffset);
+      const data = await getMyPendingPosts(eventId, LIMIT, nextOffset);
 
       setPosts((prev) => {
         const merged = reset ? data : [...prev, ...data];
@@ -58,20 +59,16 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
         setHasMore(false);
       }
     } catch (err) {
-      console.error("Erro ao carregar meus posts", err);
+      console.error("Erro ao carregar posts pendentes", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Resetar estado quando o evento mudar
-    setOffset(0);
-    setHasMore(true);
-    setPosts([]);
     loadPosts(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentEvent?.id]);
+  }, []);
 
   // infinite scroll
   useEffect(() => {
@@ -91,13 +88,11 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, offset]);
 
-  const handlePostClick = (post: NewsResponse) => {
-    // Posts rejeitados não podem ser abertos
-    if (post.status === "rejected") {
-      return;
-    }
-    const eventIdParam = post.event_id ? `?eventId=${post.event_id}` : '';
-    router.push(`/pages/news/${post.id}${eventIdParam}`);
+  const handlePostClick = (newsId: number) => {
+    // Posts pendentes não devem ser acessíveis pela rota pública
+    // Não redireciona ou pode redirecionar para uma página de visualização apenas
+    // Por enquanto, não faz nada ou pode mostrar uma mensagem
+    return;
   };
 
   if (loading && posts.length === 0) {
@@ -113,10 +108,10 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     return (
       <Box padding={2} textAlign="center">
         <Typography variant="body1" fontWeight={500} sx={{ color: "#fff", marginBottom: 1, fontSize: "0.9375rem" }}>
-          Nenhum post encontrado
+          Nenhum post pendente
         </Typography>
         <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
-          Você ainda não postou nenhuma notícia.
+          Você não tem posts aguardando aprovação.
         </Typography>
       </Box>
     );
@@ -130,7 +125,7 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
           fontWeight={500}
           sx={{ color: "#fff", marginBottom: 2, fontSize: "1rem" }}
         >
-          Meus Posts
+          Posts Pendentes
         </Typography>
       )}
 
@@ -138,7 +133,7 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
         {posts.map((post, index) => (
           <Box key={post.id}>
             <Card
-              onClick={() => handlePostClick(post)}
+              onClick={() => handlePostClick(post.id)}
               sx={{
                 display: "flex",
                 gap: 2,
@@ -146,11 +141,10 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
                 boxShadow: "none",
                 color: "#fff",
                 paddingBottom: 1,
-                cursor: post.status === "rejected" ? "default" : "pointer",
+                cursor: "default",
                 transition: "opacity 0.2s",
-                opacity: post.status === "rejected" ? 0.6 : 1,
                 "&:hover": {
-                  opacity: post.status === "rejected" ? 0.6 : 0.8,
+                  opacity: 1,
                 },
               }}
             >
@@ -170,27 +164,20 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
               )}
 
               <CardContent sx={{ padding: 1, flex: 1 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                  <Typography fontWeight={500} sx={{ color: "#fff", fontSize: "0.9375rem", flex: 1 }}>
+                <Box display="flex" alignItems="center" gap={1} marginBottom={0.5}>
+                  <Typography fontWeight={500} sx={{ color: "#fff", fontSize: "0.9375rem" }}>
                     {post.title}
                   </Typography>
-                  {post.status === "rejected" && (
-                    <Chip
-                      label="Rejeitado"
-                      size="small"
-                      sx={{
-                        backgroundColor: "rgba(255, 48, 64, 0.2)",
-                        color: "#ff3040",
-                        fontWeight: 600,
-                        fontSize: "0.75rem",
-                        height: 20,
-                        border: "1px solid rgba(255, 48, 64, 0.3)",
-                        "& .MuiChip-label": {
-                          padding: "0 8px",
-                        },
-                      }}
-                    />
-                  )}
+                  <Chip
+                    label="Pendente"
+                    size="small"
+                    sx={{
+                      backgroundColor: "rgba(255, 193, 7, 0.2)",
+                      color: "#FFC107",
+                      fontSize: "0.7rem",
+                      height: 20,
+                    }}
+                  />
                 </Box>
 
                 <Typography

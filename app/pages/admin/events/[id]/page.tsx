@@ -11,6 +11,13 @@ import {
   Divider,
   IconButton,
   Paper,
+  FormControlLabel,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from "@mui/material";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
@@ -20,7 +27,9 @@ import SchoolIcon from '@mui/icons-material/School';
 import { 
   getEventById, 
   EventResponse, 
-  deleteEvent 
+  deleteEvent,
+  updatePostApprovalRequirement,
+  getPendingPostsCount,
 } from "@/app/services/events/eventService";
 import {
   getSambaSchoolsByEvent,
@@ -49,24 +58,54 @@ export default function EventDetailsPage() {
   const [loadingSchools, setLoadingSchools] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [updatingApproval, setUpdatingApproval] = useState(false);
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+  const [loadingPendingCount, setLoadingPendingCount] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || isDeleted) return;
 
     const fetchEvent = async () => {
       try {
         const data = await getEventById(eventId);
         setEvent(data);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Erro ao buscar evento", err);
-        showToast("Erro ao carregar evento", "error");
+        // Se o evento não foi encontrado (404), pode ter sido deletado
+        if (err?.response?.status === 404) {
+          showToast("Evento não encontrado ou foi deletado", "error");
+          router.replace("/pages/user/home");
+        } else {
+          showToast("Erro ao carregar evento", "error");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchEvent();
-  }, [eventId, showToast]);
+  }, [eventId, showToast, router, isDeleted]);
+
+  // Carrega a contagem de posts pendentes quando o evento é carregado
+  useEffect(() => {
+    if (!eventId || !isAdmin) return;
+
+    const fetchPendingCount = async () => {
+      try {
+        setLoadingPendingCount(true);
+        const data = await getPendingPostsCount(eventId);
+        setPendingCount(data.pending_count);
+      } catch (err) {
+        console.error("Erro ao buscar contagem de posts pendentes", err);
+      } finally {
+        setLoadingPendingCount(false);
+      }
+    };
+
+    fetchPendingCount();
+  }, [eventId, isAdmin]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -96,9 +135,11 @@ export default function EventDetailsPage() {
     setDeleting(true);
     try {
       await deleteEvent(eventId);
+      setIsDeleted(true); // Marca como deletado para evitar recarregar
       showToast("Evento excluído com sucesso!", "success");
       setDeleteModalOpen(false);
-      router.push("/pages/user/home");
+      // Redireciona imediatamente para evitar que o useEffect tente recarregar
+      router.replace("/pages/user/home");
     } catch (err: unknown) {
       if (err instanceof Error) {
         showToast(err.message, "error");
@@ -108,6 +149,51 @@ export default function EventDetailsPage() {
       throw err; // Re-throw para o modal tratar
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleApprovalChange = async (newValue: boolean) => {
+    if (!event) return;
+
+    // Se está desativando e há posts pendentes, abre modal de confirmação
+    if (!newValue && pendingCount && pendingCount > 0) {
+      setApprovalModalOpen(true);
+      return;
+    }
+
+    // Se está ativando ou não há posts pendentes, atualiza diretamente
+    await updateApprovalRequirement(newValue);
+  };
+
+  const updateApprovalRequirement = async (requiresApproval: boolean) => {
+    if (!event) return;
+
+    setUpdatingApproval(true);
+    try {
+      const updatedEvent = await updatePostApprovalRequirement(eventId, requiresApproval);
+      setEvent(updatedEvent);
+      showToast(
+        requiresApproval 
+          ? "Aprovação de posts ativada com sucesso!" 
+          : "Aprovação de posts desativada. Posts pendentes foram aprovados automaticamente.",
+        "success"
+      );
+      setApprovalModalOpen(false);
+      
+      // Atualiza a contagem de posts pendentes
+      if (!requiresApproval) {
+        setPendingCount(0);
+      } else {
+        const data = await getPendingPostsCount(eventId);
+        setPendingCount(data.pending_count);
+      }
+    } catch (err: any) {
+      showToast(
+        err.response?.data?.detail || "Erro ao atualizar configuração de aprovação",
+        "error"
+      );
+    } finally {
+      setUpdatingApproval(false);
     }
   };
 
@@ -343,6 +429,46 @@ export default function EventDetailsPage() {
                   })}
                 </Typography>
               </Box>
+            </Box>
+          )}
+
+          {/* CONFIGURAÇÃO DE APROVAÇÃO DE POSTS */}
+          {isAdmin && (
+            <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={!event.requires_post_approval}
+                    onChange={(e) => handleApprovalChange(!e.target.checked)}
+                    disabled={updatingApproval}
+                    sx={{
+                      color: "#ffc91f",
+                      "&.Mui-checked": {
+                        color: "#ffc91f",
+                      },
+                    }}
+                  />
+                }
+                label={
+                  <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "0.9375rem" }}>
+                    Tirar aprovação de segunda etapa de aprovação de posts desse evento
+                  </Typography>
+                }
+              />
+              {pendingCount !== null && pendingCount > 0 && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: "block",
+                    color: "rgba(255, 193, 7, 0.8)",
+                    mt: 1,
+                    ml: 4.5,
+                    fontSize: "0.8125rem",
+                  }}
+                >
+                  {pendingCount} {pendingCount === 1 ? "post pendente" : "posts pendentes"}
+                </Typography>
+              )}
             </Box>
           )}
         </Paper>
@@ -642,6 +768,64 @@ export default function EventDetailsPage() {
           loading={deleting}
         />
       )}
+
+      {/* Modal de confirmação para desativar aprovação */}
+      <Dialog
+        open={approvalModalOpen}
+        onClose={() => setApprovalModalOpen(false)}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            color: "#fff",
+            border: "1px solid rgba(255, 201, 31, 0.3)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#ffc91f", fontWeight: 600 }}>
+          Confirmar Desativação de Aprovação
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.9)", mb: 2 }}>
+            Ao desativar a aprovação de posts, todos os posts pendentes serão automaticamente aprovados e publicados no feed.
+          </DialogContentText>
+          {pendingCount !== null && pendingCount > 0 && (
+            <DialogContentText sx={{ color: "#ffc91f", fontWeight: 600 }}>
+              {pendingCount} {pendingCount === 1 ? "post pendente será aprovado" : "posts pendentes serão aprovados"}.
+            </DialogContentText>
+          )}
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.7)", mt: 2, fontSize: "0.875rem" }}>
+            Deseja continuar?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={() => setApprovalModalOpen(false)}
+            sx={{ color: "rgba(255,255,255,0.7)" }}
+            disabled={updatingApproval}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={() => updateApprovalRequirement(false)}
+            variant="contained"
+            sx={{
+              backgroundColor: "#ffc91f",
+              color: "#000",
+              fontWeight: 600,
+              "&:hover": {
+                backgroundColor: "#e6b800",
+              },
+            }}
+            disabled={updatingApproval}
+          >
+            {updatingApproval ? (
+              <CircularProgress size={20} sx={{ color: "#000" }} />
+            ) : (
+              "Confirmar"
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

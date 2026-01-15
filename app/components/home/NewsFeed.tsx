@@ -96,7 +96,7 @@ export default function NewsFeed({ eventId }: Props) {
   const [featured, ...others] = news;
 
   const handleNewsClick = (newsId: number) => {
-    router.push(`/pages/news/${newsId}`);
+    router.push(`/pages/news/${newsId}?eventId=${eventId}`);
   };
 
   const handleUpdate = () => {
@@ -109,7 +109,7 @@ export default function NewsFeed({ eventId }: Props) {
           {/* AÇÕES ADMIN — SEMPRE NO TOPO */}
       {canCreatePost && (
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
-          {canApprovePosts && <PendingPostsNotification />}
+          {canApprovePosts && <PendingPostsNotification eventId={eventId} />}
           <Button
             variant="contained"
             onClick={() => router.push(`/pages/news/create?eventId=${eventId}`)}

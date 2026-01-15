@@ -6,14 +6,18 @@ import { Badge, IconButton, Tooltip } from "@mui/material";
 import { PendingActions } from "@mui/icons-material";
 import { getPendingPosts } from "@/app/services/news/newsService";
 
-export default function PendingPostsNotification() {
+interface Props {
+  eventId?: number;
+}
+
+export default function PendingPostsNotification({ eventId }: Props) {
   const router = useRouter();
   const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const loadPendingCount = async () => {
     try {
-      const posts = await getPendingPosts();
+      const posts = await getPendingPosts(eventId);
       setPendingCount(posts.length);
     } catch (error) {
       console.error("Erro ao carregar posts pendentes", error);
@@ -28,22 +32,28 @@ export default function PendingPostsNotification() {
     // Atualiza a cada 30 segundos
     const interval = setInterval(loadPendingCount, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [eventId]);
 
   const handleClick = async () => {
     try {
-      const posts = await getPendingPosts();
+      const posts = await getPendingPosts(eventId);
+      const url = eventId 
+        ? `/pages/admin/pending-posts?eventId=${eventId}`
+        : "/pages/admin/pending-posts";
       
       // Se tiver apenas 1 post, vai direto para o detail
       if (posts.length === 1) {
-        router.push(`/pages/admin/pending-posts/${posts[0].id}`);
+        router.push(`/pages/admin/pending-posts/${posts[0].id}${eventId ? `?eventId=${eventId}` : ''}`);
       } else {
         // Se tiver mais de 1, vai para a lista
-        router.push("/pages/admin/pending-posts");
+        router.push(url);
       }
     } catch (error) {
       // Em caso de erro, vai para a lista mesmo assim
-      router.push("/pages/admin/pending-posts");
+      const url = eventId 
+        ? `/pages/admin/pending-posts?eventId=${eventId}`
+        : "/pages/admin/pending-posts";
+      router.push(url);
     }
   };
 

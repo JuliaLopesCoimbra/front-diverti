@@ -13,7 +13,11 @@ import {
   PurchasedPhoto,
 } from "@/app/services/myPhotos/myPhotosService";
 
-export default function MyPhotos() {
+interface MyPhotosProps {
+  hideTitle?: boolean;
+}
+
+export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
   const [photos, setPhotos] = useState<PurchasedPhoto[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,10 +57,10 @@ export default function MyPhotos() {
   if (photos.length === 0) {
     return (
       <Box padding={2} textAlign="center">
-        <Typography variant="h6" sx={{ color: "#fff", marginBottom: 1 }}>
+        <Typography variant="body1" fontWeight={500} sx={{ color: "#fff", marginBottom: 1, fontSize: "0.9375rem" }}>
           Nenhuma foto comprada
         </Typography>
-        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)" }}>
+        <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
           Você ainda não comprou nenhuma foto.
         </Typography>
       </Box>
@@ -65,13 +69,15 @@ export default function MyPhotos() {
 
   return (
     <Box padding={2}>
-      <Typography
-        variant="h6"
-        fontWeight={700}
-        sx={{ color: "#fff", marginBottom: 2 }}
-      >
-        Minhas Fotos Compradas
-      </Typography>
+      {!hideTitle && (
+        <Typography
+          variant="h6"
+          fontWeight={500}
+          sx={{ color: "#fff", marginBottom: 2, fontSize: "1rem" }}
+        >
+          Minhas Fotos Compradas
+        </Typography>
+      )}
 
       <Box sx={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 2 }}>
         {photos.map((photo) => (

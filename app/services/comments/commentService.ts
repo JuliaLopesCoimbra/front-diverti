@@ -17,6 +17,7 @@ export interface CommentResponse {
   created_at: string;
   parent_comment_id?: number | null;
   deleted_at?: string | null;
+  deleted_by_user_id?: number | null;
   likes: CommentLikes;
   replies_count: number;
   user: CommentUser;

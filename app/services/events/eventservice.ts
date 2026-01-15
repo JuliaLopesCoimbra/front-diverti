@@ -15,7 +15,10 @@ export interface EventResponse {
   ends_at: string;
   created_at: string;
   is_active: boolean;
+  requires_post_approval: boolean;
   event_dates?: string; // Campo opcional para múltiplas datas (formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21" ou "09,10,20,21 de janeiro")
+  deleted_at?: string;
+  deleted_by_id?: number;
 }
 
 export interface CreateEventData {
@@ -116,5 +119,20 @@ export const activateEvent = async (eventId: number) => {
 
 export const deactivateEvent = async (eventId: number) => {
   const response = await api.patch(`/admin/events/${eventId}/deactivate`);
+  return response.data;
+};
+
+export const updatePostApprovalRequirement = async (
+  eventId: number,
+  requiresApproval: boolean
+): Promise<EventResponse> => {
+  const response = await api.patch<EventResponse>(
+    `/admin/events/${eventId}/post-approval?requires_approval=${requiresApproval}`
+  );
+  return response.data;
+};
+
+export const getPendingPostsCount = async (eventId: number): Promise<{ event_id: number; pending_count: number }> => {
+  const response = await api.get<{ event_id: number; pending_count: number }>(`/admin/events/${eventId}/pending-posts-count`);
   return response.data;
 };

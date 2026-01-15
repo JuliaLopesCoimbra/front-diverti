@@ -47,12 +47,15 @@ export const didILike = async (
  * Listar todos os posts que o usuário curtiu
  */
 export const getLikedPosts = async (
+  eventId?: number,
   limit: number = 10,
   offset: number = 0
 ): Promise<NewsDetailsResponse[]> => {
-  const response = await api.get(`/news/likes/me`, {
-    params: { limit, offset },
-  });
+  const params: any = { limit, offset };
+  if (eventId !== undefined) {
+    params.event_id = eventId;
+  }
+  const response = await api.get(`/news/likes/me`, { params });
   return response.data as NewsDetailsResponse[];
 };
 

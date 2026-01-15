@@ -50,7 +50,7 @@ export default function NewsDetailModal({
   onClose,
   onUpdate,
 }: Props) {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, isColunista, canCreatePost } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -68,11 +68,11 @@ export default function NewsDetailModal({
 
     setLoading(true);
     try {
-      const data = await getNewsDetails(newsId);
+      const data = await getNewsDetails(newsId, eventId);
       setNews(data);
 
-      // Verifica se o usuário atual é o autor
-      if (isAuthenticated && isAdmin) {
+      // Verifica se o usuário atual é o autor (para admin ou colunista)
+      if (isAuthenticated && canCreatePost) {
         try {
           const me = await getMe();
           setCurrentUserId(me.id);
@@ -256,8 +256,8 @@ export default function NewsDetailModal({
               </Box>
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
-              {/* Botões de editar/excluir apenas para admin que é autor */}
-              {isAuthor && isAdmin && (
+              {/* Botões de editar/excluir apenas para autor (admin ou colunista) */}
+              {isAuthor && (isAdmin || isColunista) && (
                 <>
                   <IconButton
                     onClick={() => setEditModalOpen(true)}

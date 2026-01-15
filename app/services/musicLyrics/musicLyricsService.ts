@@ -8,6 +8,8 @@ export interface MusicLyricsResponse {
   image_url?: string;
   event_id: number;
   created_at: string;
+  deleted_at?: string;
+  deleted_by_id?: number;
 }
 
 export interface CreateMusicLyricsData {

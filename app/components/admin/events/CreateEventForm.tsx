@@ -65,6 +65,35 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
       return;
     }
 
+    // Validação de datas: não permitir datas no passado
+    if (startsAt) {
+      const startDate = new Date(startsAt);
+      const now = new Date();
+      if (startDate <= now) {
+        showToast("A data de início deve ser no futuro", "error");
+        return;
+      }
+    }
+
+    if (endsAt) {
+      const endDate = new Date(endsAt);
+      const now = new Date();
+      if (endDate <= now) {
+        showToast("A data de término deve ser no futuro", "error");
+        return;
+      }
+    }
+
+    // Validação: data de término deve ser após data de início
+    if (startsAt && endsAt) {
+      const startDate = new Date(startsAt);
+      const endDate = new Date(endsAt);
+      if (endDate <= startDate) {
+        showToast("A data de término deve ser posterior à data de início", "error");
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -259,6 +288,9 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
             disabled={loading}
+            inputProps={{
+              min: new Date().toISOString().slice(0, 16),
+            }}
             InputLabelProps={{
               shrink: true,
             }}
@@ -292,6 +324,9 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             value={endsAt}
             onChange={(e) => setEndsAt(e.target.value)}
             disabled={loading}
+            inputProps={{
+              min: startsAt || new Date().toISOString().slice(0, 16),
+            }}
             InputLabelProps={{
               shrink: true,
             }}

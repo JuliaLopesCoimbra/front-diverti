@@ -32,6 +32,7 @@ import { useToast } from "@/app/context/ToastContext";
 
 interface Props {
   postId: number;
+  eventId?: number;
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
@@ -39,6 +40,7 @@ interface Props {
 
 export default function PendingPostDetail({
   postId,
+  eventId,
   open,
   onClose,
   onUpdate,
@@ -52,9 +54,14 @@ export default function PendingPostDetail({
   const { showToast } = useToast();
 
   const loadNews = async () => {
+    if (!eventId) {
+      showToast("Evento não encontrado", "error");
+      onClose();
+      return;
+    }
     setLoading(true);
     try {
-      const data = await getNewsDetails(postId);
+      const data = await getNewsDetails(postId, eventId);
       setNews(data);
     } catch (error: any) {
       showToast(

@@ -67,7 +67,8 @@ export default function MusicLyricsDetailsPage() {
       await deleteMusicLyrics(eventId, musicId);
       showToast("Música/Letra excluída com sucesso!", "success");
       setDeleteModalOpen(false);
-      router.push(`/pages/admin/events/${eventId}`);
+      // Redireciona imediatamente para evitar que o useEffect tente recarregar
+      router.replace(`/pages/admin/events/${eventId}`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         showToast(err.message, "error");

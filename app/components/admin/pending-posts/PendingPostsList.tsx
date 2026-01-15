@@ -25,9 +25,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onUpdate: () => void;
+  eventId?: number;
 }
 
-export default function PendingPostsList({ open, onClose, onUpdate }: Props) {
+export default function PendingPostsList({ open, onClose, onUpdate, eventId }: Props) {
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
@@ -36,7 +37,7 @@ export default function PendingPostsList({ open, onClose, onUpdate }: Props) {
   const loadPosts = async () => {
     setLoading(true);
     try {
-      const data = await getPendingPosts();
+      const data = await getPendingPosts(eventId);
       setPosts(data);
     } catch (error: any) {
       showToast(
@@ -53,7 +54,7 @@ export default function PendingPostsList({ open, onClose, onUpdate }: Props) {
       loadPosts();
       setSelectedPostId(null);
     }
-  }, [open]);
+  }, [open, eventId]);
 
   // Se tiver apenas 1 post, abre direto o detail
   useEffect(() => {
@@ -189,6 +190,7 @@ export default function PendingPostsList({ open, onClose, onUpdate }: Props) {
       {selectedPostId && (
         <PendingPostDetail
           postId={selectedPostId}
+          eventId={eventId}
           open={selectedPostId !== null}
           onClose={handleCloseDetail}
           onUpdate={onUpdate}

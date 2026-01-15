@@ -43,9 +43,13 @@ export default function LikedPostsPage() {
     setLoading(true);
 
     const nextOffset = reset ? 0 : offset;
+    
+    // Obtém o eventId do localStorage (evento selecionado no ambiente)
+    const selectedEventId = localStorage.getItem("selectedEventId");
+    const eventId = selectedEventId ? parseInt(selectedEventId, 10) : undefined;
 
     try {
-      const data = await getLikedPosts(LIMIT, nextOffset);
+      const data = await getLikedPosts(eventId, LIMIT, nextOffset);
 
       setPosts((prev) => {
         const merged = reset ? data : [...prev, ...data];
@@ -115,8 +119,9 @@ export default function LikedPostsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, offset, isAuthenticated]);
 
-  const handlePostClick = (newsId: number) => {
-    router.push(`/pages/news/${newsId}`);
+  const handlePostClick = (post: NewsDetailsResponse) => {
+    const eventIdParam = post.event_id ? `?eventId=${post.event_id}` : '';
+    router.push(`/pages/news/${post.id}${eventIdParam}`);
   };
 
   const formatTimeAgo = (dateString: string) => {
@@ -198,13 +203,7 @@ export default function LikedPostsPage() {
            
           }}
         >
-          <Typography
-            variant="h6"
-            fontWeight={700}
-            sx={{ color: "#fff", textAlign: "left" }}
-          >
-            Posts Curtidos por você
-          </Typography>
+    
         </Box>
 
         <Box padding={2}>
@@ -250,7 +249,7 @@ export default function LikedPostsPage() {
               {posts.map((item, index) => (
                 <Box key={item.id}>
                   <Card
-                    onClick={() => handlePostClick(item.id)}
+                    onClick={() => handlePostClick(item)}
                     sx={{
                       display: "flex",
                       gap: 1.5,

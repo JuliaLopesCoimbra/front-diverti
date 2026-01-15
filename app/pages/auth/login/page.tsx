@@ -1,6 +1,6 @@
 // /components/auth/LoginForm.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   TextField,
@@ -16,8 +16,9 @@ import {
   Facebook,
   Visibility,
   VisibilityOff,
+  Email,
 } from "@mui/icons-material";
-import { loginUser } from "@/app/services/auth/authService";
+import { loginUser, resendVerificationEmail } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
@@ -41,12 +42,34 @@ const LoginForm: React.FC = () => {
   const { login } = useAuth();
 
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResendEmail, setShowResendEmail] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
 
   const { showToast } = useToast();
   const router = useRouter();
 
+  // Efeito para o cooldown
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (cooldownSeconds > 0) {
+      interval = setInterval(() => {
+        setCooldownSeconds((prev) => {
+          if (prev <= 1) {
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [cooldownSeconds]);
+
   const handleLogin = async () => {
     setLoading(true);
+    setShowResendEmail(false);
 
     try {
       const loginData: LoginData = { email, password };
@@ -54,6 +77,7 @@ const LoginForm: React.FC = () => {
 
       // sucesso → reseta tentativas
       setShowForgotPassword(false);
+      setShowResendEmail(false);
 
       showToast("Login realizado com sucesso!", "success");
 
@@ -70,12 +94,54 @@ const LoginForm: React.FC = () => {
       setShowForgotPassword(true);
 
       if (err instanceof Error) {
+        const errorMessage = err.message.toLowerCase();
+        // Verifica se o erro é de email não confirmado
+        if (
+          errorMessage.includes("confirme seu e-mail") ||
+          errorMessage.includes("confirme seu email") ||
+          errorMessage.includes("email não confirmado")
+        ) {
+          setShowResendEmail(true);
+        }
         showToast(err.message, "error");
       } else {
         showToast("Erro ao fazer login. Tente novamente.", "error");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!email) {
+      showToast("Por favor, insira seu email primeiro", "error");
+      return;
+    }
+
+    if (cooldownSeconds > 0) {
+      return;
+    }
+
+    setResendLoading(true);
+    try {
+      await resendVerificationEmail(email);
+      setCooldownSeconds(60); // 1 minuto de cooldown
+      showToast("Email de verificação reenviado! Verifique também sua pasta de spam.", "success");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const errorMessage = err.message.toLowerCase();
+        // Se o erro contém informações sobre cooldown, extrair os segundos
+        const cooldownMatch = err.message.match(/(\d+)\s*segundos?/i);
+        if (cooldownMatch) {
+          const seconds = parseInt(cooldownMatch[1]);
+          setCooldownSeconds(seconds);
+        }
+        showToast(err.message, "error");
+      } else {
+        showToast("Erro ao reenviar email. Tente novamente.", "error");
+      }
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -272,6 +338,72 @@ const LoginForm: React.FC = () => {
         >
           {loading ? "Carregando..." : "Continuar"}
         </Button>
+
+        {showResendEmail && (
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              backgroundColor: "rgba(255, 204, 1, 0.1)",
+              borderRadius: "14px",
+              border: "1px solid rgba(255, 204, 1, 0.3)",
+            }}
+          >
+            <Typography
+              variant="body2"
+              sx={{
+                color: "#fff",
+                mb: 1.5,
+                fontSize: 14,
+              }}
+            >
+              Seu email ainda não foi confirmado. Clique no botão abaixo para reenviar o email de verificação.
+            </Typography>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Email />}
+              onClick={handleResendEmail}
+              disabled={resendLoading || cooldownSeconds > 0}
+              sx={{
+                color: "#ffcc01",
+                borderColor: "#ffcc01",
+                backgroundColor: "transparent",
+                borderRadius: "14px",
+                textTransform: "none",
+                fontWeight: 600,
+                "&:hover": {
+                  backgroundColor: "rgba(255, 204, 1, 0.1)",
+                  borderColor: "#ffcc01",
+                },
+                "&.Mui-disabled": {
+                  color: "rgba(255, 204, 1, 0.5)",
+                  borderColor: "rgba(255, 204, 1, 0.3)",
+                },
+              }}
+            >
+              {resendLoading
+                ? "Enviando..."
+                : cooldownSeconds > 0
+                ? `Aguarde ${cooldownSeconds}s`
+                : "Reenviar email de verificação"}
+            </Button>
+            {cooldownSeconds === 0 && (
+              <Typography
+                variant="body2"
+                sx={{
+                  mt: 1,
+                  color: "rgba(255, 255, 255, 0.7)",
+                  fontSize: 12,
+                  textAlign: "center",
+                  fontStyle: "italic",
+                }}
+              >
+                Verifique também sua pasta de spam
+              </Typography>
+            )}
+          </Box>
+        )}
 
         {showForgotPassword && (
           <Typography

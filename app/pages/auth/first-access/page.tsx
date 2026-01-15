@@ -13,6 +13,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { firstAccess } from "@/app/services/auth/authAdminService";
+import { validatePassword } from "@/app/utils/passwordValidator";
 
 function FirstAccessContent() {
   const params = useSearchParams();
@@ -24,6 +25,7 @@ function FirstAccessContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const { showToast } = useToast();
 
   const passwordsMatch =
@@ -37,8 +39,9 @@ function FirstAccessContent() {
       return;
     }
 
-    if (password.length < 6) {
-      showToast("A senha deve ter no mínimo 6 caracteres.", "error");
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      showToast(`Senha inválida: ${passwordValidation.errors.join(", ")}`, "error");
       return;
     }
 
@@ -117,11 +120,17 @@ function FirstAccessContent() {
           variant="outlined"
           type={showPassword ? "text" : "password"}
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          error={Boolean(password && password.length < 6)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            const validation = validatePassword(e.target.value);
+            setPasswordErrors(validation.errors);
+          }}
+          error={password.length > 0 && passwordErrors.length > 0}
           helperText={
-            password && password.length < 6
-              ? "A senha deve ter no mínimo 6 caracteres"
+            password.length > 0 && passwordErrors.length > 0
+              ? passwordErrors.join(", ")
+              : password.length > 0
+              ? "A senha deve ter: mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número e 1 caractere especial"
               : ""
           }
           InputLabelProps={{
@@ -134,7 +143,7 @@ function FirstAccessContent() {
             },
           }}
           FormHelperTextProps={{
-            sx: { color: "#ff6b6b", fontSize: 12 },
+            sx: { color: "#ff6b6b", fontSize: "0.75rem" },
           }}
           InputProps={{
             endAdornment: (
@@ -155,13 +164,13 @@ function FirstAccessContent() {
               color: "#fff",
               borderRadius: "14px",
               "& fieldset": {
-                borderColor: password && password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&:hover fieldset": {
-                borderColor: password && password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&.Mui-focused fieldset": {
-                borderColor: password && password.length < 6 ? "#ff6b6b" : "#fff",
+                borderColor: password.length > 0 && passwordErrors.length > 0 ? "#ff6b6b" : "#fff",
               },
               "&.Mui-error fieldset": {
                 borderColor: "#ff6b6b",

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -19,45 +19,65 @@ import { getPendingPosts, NewsResponse } from "@/app/services/news/newsService";
 import { useToast } from "@/app/context/ToastContext";
 import { useAuth } from "@/app/context/AuthContext";
 
-export default function PendingPostsPage() {
+function PendingPostsContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAdminMaster, isSubadmin } = useAuth();
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
+  const isLoadingRef = useRef(false);
+  const hasRedirectedRef = useRef(false);
 
   const canApprovePosts = isAdminMaster || isSubadmin;
+  const eventIdParam = searchParams.get("eventId");
+  const eventId = eventIdParam ? parseInt(eventIdParam, 10) : undefined;
 
   useEffect(() => {
     if (!canApprovePosts) {
       router.push("/pages/user/home");
       return;
     }
-    loadPosts();
-  }, [canApprovePosts, router]);
-
-  const loadPosts = async () => {
-    setLoading(true);
-    try {
-      const data = await getPendingPosts();
-      setPosts(data);
-      
-      // Se tiver apenas 1 post, redireciona direto para o detail
-      if (data.length === 1) {
-        router.push(`/pages/admin/pending-posts/${data[0].id}`);
+    
+    if (isLoadingRef.current) return;
+    
+    const loadPosts = async () => {
+      if (isLoadingRef.current) return;
+      isLoadingRef.current = true;
+      setLoading(true);
+      try {
+        const data = await getPendingPosts(eventId);
+        setPosts(data);
+        
+        // Se tiver apenas 1 post, redireciona direto para o detail (apenas uma vez)
+        if (data.length === 1 && !hasRedirectedRef.current) {
+          hasRedirectedRef.current = true;
+          const redirectUrl = eventId 
+            ? `/pages/admin/pending-posts/${data[0].id}?eventId=${eventId}`
+            : `/pages/admin/pending-posts/${data[0].id}`;
+          router.push(redirectUrl);
+        }
+      } catch (error: any) {
+        showToast(
+          error.response?.data?.detail || "Erro ao carregar posts pendentes",
+          "error"
+        );
+      } finally {
+        isLoadingRef.current = false;
+        setLoading(false);
       }
-    } catch (error: any) {
-      showToast(
-        error.response?.data?.detail || "Erro ao carregar posts pendentes",
-        "error"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  const handlePostClick = (postId: number) => {
-    router.push(`/pages/admin/pending-posts/${postId}`);
+    loadPosts();
+  }, [canApprovePosts, eventId]);
+
+  const handlePostClick = (post: NewsResponse) => {
+    // Usa o eventId da query string ou do próprio post
+    const postEventId = post.event_id || eventId;
+    const url = postEventId 
+      ? `/pages/admin/pending-posts/${post.id}?eventId=${postEventId}`
+      : `/pages/admin/pending-posts/${post.id}`;
+    router.push(url);
   };
 
   const formatDate = (dateString: string) => {
@@ -135,7 +155,7 @@ export default function PendingPostsPage() {
               return (
                 <Card
                   key={post.id}
-                  onClick={() => handlePostClick(post.id)}
+                  onClick={() => handlePostClick(post)}
                   sx={{
                     display: "flex",
                     gap: 2,
@@ -222,3 +242,27 @@ export default function PendingPostsPage() {
   );
 }
 
+export default function PendingPostsPage() {
+  return (
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            minHeight: "100vh",
+            backgroundImage: "url(/background/dashboard.png)",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <CircularProgress sx={{ color: "#ffcc01" }} />
+        </Box>
+      }
+    >
+      <PendingPostsContent />
+    </Suspense>
+  );
+}

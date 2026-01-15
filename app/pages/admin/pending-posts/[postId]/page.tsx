@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -36,8 +36,11 @@ import { useAuth } from "@/app/context/AuthContext";
 export default function PendingPostDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const postId = Number(params.postId);
   const { isAdminMaster, isSubadmin } = useAuth();
+  const eventIdParam = searchParams.get("eventId");
+  const eventId = eventIdParam ? parseInt(eventIdParam, 10) : undefined;
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState(false);
@@ -48,34 +51,97 @@ export default function PendingPostDetailPage() {
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
   const { showToast } = useToast();
+  const hasRedirected = useRef(false);
+  const isLoadingRef = useRef(false);
 
   const canApprovePosts = isAdminMaster || isSubadmin;
 
+  // Reset flags quando postId mudar
   useEffect(() => {
+    hasRedirected.current = false;
+    isLoadingRef.current = false;
+    setNews(null);
+    setLoading(true);
+  }, [postId]);
+
+  // useEffect principal para carregar os dados
+  useEffect(() => {
+    // Verifica permissões primeiro
     if (!canApprovePosts) {
       router.push("/pages/user/home");
       return;
     }
-    if (postId) {
-      loadNews();
-    }
-  }, [postId, canApprovePosts, router]);
 
-  const loadNews = async () => {
-    setLoading(true);
-    try {
-      const data = await getNewsDetails(postId);
-      setNews(data);
-    } catch (error: any) {
-      showToast(
-        error.response?.data?.detail || "Erro ao carregar post",
-        "error"
-      );
-      router.push("/pages/admin/pending-posts");
-    } finally {
-      setLoading(false);
+    // Guard clauses: evita execução desnecessária
+    // Não verifica 'news' aqui porque ele é resetado quando postId muda
+    if (!postId || isLoadingRef.current || hasRedirected.current) {
+      return;
     }
-  };
+
+    // Função interna para evitar dependências problemáticas
+    const loadNews = async () => {
+      // Verificação dupla para garantir que não está carregando
+      if (isLoadingRef.current || hasRedirected.current) return;
+
+      isLoadingRef.current = true;
+      setLoading(true);
+      
+      try {
+        let data: NewsDetailsResponse;
+        let finalEventId = eventId;
+        
+        // Se não tiver eventId na URL, tenta carregar sem ele primeiro
+        // O endpoint retornará o event_id na resposta, então podemos usar depois
+        if (!finalEventId) {
+          // Tenta carregar sem eventId (endpoint unificado permite para posts aprovados)
+          // Mas para posts pendentes, precisamos do eventId
+          try {
+            data = await getNewsDetails(postId);
+            // Se conseguir carregar, pega o event_id da resposta
+            if (data.event_id) {
+              finalEventId = data.event_id;
+              // Atualiza a URL com o eventId para manter consistência
+              const newUrl = `/pages/admin/pending-posts/${postId}?eventId=${data.event_id}`;
+              window.history.replaceState({}, '', newUrl);
+            }
+          } catch (error: any) {
+            // Se falhar, pode ser porque é um post pendente que precisa do eventId
+            showToast("Evento não encontrado. Por favor, acesse através da lista de posts pendentes.", "error");
+            const redirectUrl = "/pages/admin/pending-posts";
+            hasRedirected.current = true;
+            router.push(redirectUrl);
+            return;
+          }
+        } else {
+          // Se tiver eventId, usa ele diretamente
+          data = await getNewsDetails(postId, finalEventId);
+        }
+        
+        setNews(data);
+      } catch (error: any) {
+        // Evita múltiplos redirecionamentos
+        if (hasRedirected.current) return;
+        
+        hasRedirected.current = true;
+        showToast(
+          error.response?.data?.detail || "Erro ao carregar post",
+          "error"
+        );
+        const redirectUrl = eventId 
+          ? `/pages/admin/pending-posts?eventId=${eventId}`
+          : "/pages/admin/pending-posts";
+        router.push(redirectUrl);
+      } finally {
+        isLoadingRef.current = false;
+        setLoading(false);
+      }
+    };
+
+    loadNews();
+    // Dependências mínimas: só postId e eventId (valores primitivos)
+    // canApprovePosts é derivado de isAdminMaster/isSubadmin, então é estável
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId, eventId]);
 
   const handleApprove = async () => {
     setApproving(true);
@@ -83,7 +149,10 @@ export default function PendingPostDetailPage() {
       await approvePost(postId);
       showToast("Post aprovado com sucesso!", "success");
       setConfirmApproveOpen(false);
-      router.push("/pages/admin/pending-posts");
+      const redirectUrl = eventId 
+        ? `/pages/admin/pending-posts?eventId=${eventId}`
+        : "/pages/admin/pending-posts";
+      router.push(redirectUrl);
     } catch (error: any) {
       showToast(
         error.response?.data?.detail || "Erro ao aprovar post",
@@ -100,7 +169,10 @@ export default function PendingPostDetailPage() {
       await rejectPost(postId);
       showToast("Post recusado com sucesso!", "success");
       setConfirmRejectOpen(false);
-      router.push("/pages/admin/pending-posts");
+      const redirectUrl = eventId 
+        ? `/pages/admin/pending-posts?eventId=${eventId}`
+        : "/pages/admin/pending-posts";
+      router.push(redirectUrl);
     } catch (error: any) {
       showToast(
         error.response?.data?.detail || "Erro ao recusar post",
@@ -177,7 +249,9 @@ export default function PendingPostDetailPage() {
           {/* Header */}
           <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
             <IconButton
-              onClick={() => router.push("/pages/user/home")}
+              onClick={() => {
+                router.push("/pages/user/home");
+              }}
               sx={{
                 color: "#fff",
                 padding: 0.5,

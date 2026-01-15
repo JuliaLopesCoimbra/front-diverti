@@ -67,7 +67,8 @@ export default function SambaSchoolDetailsPage() {
       await deleteSambaSchool(eventId, schoolId);
       showToast("Escola de samba excluída com sucesso!", "success");
       setDeleteModalOpen(false);
-      router.push(`/pages/admin/events/${eventId}`);
+      // Redireciona imediatamente para evitar que o useEffect tente recarregar
+      router.replace(`/pages/admin/events/${eventId}`);
     } catch (err: unknown) {
       if (err instanceof Error) {
         showToast(err.message, "error");

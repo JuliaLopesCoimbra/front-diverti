@@ -345,9 +345,16 @@ export const reactivateUserAccess = async (userId: number): Promise<void> => {
 // ---------------------------
 // LIST USERS
 // ---------------------------
-export const listSubadmins = async (): Promise<UserResponse[]> => {
+export const listSubadmins = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const response = await api.get<UserResponse[]>(`${API_URL}/auth/subadmins`);
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", limit.toString());
+    if (offset !== undefined) params.append("offset", offset.toString());
+    
+    const queryString = params.toString();
+    const url = `${API_URL}/auth/subadmins${queryString ? `?${queryString}` : ""}`;
+    
+    const response = await api.get<UserResponse[]>(url);
     return response.data;
   } catch (error: unknown) {
     const err = error as {
@@ -370,9 +377,16 @@ export const listSubadmins = async (): Promise<UserResponse[]> => {
   }
 };
 
-export const listColunistas = async (): Promise<UserResponse[]> => {
+export const listColunistas = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const response = await api.get<UserResponse[]>(`${API_URL}/auth/colunistas`);
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", limit.toString());
+    if (offset !== undefined) params.append("offset", offset.toString());
+    
+    const queryString = params.toString();
+    const url = `${API_URL}/auth/colunistas${queryString ? `?${queryString}` : ""}`;
+    
+    const response = await api.get<UserResponse[]>(url);
     return response.data;
   } catch (error: unknown) {
     const err = error as {
@@ -395,9 +409,16 @@ export const listColunistas = async (): Promise<UserResponse[]> => {
   }
 };
 
-export const listUsers = async (): Promise<UserResponse[]> => {
+export const listUsers = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const response = await api.get<UserResponse[]>(`${API_URL}/auth/users`);
+    const params = new URLSearchParams();
+    if (limit !== undefined) params.append("limit", limit.toString());
+    if (offset !== undefined) params.append("offset", offset.toString());
+    
+    const queryString = params.toString();
+    const url = `${API_URL}/auth/users${queryString ? `?${queryString}` : ""}`;
+    
+    const response = await api.get<UserResponse[]>(url);
     return response.data;
   } catch (error: unknown) {
     const err = error as {

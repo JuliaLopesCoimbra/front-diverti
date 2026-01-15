@@ -1,26 +1,62 @@
 "use client";
 
-import { Button } from "@mui/material";
+import { Button, Box, Typography } from "@mui/material";
 import { useRouter } from "next/navigation";
 
 export default function EventIndisponivel() {
   const router = useRouter();
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column" }}>
-      <h1>Evento Indisponível</h1>
-      <p>O evento que você procurou não está mais disponível ou não está ativo no momento.</p>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        backgroundColor: "#f4f7fc",
+        backgroundImage: "url(/background/dashboard.png)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+        padding: { xs: 3, sm: 4 },
+        textAlign: "center",
+      }}
+    >
+      <Typography
+        variant="h4"
+        component="h1"
+        sx={{
+          color: "white",
+          fontWeight: 700,
+          marginBottom: 2,
+          fontSize: { xs: "1.75rem", sm: "2.25rem" },
+        }}
+      >
+        Evento Indisponível
+      </Typography>
+      <Typography
+        variant="body1"
+        sx={{
+          color: "white",
+          fontSize: { xs: "1rem", sm: "1.125rem" },
+          marginBottom: 4,
+          maxWidth: "600px",
+          lineHeight: 1.6,
+        }}
+      >
+        O evento que você procurou não está mais disponível ou não está ativo no momento.
+      </Typography>
       <Button
         onClick={() => router.push("/")}
         sx={{
-          marginTop: 3,
           backgroundColor: "#FFD600",
           color: "#000",
           fontWeight: 700,
           padding: "12px 32px",
           borderRadius: "30px",
           textTransform: "none",
-          fontSize: 16,
+          fontSize: { xs: 14, sm: 16 },
           "&:hover": {
             backgroundColor: "#FFC400",
           },
@@ -28,6 +64,6 @@ export default function EventIndisponivel() {
       >
         Voltar para a página inicial
       </Button>
-    </div>
+    </Box>
   );
 }

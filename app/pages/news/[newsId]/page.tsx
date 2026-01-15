@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
   Typography,
@@ -63,8 +63,11 @@ import { getProfile, ProfileResponse } from "@/app/services/profile/profileServi
 export default function NewsDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const newsId = Number(params.newsId);
-  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin } = useAuth();
+  const eventIdParam = searchParams.get("eventId");
+  const eventId = eventIdParam ? parseInt(eventIdParam, 10) : null;
+  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin, isColunista, canCreatePost } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -96,8 +99,28 @@ export default function NewsDetailPage() {
 
     setLoading(true);
     try {
-      // getNewsDetails já retorna as informações de likes do backend
-      const data = await getNewsDetails(newsId);
+      let data: NewsDetailsResponse;
+      
+      // Se tiver eventId na URL, usa ele
+      if (eventId) {
+        data = await getNewsDetails(newsId, eventId);
+      } else {
+        // Se não tiver, tenta carregar sem eventId (endpoint unificado permite para posts aprovados)
+        try {
+          data = await getNewsDetails(newsId);
+          // Se conseguir carregar e tiver event_id na resposta, atualiza a URL
+          if (data.event_id) {
+            const newUrl = `/pages/news/${newsId}?eventId=${data.event_id}`;
+            window.history.replaceState({}, '', newUrl);
+          }
+        } catch (error: any) {
+          // Se falhar, pode ser um post pendente que precisa do eventId
+          showToast("Evento não encontrado. Por favor, acesse através do evento.", "error");
+          router.back();
+          return;
+        }
+      }
+      
       setNews(data);
 
       // Busca dados do usuário logado
@@ -105,7 +128,8 @@ export default function NewsDetailPage() {
         try {
           const profile = await getProfile();
           setCurrentUser(profile);
-          if (isAdmin) {
+          // Verifica se é autor (para admin ou colunista)
+          if (canCreatePost) {
             const me = await getMe();
             setIsAuthor(data.author?.id === me.id);
           }
@@ -130,6 +154,12 @@ export default function NewsDetailPage() {
 
   const handleLike = async () => {
     if (!isAuthenticated || !news || liking) return;
+
+    // Bloqueia curtir se o post estiver pendente
+    if (news.status === "pending") {
+      showToast("Este post ainda não foi aprovado.", "error");
+      return;
+    }
 
     setLiking(true);
     try {
@@ -233,6 +263,12 @@ export default function NewsDetailPage() {
 
   const handleComment = async () => {
     if (!isAuthenticated || !commentText.trim() || submittingComment || !news) return;
+
+    // Bloqueia comentar se o post estiver pendente
+    if (news.status === "pending") {
+      showToast("Este post ainda não foi aprovado.", "error");
+      return;
+    }
 
     setSubmittingComment(true);
     try {
@@ -497,10 +533,100 @@ export default function NewsDetailPage() {
       await deleteComment(commentToDelete.id);
       showToast("Comentário excluído com sucesso!", "success");
       setDeleteCommentModalOpen(false);
+      
+      // Salva o ID antes de limpar o estado
+      const deletedCommentId = commentToDelete.id;
+      
+      // Verifica se é um comentário principal ou um subcomentário (reply)
+      const isMainComment = news.comments.some(c => c.id === deletedCommentId);
+      let parentCommentId: number | null = null;
+      
+      if (isMainComment) {
+        // Remove o comentário principal da lista
+        setNews((prevNews) => {
+          if (!prevNews) return prevNews;
+          return {
+            ...prevNews,
+            comments: prevNews.comments.filter(c => c.id !== deletedCommentId),
+            comments_count: Math.max(0, prevNews.comments_count - 1),
+          };
+        });
+        
+        // Remove também das replies se estiver carregado e fecha a expansão
+        setReplies((prev) => {
+          const newReplies = { ...prev };
+          delete newReplies[deletedCommentId];
+          return newReplies;
+        });
+        
+        // Remove da lista de comentários expandidos
+        setExpandedComments((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(deletedCommentId);
+          return newSet;
+        });
+      } else {
+        // É um subcomentário - remove das replies
+        setReplies((prev) => {
+          const newReplies = { ...prev };
+          // Encontra em qual comentário principal está essa reply
+          Object.keys(newReplies).forEach((key) => {
+            const commentId = Number(key);
+            const replyExists = newReplies[commentId]?.some(r => r.id === deletedCommentId);
+            if (replyExists) {
+              parentCommentId = commentId;
+              newReplies[commentId] = newReplies[commentId].filter(
+                r => r.id !== deletedCommentId
+              );
+            }
+          });
+          return newReplies;
+        });
+        
+        // Atualiza o contador de replies no comentário principal
+        if (parentCommentId !== null) {
+          setNews((prevNews) => {
+            if (!prevNews) return prevNews;
+            return {
+              ...prevNews,
+              comments: prevNews.comments.map(c =>
+                c.id === parentCommentId
+                  ? { ...c, replies_count: Math.max(0, c.replies_count - 1) }
+                  : c
+              ),
+            };
+          });
+        }
+      }
+      
       setCommentToDelete(null);
       
-      // Recarrega os comentários
+      // Recarrega os dados do servidor para garantir sincronização
       await loadNewsDetails();
+      
+      // Se deletamos um comentário principal que tinha replies carregadas, recarrega os replies dos outros comentários
+      if (isMainComment) {
+        // Recarrega replies de todos os comentários que estão expandidos
+        const expandedIds = Array.from(expandedComments);
+        for (const commentId of expandedIds) {
+          if (commentId !== deletedCommentId) {
+            try {
+              const fetchedReplies = await listReplies(newsId, commentId);
+              setReplies((prev) => ({ ...prev, [commentId]: fetchedReplies }));
+            } catch (error) {
+              console.error(`Erro ao recarregar replies do comentário ${commentId}`, error);
+            }
+          }
+        }
+      } else if (parentCommentId !== null) {
+        // Se deletamos um reply, recarrega os replies do comentário pai
+        try {
+          const fetchedReplies = await listReplies(newsId, parentCommentId);
+          setReplies((prev) => ({ ...prev, [parentCommentId as number]: fetchedReplies }));
+        } catch (error) {
+          console.error(`Erro ao recarregar replies do comentário ${parentCommentId}`, error);
+        }
+      }
     } catch (error: any) {
       console.error("Erro ao excluir comentário", error);
       const message = error.response?.data?.detail || "Erro ao excluir comentário";
@@ -640,30 +766,85 @@ export default function NewsDetailPage() {
         flexDirection: "column",
       }}
     >
-      {/* Botão X para desativar (apenas admin master e subadmin) - Posicionado absolutamente */}
-      {(isAdminMaster || isSubadmin) && (
-        <IconButton
-          onClick={() => setDeactivateModalOpen(true)}
-          size="small"
-          disabled={deactivating}
-          sx={{
-            color: "#ff3040",
-            position: "fixed",
-            top: 16,
-            right: 16,
-            zIndex: 1000,
-           
-            backdropFilter: "blur(10px)",
-            width: 40,
-            height: 40,
-            "&:hover": {
-              backgroundColor: "rgba(255, 48, 64, 0.3)",
-            },
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
-      )}
+      {/* Botões de ação - Posicionados absolutamente no topo direito */}
+      <Box
+        sx={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 1000,
+          display: "flex",
+          gap: 1,
+          alignItems: "center",
+        }}
+      >
+        {/* Botão de editar - apenas para autor */}
+        {isAuthor && (isAdmin || isColunista) && (
+          <IconButton
+            onClick={() => router.push(`/pages/news/edit?newsId=${newsId}&eventId=${eventId || news?.event_id || ''}`)}
+            size="small"
+            disabled={deleting}
+            sx={{
+              color: "#ffc91f",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(10px)",
+              width: 40,
+              height: 40,
+              "&:hover": {
+                backgroundColor: "rgba(255, 201, 31, 0.3)",
+              },
+            }}
+            title="Editar post"
+          >
+            <EditIcon />
+          </IconButton>
+        )}
+        
+        {/* Botão de excluir - para autor OU para posts criados por admins */}
+        {((isAuthor && (isAdmin || isColunista)) || 
+          ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id)) && (
+          <IconButton
+            onClick={() => setDeleteModalOpen(true)}
+            size="small"
+            disabled={deleting}
+            sx={{
+              color: "#ff3040",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(10px)",
+              width: 40,
+              height: 40,
+              "&:hover": {
+                backgroundColor: "rgba(255, 48, 64, 0.3)",
+              },
+            }}
+            title="Excluir post"
+          >
+            <DeleteIcon />
+          </IconButton>
+        )}
+        
+        {/* Botão X para desativar - sempre visível para admins */}
+        {(isAdminMaster || isSubadmin) && (
+          <IconButton
+            onClick={() => setDeactivateModalOpen(true)}
+            size="small"
+            disabled={deactivating}
+            sx={{
+              color: "#ff3040",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              backdropFilter: "blur(10px)",
+              width: 40,
+              height: 40,
+              "&:hover": {
+                backgroundColor: "rgba(255, 48, 64, 0.3)",
+              },
+            }}
+            title="Desativar post"
+          >
+            <CloseIcon />
+          </IconButton>
+        )}
+      </Box>
 
       {/* Header com botão de voltar */}
       <Box
@@ -705,27 +886,6 @@ export default function NewsDetailPage() {
             </Box>
           </Box>
         </Box>
-        {/* Botões de editar/excluir apenas para admin que é autor */}
-        {isAuthor && isAdmin && (
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <IconButton
-              onClick={() => router.push(`/pages/news/edit?newsId=${newsId}`)}
-              size="small"
-              disabled={deleting}
-              sx={{ color: "#ffc91f" }}
-            >
-              <EditIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              onClick={() => setDeleteModalOpen(true)}
-              size="small"
-              disabled={deleting}
-              sx={{ color: "#ff3040" }}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        )}
       </Box>
 
       {/* Conteúdo */}
@@ -861,7 +1021,7 @@ export default function NewsDetailPage() {
           <Box sx={{ display: "flex", gap: 1.5, mb: 1.5 }}>
             <IconButton
               onClick={handleLike}
-              disabled={!isAuthenticated || liking}
+              disabled={!isAuthenticated || liking || news.status === "pending"}
               sx={{ color: news.likes.user_liked ? "#ff3040" : "#fff" }}
             >
               {news.likes.user_liked ? (
@@ -1019,8 +1179,8 @@ export default function NewsDetailPage() {
                               </Typography>
                             </>
                           )}
-                          {/* Botão de excluir - apenas para admin ou dono do comentário */}
-                          {isAuthenticated && (isAdmin || comment.user.id === currentUser?.id) && (
+                          {/* Botão de excluir - apenas para admin_master, subadmin ou dono do comentário */}
+                          {isAuthenticated && (isAdminMaster || isSubadmin || comment.user.id === currentUser?.id) && (
                             <IconButton
                               size="small"
                               onClick={() => handleDeleteCommentClick(comment.id, comment.content)}
@@ -1188,6 +1348,20 @@ export default function NewsDetailPage() {
                                             {reply.likes.count}
                                           </Typography>
                                         )}
+                                        {/* Botão de excluir subcomentário - apenas para admin_master, subadmin ou dono do comentário */}
+                                        {isAuthenticated && (isAdminMaster || isSubadmin || reply.user.id === currentUser?.id) && (
+                                          <IconButton
+                                            size="small"
+                                            onClick={() => handleDeleteCommentClick(reply.id, reply.content)}
+                                            sx={{
+                                              color: "rgba(255,255,255,0.4)",
+                                              padding: "2px",
+                                              ml: 0.5,
+                                            }}
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        )}
                                       </Box>
                                     </Box>
                                   </Box>
@@ -1233,7 +1407,7 @@ export default function NewsDetailPage() {
                   }}
                   multiline
                   maxRows={4}
-                  disabled={submittingComment}
+                  disabled={submittingComment || news?.status === "pending"}
                   sx={{
                     "& .MuiOutlinedInput-root": {
                       backgroundColor: "rgba(255,255,255,0.05)",
@@ -1260,7 +1434,7 @@ export default function NewsDetailPage() {
                 />
                 <IconButton
                   onClick={handleComment}
-                  disabled={!commentText.trim() || submittingComment}
+                  disabled={!commentText.trim() || submittingComment || news?.status === "pending"}
                   sx={{
                     color: commentText.trim()
                       ? "#ffc91f"
