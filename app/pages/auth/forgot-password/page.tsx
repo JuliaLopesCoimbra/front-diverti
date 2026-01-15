@@ -4,8 +4,9 @@ import { Box, Button, TextField, Typography } from "@mui/material";
 import axios from "axios";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
+import { getApiUrl } from "@/app/utils/apiUrlHelper";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 const isValidEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };

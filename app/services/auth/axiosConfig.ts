@@ -1,8 +1,9 @@
 // /services/axiosConfig.ts
 
 import axios from "axios";
+import { getApiUrl } from "@/app/utils/apiUrlHelper";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 const api = axios.create({
   baseURL: API_URL,

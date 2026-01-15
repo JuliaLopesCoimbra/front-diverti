@@ -2,8 +2,6 @@
 
 import api from './axiosConfig';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
 // Tipos
 interface InviteAdminData {
   name: string;
@@ -48,7 +46,7 @@ interface ResendAdminInviteData {
 // ---------------------------
 export const inviteAdmin = async (data: InviteAdminData): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/invite-admin`, data);
+    await api.post("/auth/invite-admin", data);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -75,7 +73,7 @@ export const inviteAdmin = async (data: InviteAdminData): Promise<void> => {
 // ---------------------------
 export const firstAccess = async (data: FirstAccessData): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/first-access`, data);
+    await api.post("/auth/first-access", data);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -104,7 +102,7 @@ export const resendAdminInvite = async (
   data: ResendAdminInviteData
 ): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/resend-admin-invite`, data);
+    await api.post("/auth/resend-admin-invite", data);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -131,7 +129,7 @@ export const resendAdminInvite = async (
 // ---------------------------
 export const inviteSubadmin = async (data: InviteAdminData): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/invite-subadmin`, data);
+    await api.post("/auth/invite-subadmin", data);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -158,7 +156,7 @@ export const inviteSubadmin = async (data: InviteAdminData): Promise<void> => {
 // ---------------------------
 export const inviteColunista = async (data: InviteAdminData): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/invite-colunista`, data);
+    await api.post("/auth/invite-colunista", data);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -185,7 +183,7 @@ export const inviteColunista = async (data: InviteAdminData): Promise<void> => {
 // ---------------------------
 export const revokeColunistaAccess = async (colunistaId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/revoke-colunista/${colunistaId}`);
+    await api.post(`/auth/revoke-colunista/${colunistaId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -212,7 +210,7 @@ export const revokeColunistaAccess = async (colunistaId: number): Promise<void> 
 // ---------------------------
 export const revokeSubadminAccess = async (subadminId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/revoke-subadmin/${subadminId}`);
+    await api.post(`/auth/revoke-subadmin/${subadminId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -239,7 +237,7 @@ export const revokeSubadminAccess = async (subadminId: number): Promise<void> =>
 // ---------------------------
 export const revokeUserAccess = async (userId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/revoke-user/${userId}`);
+    await api.post(`/auth/revoke-user/${userId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -266,7 +264,7 @@ export const revokeUserAccess = async (userId: number): Promise<void> => {
 // ---------------------------
 export const reactivateColunistaAccess = async (colunistaId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/reactivate-colunista/${colunistaId}`);
+    await api.post(`/auth/reactivate-colunista/${colunistaId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -293,7 +291,7 @@ export const reactivateColunistaAccess = async (colunistaId: number): Promise<vo
 // ---------------------------
 export const reactivateSubadminAccess = async (subadminId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/reactivate-subadmin/${subadminId}`);
+    await api.post(`/auth/reactivate-subadmin/${subadminId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -320,7 +318,7 @@ export const reactivateSubadminAccess = async (subadminId: number): Promise<void
 // ---------------------------
 export const reactivateUserAccess = async (userId: number): Promise<void> => {
   try {
-    await api.post(`${API_URL}/auth/reactivate-user/${userId}`);
+    await api.post(`/auth/reactivate-user/${userId}`);
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -347,14 +345,11 @@ export const reactivateUserAccess = async (userId: number): Promise<void> => {
 // ---------------------------
 export const listSubadmins = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params = new URLSearchParams();
-    if (limit !== undefined) params.append("limit", limit.toString());
-    if (offset !== undefined) params.append("offset", offset.toString());
+    const params: any = {};
+    if (limit !== undefined) params.limit = limit;
+    if (offset !== undefined) params.offset = offset;
     
-    const queryString = params.toString();
-    const url = `${API_URL}/auth/subadmins${queryString ? `?${queryString}` : ""}`;
-    
-    const response = await api.get<UserResponse[]>(url);
+    const response = await api.get<UserResponse[]>("/auth/subadmins", { params });
     return response.data;
   } catch (error: unknown) {
     const err = error as {
@@ -379,14 +374,11 @@ export const listSubadmins = async (limit?: number, offset?: number): Promise<Us
 
 export const listColunistas = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params = new URLSearchParams();
-    if (limit !== undefined) params.append("limit", limit.toString());
-    if (offset !== undefined) params.append("offset", offset.toString());
+    const params: any = {};
+    if (limit !== undefined) params.limit = limit;
+    if (offset !== undefined) params.offset = offset;
     
-    const queryString = params.toString();
-    const url = `${API_URL}/auth/colunistas${queryString ? `?${queryString}` : ""}`;
-    
-    const response = await api.get<UserResponse[]>(url);
+    const response = await api.get<UserResponse[]>("/auth/colunistas", { params });
     return response.data;
   } catch (error: unknown) {
     const err = error as {
@@ -411,14 +403,11 @@ export const listColunistas = async (limit?: number, offset?: number): Promise<U
 
 export const listUsers = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params = new URLSearchParams();
-    if (limit !== undefined) params.append("limit", limit.toString());
-    if (offset !== undefined) params.append("offset", offset.toString());
+    const params: any = {};
+    if (limit !== undefined) params.limit = limit;
+    if (offset !== undefined) params.offset = offset;
     
-    const queryString = params.toString();
-    const url = `${API_URL}/auth/users${queryString ? `?${queryString}` : ""}`;
-    
-    const response = await api.get<UserResponse[]>(url);
+    const response = await api.get<UserResponse[]>("/auth/users", { params });
     return response.data;
   } catch (error: unknown) {
     const err = error as {

@@ -14,8 +14,9 @@ import axios from "axios";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { validatePassword } from "@/app/utils/passwordValidator";
+import { getApiUrl } from "@/app/utils/apiUrlHelper";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 function ResetPasswordContent() {
   const params = useSearchParams();

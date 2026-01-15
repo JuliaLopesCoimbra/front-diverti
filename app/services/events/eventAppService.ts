@@ -1,15 +1,6 @@
 import api from "../auth/axiosConfig";
 import axios from "axios";
-
-// Função helper para obter a URL da API de forma segura
-const getApiUrl = (): string => {
-  if (typeof window !== "undefined") {
-    // Cliente: usa a variável de ambiente
-    return process.env.NEXT_PUBLIC_API_URL || "";
-  }
-  // Servidor: usa a variável de ambiente
-  return process.env.NEXT_PUBLIC_API_URL || "";
-};
+import { getApiUrl } from "@/app/utils/apiUrlHelper";
 
 export interface EventResponse {
   id: number;
@@ -66,18 +57,7 @@ export const getPublicEvents = async (): Promise<EventResponse[]> => {
     throw new Error("NEXT_PUBLIC_API_URL não está configurada");
   }
   
-  // Garante que a URL tem o protocolo (http:// ou https://)
-  let baseUrl = API_URL.trim();
-  
-  // Se não começar com http:// ou https://, adiciona http://
-  if (!baseUrl.startsWith('http://') && !baseUrl.startsWith('https://')) {
-    baseUrl = `http://${baseUrl}`;
-  }
-  
-  // Remove barra final se existir
-  baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
-  
-  const url = `${baseUrl}/public/events`;
+  const url = `${API_URL}/public/events`;
   
   try {
     const response = await axios.get<EventResponse[]>(url);

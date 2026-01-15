@@ -3,8 +3,9 @@
 import axios from 'axios';
 import { LoginResponse } from '@/app/types/types';
 import api from './axiosConfig';
+import { getApiUrl } from '@/app/utils/apiUrlHelper';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = getApiUrl();
 
 // Tipos para login normal
 interface LoginData {
