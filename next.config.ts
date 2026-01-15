@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: 'export', // <--- ADICIONE ESTA LINHA AQUI
   images: {
+    unoptimized: true, // <--- OBRIGATÓRIO PARA EXPORT ESTÁTICO SE USAR <Image />
     remotePatterns: [
       {
         protocol: "https",
@@ -10,7 +12,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Configuração do Turbopack para resolução de módulos
   turbopack: {
     resolveAlias: {
       "@": "./",
