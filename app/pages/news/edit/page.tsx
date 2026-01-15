@@ -311,7 +311,7 @@ function EditNewsPageContent() {
             <ArrowBackIos sx={{ fontSize: 20 }} />
           </IconButton>
           <Typography variant="h6" sx={{ color: "white", fontWeight: 600, fontSize: "1rem" }}>
-            Editar publicação
+            Editar publicaçãoo
           </Typography>
         </Box>
 
