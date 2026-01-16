@@ -30,6 +30,7 @@ import {
   approvePost,
   rejectPost,
 } from "@/app/services/news/newsService";
+import { getEvents, EventResponse } from "@/app/services/events/eventAppService";
 import { useToast } from "@/app/context/ToastContext";
 import { useAuth } from "@/app/context/AuthContext";
 
@@ -50,6 +51,7 @@ export default function PendingPostDetailPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [event, setEvent] = useState<EventResponse | null>(null);
   const { showToast } = useToast();
   const hasRedirected = useRef(false);
   const isLoadingRef = useRef(false);
@@ -118,6 +120,19 @@ export default function PendingPostDetailPage() {
         }
         
         setNews(data);
+        
+        // Carrega informações do evento para verificar se está ativo
+        if (data.event_id) {
+          try {
+            const events = await getEvents();
+            const foundEvent = events.find((e) => e.id === data.event_id);
+            if (foundEvent) {
+              setEvent(foundEvent);
+            }
+          } catch (error) {
+            console.error("Erro ao carregar evento:", error);
+          }
+        }
       } catch (error: any) {
         // Evita múltiplos redirecionamentos
         if (hasRedirected.current) return;
@@ -438,78 +453,80 @@ export default function PendingPostDetailPage() {
                   {news.content}
                 </Typography>
 
-                {/* Botões de ação */}
-                <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 4 }}>
-                  <Button
-                    onClick={() => router.push("/pages/user/home")}
-                    sx={{
-                      color: "rgba(255,255,255,0.7)",
-                      textTransform: "none",
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                      "&:hover": {
-                        backgroundColor: "transparent",
-                        color: "rgba(255,255,255,0.9)",
-                      },
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    onClick={() => setConfirmRejectOpen(true)}
-                    variant="contained"
-                    disabled={rejecting}
-                    sx={{
-                      backgroundColor: "#ff4444",
-                      color: "white",
-                      textTransform: "none",
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                      px: 3,
-                      borderRadius: "14px",
-                      "&:hover": {
-                        backgroundColor: "#cc0000",
-                      },
-                      "&:disabled": {
-                        backgroundColor: "rgba(255, 68, 68, 0.3)",
-                        color: "rgba(255, 255, 255, 0.5)",
-                      },
-                    }}
-                  >
-                    {rejecting ? (
-                      <CircularProgress size={16} sx={{ color: "#fff" }} />
-                    ) : (
-                      "Recusar"
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => setConfirmApproveOpen(true)}
-                    variant="contained"
-                    disabled={approving}
-                    sx={{
-                      backgroundColor: "#ffcc01",
-                      color: "#000",
-                      textTransform: "none",
-                      fontSize: "0.875rem",
-                      fontWeight: 600,
-                      px: 3,
-                      borderRadius: "14px",
-                      "&:hover": {
-                        backgroundColor: "#e6b800",
-                      },
-                      "&:disabled": {
-                        backgroundColor: "rgba(255, 201, 31, 0.3)",
-                        color: "rgba(0, 0, 0, 0.3)",
-                      },
-                    }}
-                  >
-                    {approving ? (
-                      <CircularProgress size={16} sx={{ color: "#000" }} />
-                    ) : (
-                      "Aprovar"
-                    )}
-                  </Button>
-                </Box>
+                {/* Botões de ação - só aparecem se o evento estiver ativo */}
+                {event && event.is_active === true && (
+                  <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 4 }}>
+                    <Button
+                      onClick={() => router.push("/pages/user/home")}
+                      sx={{
+                        color: "rgba(255,255,255,0.7)",
+                        textTransform: "none",
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        "&:hover": {
+                          backgroundColor: "transparent",
+                          color: "rgba(255,255,255,0.9)",
+                        },
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={() => setConfirmRejectOpen(true)}
+                      variant="contained"
+                      disabled={rejecting}
+                      sx={{
+                        backgroundColor: "#ff4444",
+                        color: "white",
+                        textTransform: "none",
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        px: 3,
+                        borderRadius: "14px",
+                        "&:hover": {
+                          backgroundColor: "#cc0000",
+                        },
+                        "&:disabled": {
+                          backgroundColor: "rgba(255, 68, 68, 0.3)",
+                          color: "rgba(255, 255, 255, 0.5)",
+                        },
+                      }}
+                    >
+                      {rejecting ? (
+                        <CircularProgress size={16} sx={{ color: "#fff" }} />
+                      ) : (
+                        "Recusar"
+                      )}
+                    </Button>
+                    <Button
+                      onClick={() => setConfirmApproveOpen(true)}
+                      variant="contained"
+                      disabled={approving}
+                      sx={{
+                        backgroundColor: "#ffcc01",
+                        color: "#000",
+                        textTransform: "none",
+                        fontSize: "0.875rem",
+                        fontWeight: 600,
+                        px: 3,
+                        borderRadius: "14px",
+                        "&:hover": {
+                          backgroundColor: "#e6b800",
+                        },
+                        "&:disabled": {
+                          backgroundColor: "rgba(255, 201, 31, 0.3)",
+                          color: "rgba(0, 0, 0, 0.3)",
+                        },
+                      }}
+                    >
+                      {approving ? (
+                        <CircularProgress size={16} sx={{ color: "#000" }} />
+                      ) : (
+                        "Aprovar"
+                      )}
+                    </Button>
+                  </Box>
+                )}
               </Box>
             </Paper>
           ) : null}

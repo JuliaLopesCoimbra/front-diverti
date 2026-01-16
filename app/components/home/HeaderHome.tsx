@@ -125,7 +125,7 @@ export default function HomeHeader({
 
         <Box display="flex" alignItems="center" gap={0.6}>
           <Typography variant="body2" sx={{ color: "white" }}>
-            Ambiente ao vivo
+            {event.is_active ? "Ambiente ao vivo" : "Ambiente offline"}
           </Typography>
 
           <Box
@@ -133,8 +133,10 @@ export default function HomeHeader({
               width: 8,
               height: 8,
               borderRadius: "50%",
-              backgroundColor: "#2ecc71",
-              boxShadow: "0 0 6px rgba(46, 204, 113, 0.8)",
+              backgroundColor: event.is_active ? "#2ecc71" : "#9e9e9e",
+              boxShadow: event.is_active 
+                ? "0 0 6px rgba(46, 204, 113, 0.8)" 
+                : "0 0 6px rgba(158, 158, 158, 0.5)",
             }}
           />
         </Box>

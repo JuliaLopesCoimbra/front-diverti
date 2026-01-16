@@ -29,6 +29,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BlockIcon from "@mui/icons-material/Block";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
@@ -73,10 +74,10 @@ export default function HamburgerMenu({
       return;
     }
 
-    // Evento inativo
+    // Evento inativo - admin e subadmin podem entrar
     if (isAdmin) {
-      setSelectedEvent(event);
-      setActivateModalOpen(true);
+      onSelectEvent(event);
+      setOpen(false);
     }
   };
   const handleOpenMenu = (
@@ -287,9 +288,7 @@ export default function HamburgerMenu({
                     onClick={() => handleEventClick(event)}
                     sx={{
                       position: "relative",
-                      cursor:
-                        isInactive && !isAdmin ? "not-allowed" : "pointer",
-                      pointerEvents: isInactive && !isAdmin ? "none" : "auto",
+                      cursor: "pointer",
                       border: isSelected ? "3px solid #ffc91f" : "none",
                       borderRadius: 2,
                       padding: isSelected ? "3px" : 0,
@@ -318,6 +317,7 @@ export default function HamburgerMenu({
                           position: "absolute",
                           top: 6,
                           right: 6,
+                          zIndex: 10,
                           backgroundColor: "rgba(0,0,0,0.45)",
                           "&:hover": {
                             backgroundColor: "rgba(0,0,0,0.65)",
@@ -341,6 +341,7 @@ export default function HamburgerMenu({
                           ? "#2ecc71"
                           : "#e74c3c",
                         border: "2px solid rgba(0,0,0,0.6)",
+                        zIndex: 10,
                       }}
                     />
 
@@ -359,6 +360,7 @@ export default function HamburgerMenu({
                           fontWeight: 600,
                           fontSize: 13,
                           textTransform: "uppercase",
+                          pointerEvents: "none",
                         }}
                       >
                         Ativar evento
@@ -567,7 +569,7 @@ export default function HamburgerMenu({
           }}
         />
 
-        {menuEvent?.is_active && (
+        {menuEvent && menuEvent.is_active === true ? (
           <MenuItem
             onClick={() => {
               if (!menuEvent) return;
@@ -592,7 +594,32 @@ export default function HamburgerMenu({
               }}
             />
           </MenuItem>
-        )}
+        ) : menuEvent && menuEvent.is_active === false ? (
+          <MenuItem
+            onClick={() => {
+              if (!menuEvent) return;
+              setSelectedEvent(menuEvent);
+              setActivateModalOpen(true);
+              handleCloseMenu();
+            }}
+            sx={{
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "rgba(76, 175, 80, 0.1)",
+              },
+            }}
+          >
+            <ListItemIcon>
+              <CheckCircleIcon fontSize="small" sx={{ color: "#4caf50" }} />
+            </ListItemIcon>
+            <ListItemText 
+              primary="Ativar evento"
+              primaryTypographyProps={{
+                sx: { color: "#fff", fontSize: "0.875rem" }
+              }}
+            />
+          </MenuItem>
+        ) : null}
       </Menu>
     </>
   );

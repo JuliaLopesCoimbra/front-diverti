@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useAuth } from "@/app/context/AuthContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
+import { EventResponse } from "@/app/services/events/eventAppService";
 import EmptyNews from "./EmptyNews";
 import { useRouter } from "next/navigation";
 import CTVAd from "@/app/components/ads/CTVAd";
@@ -20,11 +21,12 @@ import PendingPostsNotification from "@/app/components/admin/pending-posts/Pendi
 
 interface Props {
   eventId: number;
+  event?: EventResponse;
 }
 
 const LIMIT = 5;
 
-export default function NewsFeed({ eventId }: Props) {
+export default function NewsFeed({ eventId, event }: Props) {
   const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
   const router = useRouter();
   const [news, setNews] = useState<NewsResponse[]>([]);
@@ -35,6 +37,8 @@ export default function NewsFeed({ eventId }: Props) {
   const loaderRef = useRef<HTMLDivElement | null>(null);
   
   const canApprovePosts = isAdminMaster || isSubadmin;
+  // Evento está ativo apenas se existir e is_active for explicitamente true
+  const isEventActive = event ? event.is_active === true : true; // Default true se não tiver info (para não quebrar)
 
   const loadNews = async (reset = false) => {
     if (loading) return;
@@ -107,9 +111,9 @@ export default function NewsFeed({ eventId }: Props) {
   return (
     <Box padding={2} key={authVersion}>
           {/* AÇÕES ADMIN — SEMPRE NO TOPO */}
-      {canCreatePost && (
+      {canCreatePost && isEventActive && (
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
-          {canApprovePosts && <PendingPostsNotification eventId={eventId} />}
+          {canApprovePosts && isEventActive && <PendingPostsNotification eventId={eventId} />}
           <Button
             variant="contained"
             onClick={() => router.push(`/pages/news/create?eventId=${eventId}`)}

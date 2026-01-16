@@ -12,10 +12,12 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { getEvents, EventResponse } from "../../services/events/eventAppService";
 import EventIndisponivel from "../../components/event/EventIndisponivel";
 import { formatEventDates } from "../../utils/eventDateFormatter";
+import { useAuth } from "../../context/AuthContext";
 
 export default function EventPage() {
   const router = useRouter();
   const params = useParams();
+  const { isAdmin } = useAuth();
   const title = params?.title_event as string; // Recebe o título da URL
   const [event, setEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,9 +69,9 @@ export default function EventPage() {
           );
         });
 
-        if (!foundEvent || !foundEvent.is_active) {
-          // Caso o evento não seja encontrado ou não esteja ativo, renderiza o componente de evento indisponível
-          console.log("Evento não encontrado ou inativo:", {
+        if (!foundEvent) {
+          // Caso o evento não seja encontrado, renderiza o componente de evento indisponível
+          console.log("Evento não encontrado:", {
             urlTitle: decodedTitle,
             normalizedUrlTitle,
             availableEvents: events.map((e) => ({
@@ -80,7 +82,11 @@ export default function EventPage() {
             })),
           });
           setEvent(null);
+        } else if (!foundEvent.is_active && !isAdmin) {
+          // Se o evento estiver inativo e o usuário não for admin/subadmin, renderiza o componente de evento indisponível
+          setEvent(null);
         } else {
+          // Admin/subadmin podem ver eventos desativados, usuários normais só veem ativos
           setEvent(foundEvent);
         }
       } catch (error) {
