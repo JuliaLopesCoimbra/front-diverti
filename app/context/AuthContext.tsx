@@ -95,14 +95,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   
 const login = useCallback(
   (accessToken: string, refreshToken: string) => {
-    const decoded = jwtDecode<TokenPayload>(accessToken);
+    try {
+      const decoded = jwtDecode<TokenPayload>(accessToken);
 
-    // Salva tokens no localStorage e cookie
-    localStorage.setItem("access_token", accessToken);
-    document.cookie = `refresh_token=${refreshToken}; path=/; secure`;
+      // Salva tokens no localStorage e cookie
+      localStorage.setItem("access_token", accessToken);
+      document.cookie = `refresh_token=${refreshToken}; path=/; secure`;
 
-    setRole(decoded.role);
-    setIsAuthenticated(true);
+      // Garante que o role seja definido (pode ser undefined em tokens antigos)
+      const userRole = decoded.role || null;
+      setRole(userRole);
+      setIsAuthenticated(true);
+      
+      // Força atualização do contexto
+      setAuthVersion((v) => v + 1);
+    } catch (error) {
+      console.error("Erro ao decodificar token:", error);
+      setIsAuthenticated(false);
+      setRole(null);
+    }
   },
   []
 );
@@ -124,12 +135,13 @@ const login = useCallback(
     if (!token) {
       setIsAuthenticated(false);
       setRole(null);
+      setAuthReady(true);
       return;
     }
 
     try {
       const decoded = jwtDecode<TokenPayload>(token);
-      setRole(decoded.role);
+      setRole(decoded.role || null);
       setIsAuthenticated(true);
     } catch {
       setIsAuthenticated(false);

@@ -24,8 +24,13 @@ function AuthCallbackContent() {
       return;
     }
 
+    // Força o login e aguarda um pouco para garantir que o contexto seja atualizado
     login(access, refresh);
-    router.replace("/pages/user/home");
+    
+    // Pequeno delay para garantir que o token seja processado
+    setTimeout(() => {
+      router.replace("/pages/user/home");
+    }, 100);
   }, [params, login, router]);
 
   return (

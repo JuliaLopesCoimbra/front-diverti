@@ -10,6 +10,7 @@ import {
   Skeleton,
   Button,
   Divider,
+  Avatar,
 } from "@mui/material";
 import { useAuth } from "@/app/context/AuthContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
@@ -25,6 +26,36 @@ interface Props {
 }
 
 const LIMIT = 5;
+
+// Função para formatar data relativa ou extensa
+function formatDate(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = diffMs / (1000 * 60 * 60);
+
+  // Se for menos de 24 horas, mostra relativo
+  if (diffHours < 24) {
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMinutes < 1) {
+      return "há menos de 1 minuto";
+    } else if (diffMinutes < 60) {
+      return `há ${diffMinutes} ${diffMinutes === 1 ? "minuto" : "minutos"} atrás`;
+    } else {
+      const hours = Math.floor(diffHours);
+      return `há ${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
+    }
+  }
+
+  // Se for mais de 24 horas, mostra data extensa
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export default function NewsFeed({ eventId, event }: Props) {
   const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
@@ -182,13 +213,28 @@ export default function NewsFeed({ eventId, event }: Props) {
                   variant="body2"
                   sx={{ color: "rgba(255,255,255,0.7)", marginTop: 1 }}
                 >
-                  {new Date(featured.created_at).toLocaleDateString("pt-BR", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
+                  {formatDate(featured.created_at)}
                 </Typography>
+
+                {featured.author && (
+                  <Box display="flex" alignItems="center" gap={1} marginTop={1}>
+                    <Avatar
+                      src={featured.author.profile_photo || undefined}
+                      alt={featured.author.name || "Autor"}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        bgcolor: "rgba(255,255,255,0.2)",
+                      }}
+                    />
+                    <Typography
+                      variant="body2"
+                      sx={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}
+                    >
+                      {featured.author.name || "Autor desconhecido"}
+                    </Typography>
+                  </Box>
+                )}
               </CardContent>
             </Card>
           )}
@@ -242,8 +288,28 @@ export default function NewsFeed({ eventId, event }: Props) {
                       fontSize={12}
                       sx={{ color: "rgba(255,255,255,0.6)" }}
                     >
-                      {new Date(item.created_at).toLocaleDateString("pt-BR")}
+                      {formatDate(item.created_at)}
                     </Typography>
+
+                    {item.author && (
+                      <Box display="flex" alignItems="center" gap={1} marginTop={0.5}>
+                        <Avatar
+                          src={item.author.profile_photo || undefined}
+                          alt={item.author.name || "Autor"}
+                          sx={{
+                            width: 20,
+                            height: 20,
+                            bgcolor: "rgba(255,255,255,0.2)",
+                          }}
+                        />
+                        <Typography
+                          fontSize={11}
+                          sx={{ color: "rgba(255,255,255,0.6)" }}
+                        >
+                          {item.author.name || "Autor desconhecido"}
+                        </Typography>
+                      </Box>
+                    )}
                   </CardContent>
                 </Card>
 

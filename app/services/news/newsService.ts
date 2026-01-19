@@ -17,6 +17,7 @@ export interface NewsResponse {
   deleted_by_id?: number;
   event_id?: number;
   status?: "pending" | "approved" | "rejected" | "deleted";
+  author?: NewsAuthor | null;
 }
 
 export interface NewsAuthor {
