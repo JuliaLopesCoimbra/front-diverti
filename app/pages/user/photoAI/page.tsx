@@ -64,6 +64,15 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
     }
   }, [stage]);
 
+  const extractErrorMessage = (error: any) => {
+    return (
+      error?.response?.data?.detail ||
+      error?.response?.data?.message ||
+      error?.message ||
+      "Não foi possível concluir a operação. Tente novamente."
+    );
+  };
+
   const requestCamera = async () => {
     setIsRequestingCamera(true);
     setCameraError(null);
@@ -89,9 +98,10 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
       }, 100);
     } catch (err: any) {
       console.error("Erro ao acessar câmera:", err);
-      setCameraError(
-        `Não foi possível acessar a câmera: ${err.message || "Verifique as permissões do dispositivo."}`
-      );
+      const message =
+        `Não foi possível acessar a câmera: ${err?.message || "Verifique as permissões do dispositivo."}`;
+      setCameraError(message);
+      showToast(message, "error");
     } finally {
       setIsRequestingCamera(false);
     }
@@ -157,7 +167,9 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
     try {
       const file = await capturePhoto();
       if (!file) {
-        setSearchMessage("Não foi possível capturar a foto. Tente novamente.");
+        const message = "Não foi possível capturar a foto. Tente novamente.";
+        setSearchMessage(message);
+        showToast(message, "error");
         setIsUploading(false);
         return;
       }
@@ -186,12 +198,14 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
       console.log("Imagens finais para exibir:", imagesFromApi);
       setResults(imagesFromApi);
       setSearchMessage(response.message || null);
+      if (response.message) {
+        showToast(response.message, "info");
+      }
       setStage("results");
     } catch (error: any) {
-      setSearchMessage(
-        error?.response?.data?.detail ||
-          "Não foi possível realizar a busca. Tente novamente."
-      );
+      const message = extractErrorMessage(error);
+      setSearchMessage(message);
+      showToast(message, "error");
     } finally {
       stopCamera();
       setIsUploading(false);
