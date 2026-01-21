@@ -33,6 +33,8 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
   const [schools, setSchools] = useState<SambaSchoolResponse[]>([]);
   const [musics, setMusics] = useState<MusicLyricsResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSchoolId, setSelectedSchoolId] = useState<number | null>(null);
+  const enredoSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (initialized) {
@@ -213,6 +215,18 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
     };
   }, [schools, musics, cacheKey, setCache]);
 
+  // Scroll automático para a seção do enredo quando uma escola é selecionada
+  useEffect(() => {
+    if (selectedSchoolId && enredoSectionRef.current) {
+      setTimeout(() => {
+        enredoSectionRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100);
+    }
+  }, [selectedSchoolId]);
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" mt={4}>
@@ -264,6 +278,9 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
           {schools.map((school) => (
             <Box key={school.id}>
               <Card
+                onClick={() => {
+                  setSelectedSchoolId(selectedSchoolId === school.id ? null : school.id);
+                }}
                 sx={{
                   backgroundColor: "transparent",
                   height: "100%",
@@ -271,6 +288,12 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                   flexDirection: "column",
                   boxShadow: "none",
                   border: "none",
+                  cursor: "pointer",
+                  transition: "transform 0.2s, opacity 0.2s",
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    opacity: 0.9,
+                  },
                 }}
               >
                 <CardContent
@@ -389,6 +412,112 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
           />
         </Box>
       </Box>
+
+      {/* Seção de Enredo da Escola de Samba */}
+      {selectedSchoolId && (() => {
+        const selectedSchool = schools.find(s => s.id === selectedSchoolId);
+        if (!selectedSchool) return null;
+        
+        return (
+          <Box
+            ref={enredoSectionRef}
+            sx={{
+              mt: 4,
+              px: 2,
+              maxWidth: { md: "800px", lg: "900px" },
+              mx: "auto",
+            }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              mb={3}
+              sx={{
+                color: "#fff",
+                textAlign: "center",
+                fontSize: "1.2rem",
+              }}
+            >
+              Enredo da Escola de Samba
+            </Typography>
+
+            <Card
+              sx={{
+                backgroundColor: "transparent",
+                boxShadow: "none",
+                border: "none",
+                borderRadius: 3,
+              }}
+            >
+              <CardContent
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  p: { xs: 2, md: 4 },
+                }}
+              >
+                {/* Foto da Escola */}
+                {selectedSchool.image_url && (
+                  <Box
+                    sx={{
+                      width: { xs: "100%", md: "400px", lg: "500px" },
+                      height: { xs: "250px", md: "350px", lg: "400px" },
+                      borderRadius: 3,
+                      mb: 3,
+                      overflow: "hidden",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={selectedSchool.image_url}
+                      alt={selectedSchool.name}
+                      sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                      }}
+                    />
+                  </Box>
+                )}
+
+                {/* Nome da Escola */}
+                <Typography
+                  variant="h5"
+                  fontWeight={700}
+                  mb={2}
+                  sx={{
+                    color: "#fff",
+                    textAlign: "center",
+                    fontSize: { xs: "1.3rem", md: "1.5rem", lg: "1.7rem" },
+                  }}
+                >
+                  {selectedSchool.name}
+                </Typography>
+
+                {/* Descrição/Enredo */}
+                {selectedSchool.description && (
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "rgba(255,255,255,0.9)",
+                      textAlign: "justify",
+                      fontSize: { xs: "0.95rem", md: "1.05rem", lg: "1.1rem" },
+                      lineHeight: 1.8,
+                      whiteSpace: "pre-line",
+                    }}
+                  >
+                    {selectedSchool.description}
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Box>
+        );
+      })()}
 
       {/* <Divider sx={{ my: 4 }} /> */}
 

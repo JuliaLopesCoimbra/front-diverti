@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Box, CircularProgress, Typography, IconButton } from "@mui/material";
+import { Box, CircularProgress, Typography, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import EmailIcon from "@mui/icons-material/Email";
@@ -16,6 +16,8 @@ import { useToast } from "@/app/context/ToastContext";
 export default function ProfilePage() {
   const router = useRouter();
   const { showToast } = useToast();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up("md"));
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -150,171 +152,187 @@ export default function ProfilePage() {
         minHeight: "100vh",
         backgroundColor: "#f4f7fc",
         backgroundImage: "url(/background/dashboard.png)",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "16px",
-        }}
-      >
-        {/* SETA DE VOLTAR */}
-        <IconButton
-          onClick={() => router.back()}
-          sx={{
-            color: "white",
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.1)",
-            },
-          }}
-        >
-          <ArrowBackIosIcon />
-        </IconButton>
-      </div>
-
-      <main
-        style={{
+      {/* Container centralizado para desktop */}
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: { xs: "100%", md: "800px" },
+          margin: { xs: 0, md: "0 auto" },
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
         }}
       >
-        {/* Foto de Perfil */}
-        <Box
-          sx={{
-            position: "relative",
-            mb: 4,
-            cursor: "pointer",
-            "&:hover .camera-overlay": {
-              opacity: 1,
-            },
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "16px",
           }}
-          onClick={handlePhotoClick}
         >
-          <Box
+          {/* SETA DE VOLTAR */}
+          <IconButton
+            onClick={() => router.back()}
             sx={{
-              width: 200,
-              height: 200,
-              borderRadius: "50%",
-              overflow: "hidden",
-              border: "4px solid #FFD600",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-              position: "relative",
+              color: "white",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
             }}
           >
-            {profile.profile_photo ? (
-              <Image
-                src={profile.profile_photo}
-                alt="Foto de perfil"
-                width={200}
-                height={200}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            ) : (
+            <ArrowBackIosIcon />
+          </IconButton>
+        </div>
+
+        <main
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
+          {/* Foto de Perfil */}
+          <Box
+            sx={{
+              position: "relative",
+              mb: { xs: 4, md: 6 },
+              cursor: "pointer",
+              "&:hover .camera-overlay": {
+                opacity: 1,
+              },
+            }}
+            onClick={handlePhotoClick}
+          >
+            <Box
+              sx={{
+                width: { xs: 200, md: 250 },
+                height: { xs: 200, md: 250 },
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "4px solid #FFD600",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                position: "relative",
+              }}
+            >
+              {profile.profile_photo ? (
+                <Image
+                  src={profile.profile_photo}
+                  alt="Foto de perfil"
+                  width={250}
+                  height={250}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <Box
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <PersonIcon sx={{ fontSize: { xs: 80, md: 100 }, color: "white" }} />
+                </Box>
+              )}
               <Box
+                className="camera-overlay"
                 sx={{
-                  width: "100%",
-                  height: "100%",
-                  backgroundColor: "rgba(255,255,255,0.2)",
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  backgroundColor: "rgba(0,0,0,0.5)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  opacity: 0,
+                  transition: "opacity 0.2s",
                 }}
               >
-                <PersonIcon sx={{ fontSize: 80, color: "white" }} />
+                {uploading ? (
+                  <CircularProgress sx={{ color: "#FFD600" }} size={40} />
+                ) : (
+                  <CameraAltIcon sx={{ fontSize: { xs: 40, md: 50 }, color: "#FFD600" }} />
+                )}
+              </Box>
+            </Box>
+          </Box>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handlePhotoChange}
+          />
+
+          {/* Informações do Usuário */}
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: { xs: "100%", md: "600px" },
+              padding: { xs: "30px", md: "40px" },
+              color: "white",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: { xs: "flex-start", md: "flex-start" },
+            }}
+          >
+            {/* Nome */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <PersonIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                {profile.name || "Não informado"}
+              </Typography>
+            </Box>
+
+            {/* Email */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <EmailIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                {profile.email}
+              </Typography>
+            </Box>
+
+            {/* Status de Verificação */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <VerifiedUserIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                {profile.is_email_verified ? "Email verificado" : "Email não verificado"}
+              </Typography>
+            </Box>
+
+            {/* Data de Criação */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <CalendarTodayIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                Membro desde {formatDate(profile.created_at)}
+              </Typography>
+            </Box>
+
+            {/* Último Login */}
+            {profile.last_login && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 } }}>
+                <CalendarTodayIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+                <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                  Último acesso {formatDate(profile.last_login)}
+                </Typography>
               </Box>
             )}
-            <Box
-              className="camera-overlay"
-              sx={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: 0,
-                transition: "opacity 0.2s",
-              }}
-            >
-              {uploading ? (
-                <CircularProgress sx={{ color: "#FFD600" }} size={40} />
-              ) : (
-                <CameraAltIcon sx={{ fontSize: 40, color: "#FFD600" }} />
-              )}
-            </Box>
           </Box>
-        </Box>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={handlePhotoChange}
-        />
-
-        {/* Informações do Usuário */}
-        <Box
-          sx={{
-            maxWidth: 700,
-            padding: "30px",
-            alignSelf: "flex-start",
-            color: "white",
-          }}
-        >
-          {/* Nome */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <PersonIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              {profile.name || "Não informado"}
-            </p>
-          </Box>
-
-          {/* Email */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <EmailIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              {profile.email}
-            </p>
-          </Box>
-
-          {/* Status de Verificação */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <VerifiedUserIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              {profile.is_email_verified ? "Email verificado" : "Email não verificado"}
-            </p>
-          </Box>
-
-          {/* Data de Criação */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-            <CalendarTodayIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              Membro desde {formatDate(profile.created_at)}
-            </p>
-          </Box>
-
-          {/* Último Login */}
-          {profile.last_login && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <CalendarTodayIcon style={{ color: "yellow" }} />
-              <p style={{ margin: 0, fontSize: 15 }}>
-                Último acesso {formatDate(profile.last_login)}
-              </p>
-            </Box>
-          )}
-        </Box>
-      </main>
+        </main>
+      </Box>
     </div>
   );
 }

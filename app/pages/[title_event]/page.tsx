@@ -281,13 +281,13 @@ export default function EventPage() {
   if (!event) return <EventIndisponivel />; // Se não houver evento ou se não for ativo, exibe o componente de evento indisponível
 
   // Formatação do horário
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("pt-BR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const startDate = new Date(event.starts_at);
+  const endDate = new Date(event.ends_at);
+
+  const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 
   return (
     <div
@@ -295,221 +295,240 @@ export default function EventPage() {
         minHeight: "100vh",
         backgroundColor: "#f4f7fc",
         backgroundImage: "url(/background/dashboard.png)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
+      {/* Container centralizado para desktop */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "16px 32px",
-        }}
-      >
-        {/* LOGO + TEXTO */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Image
-            src="/logo/logo-n1.png"
-            alt="Camarote N1"
-            width={60}
-            height={60}
-          />
-          <strong style={{ fontSize: 22, color: "white" }}>Camarote N1</strong>
-        </div>
-        <Button
-          onClick={() => router.push("/pages/auth/login")}
-          sx={{
-            color: "white",
-            textTransform: "none",
-            fontWeight: 500,
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.1)",
-            },
-          }}
-        >
-          Login
-        </Button>
-      </div>
-
-      <main
-        style={{
+          width: "100%",
+          maxWidth: "1200px",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
         }}
       >
-        <Image
-          src={event.banner_image || "/components/dashboard-component.png"}
-          alt={event.title}
-          width={900}
-          height={400}
-          style={{ borderRadius: 12 }}
-        />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "16px 32px",
+          }}
+        >
+          {/* LOGO + TEXTO */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <Image
+              src="/logo/logo-n1.png"
+              alt="Camarote N1"
+              width={60}
+              height={60}
+            />
+            <strong style={{ fontSize: 22, color: "white" }}>Camarote N1</strong>
+          </div>
+          <Button
+            onClick={() => router.push("/pages/auth/login")}
+            sx={{
+              color: "white",
+              textTransform: "none",
+              fontWeight: 500,
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            }}
+          >
+            Login
+          </Button>
+        </div>
 
-        {event.description && (
+        <main
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            textAlign: "center",
+          }}
+        >
+          {event.banner_image && (
+            <Box
+              component="img"
+              src={event.banner_image}
+              alt={event.title}
+              sx={{
+                width: "100%",
+                maxWidth: 700,
+                maxHeight: 280,
+                objectFit: "cover",
+                borderRadius: 2,
+              }}
+            />
+          )}
+
+          {event.description && (
+            <p
+              style={{
+                maxWidth: 700,
+                marginTop: 16,
+                fontSize: 13,
+                padding: "30px",
+                color: "white",
+                textAlign: "left",
+              }}
+            >
+              {event.description}
+            </p>
+          )}
+
           <p
             style={{
               maxWidth: 700,
-              marginTop: 16,
-              fontSize: 13,
+              marginTop: 2,
+              fontSize: 16,
               padding: "30px",
-              color: "white",
-              textAlign: "left",
+              color: "#000",
+              textAlign: "center",
+              lineHeight: 1.6,
             }}
           >
-            {event.description}
-          </p>
-        )}
-
-        <p
-          style={{
-            maxWidth: 700,
-            marginTop: 2,
-            fontSize: 16,
-            padding: "30px",
-            color: "#000",
-            textAlign: "left",
-            lineHeight: 1.6,
-          }}
-        >
-          <span
-            style={{
-              backgroundColor: "#ffffff",
-              padding: "6px 10px",
-              fontWeight: 600,
-              display: "inline",
-              boxDecorationBreak: "clone",
-              WebkitBoxDecorationBreak: "clone",
-            }}
-          >
-            Prepare-se para sapucar como nunca antes. Te esperamos na Avenida!
-          </span>
-        </p>
-
-        <Box
-          sx={{
-            maxWidth: 700,
-            padding: "30px",
-            alignSelf: "flex-start",
-            color: "white",
-          }}
-        >
-          {/* DATA */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <EventIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              {formatEventDates(event)}
-            </p>
-          </Box>
-
-          {/* HORÁRIO */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <AccessTimeIcon style={{ color: "yellow" }} />
-            <p style={{ margin: 0, fontSize: 15 }}>
-              {formatTime(event.starts_at)}
-            </p>
-          </Box>
-
-          {/* LOCAL */}
-          {event.location && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <LocationOnIcon style={{ color: "yellow" }} />
-              <p style={{ margin: 0, fontSize: 15 }}>{event.location}</p>
-            </Box>
-          )}
-        </Box>
-
-        {/* MAPA DO EVENTO */}
-        {event.image_map && (
-          <Box
-            sx={{
-              maxWidth: 700,
-              width: "100%",
-             
-              padding: "20px",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 2 }}>
-              <MapIcon style={{ color: "yellow" }} />
-              <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
-                Mapa do Evento
-              </h3>
-            </Box>
-            <Image
-              src={event.image_map}
-              alt="Mapa do Evento"
-              width={700}
-              height={400}
+            <span
               style={{
-                borderRadius: 12,
-                width: "100%",
-                height: "auto",
-                objectFit: "contain",
-              }}
-            />
-          </Box>
-        )}
-
-        {/* LINE UP / PROGRAMAÇÃO */}
-        {event.line_up && (
-          <Box
-            sx={{
-              maxWidth: 700,
-              width: "100%",
-             
-              padding: "20px",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 2 }}>
-              <MusicNoteIcon style={{ color: "yellow" }} />
-              <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
-                Programação (Line Up)
-              </h3>
-            </Box>
-            <Box
-              sx={{
-                backgroundColor: "rgba(255,255,255,0.1)",
-                borderRadius: 2,
-                padding: 3,
                 color: "white",
+                padding: "6px 10px",
+                fontWeight: 600,
+                display: "inline",
               }}
             >
-              <pre
-                style={{
-                  margin: 0,
-                  fontSize: 14,
-                  lineHeight: 1.8,
-                  whiteSpace: "pre-wrap",
-                  fontFamily: "inherit",
+              Prepare-se para sapucar como nunca antes. Te esperamos na Avenida!
+            </span>
+          </p>
+
+          <Box
+            sx={{
+              maxWidth: 700,
+              width: "100%",
+              padding: "30px",
+              color: "white",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 1.5,
+            }}
+          >
+            {/* DATA */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <EventIcon style={{ color: "yellow" }} />
+              <p style={{ margin: 0, fontSize: 15 }}>
+                {formatEventDates(event)}
+              </p>
+            </Box>
+
+            {/* HORÁRIO */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <AccessTimeIcon style={{ color: "yellow" }} />
+              <p style={{ margin: 0, fontSize: 15 }}>
+                {timeFormatter.format(startDate)} às {timeFormatter.format(endDate)}
+              </p>
+            </Box>
+
+            {/* LOCAL */}
+            {event.location && (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <LocationOnIcon style={{ color: "yellow" }} />
+                <p style={{ margin: 0, fontSize: 15 }}>{event.location}</p>
+              </Box>
+            )}
+          </Box>
+
+          {/* MAPA DO EVENTO */}
+          {event.image_map && (
+            <Box
+              sx={{
+                maxWidth: 700,
+                width: "100%",
+                padding: "20px",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
+                <MapIcon style={{ color: "yellow" }} />
+                <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
+                  Mapa do Evento
+                </h3>
+              </Box>
+              <Box
+                component="img"
+                src={event.image_map}
+                alt="Mapa do Evento"
+                sx={{
+                  width: "100%",
+                  maxHeight: 400,
+                  objectFit: "contain",
+                  borderRadius: 2,
+                }}
+              />
+            </Box>
+          )}
+
+          {/* LINE UP / PROGRAMAÇÃO */}
+          {event.line_up && (
+            <Box
+              sx={{
+                maxWidth: 700,
+                width: "100%",
+                padding: "20px",
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
+                <MusicNoteIcon style={{ color: "yellow" }} />
+                <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
+                  Programação (Line Up)
+                </h3>
+              </Box>
+              <Box
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  borderRadius: 2,
+                  padding: 3,
+                  color: "white",
                 }}
               >
-                {event.line_up}
-              </pre>
+                <pre
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    lineHeight: 1.8,
+                    whiteSpace: "pre-wrap",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {event.line_up}
+                </pre>
+              </Box>
             </Box>
-          </Box>
-        )}
+          )}
 
-        <Button
-          onClick={() => router.push("/comprar")}
-          sx={{
-            marginTop: 3,
-            backgroundColor: "#FFD600",
-            color: "#000",
-            fontWeight: 700,
-            padding: "12px 32px",
-            borderRadius: "30px",
-            textTransform: "none",
-            fontSize: 16,
-            marginBottom: 3,
-            boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
-            "&:hover": {
-              backgroundColor: "#FFC400",
-            },
-          }}
-        >
-          Comprar ingressos
-        </Button>
-      </main>
+          <Button
+            onClick={() => router.push("/comprar")}
+            sx={{
+              marginTop: 3,
+              backgroundColor: "#FFD600",
+              color: "#000",
+              fontWeight: 700,
+              padding: "12px 32px",
+              borderRadius: "30px",
+              textTransform: "none",
+              fontSize: 16,
+              marginBottom: 3,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+              "&:hover": {
+                backgroundColor: "#FFC400",
+              },
+            }}
+          >
+            Comprar ingressos
+          </Button>
+        </main>
+      </div>
     </div>
   );
 }
