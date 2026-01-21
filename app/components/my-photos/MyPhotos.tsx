@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,6 +8,7 @@ import {
   CardMedia,
   Skeleton,
 } from "@mui/material";
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import {
   getMyPurchasedPhotos,
   PurchasedPhoto,
@@ -18,23 +19,156 @@ interface MyPhotosProps {
 }
 
 export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
+  // ===== CACHE (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = "my-photos";
+  const [initialized, setInitialized] = useState(false);
+  // =========================================
+  
   const [photos, setPhotos] = useState<PurchasedPhoto[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const loadPhotos = async () => {
+    try {
+      const data = await getMyPurchasedPhotos();
+      setPhotos(data);
+    } catch (err) {
+      console.error("Erro ao carregar fotos compradas", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ===== CACHE: Carregar dados ao montar =====
   useEffect(() => {
-    const loadPhotos = async () => {
-      try {
-        const data = await getMyPurchasedPhotos();
-        setPhotos(data);
-      } catch (err) {
-        console.error("Erro ao carregar fotos compradas", err);
-      } finally {
-        setLoading(false);
+    if (initialized) return;
+
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      // ✅ Dados encontrados no cache!
+      setPhotos(cached.data);
+      setLoading(false);
+      setInitialized(true);
+      
+      // Restaura posição do scroll
+      const targetPosition = cached.scrollPosition;
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff >= 10 && attempts < maxAttempts) {
+          requestAnimationFrame(attemptRestore);
+        }
+      };
+      
+      requestAnimationFrame(attemptRestore);
+      
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      // ❌ Sem cache - carrega da API
+      loadPhotos();
+      setInitialized(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ===== CACHE: Salvar scroll position =====
+  const lastScrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 400; // Otimizado para performance
+    
+    const updateScrollPosition = () => {
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+      lastScrollPositionRef.current = currentScroll;
+      
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        if (photos.length > 0) {
+          setCache(cacheKey, photos, currentScroll);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    const handleScroll = () => {
+      updateScrollPosition();
+    };
+    
+    const handlePageHide = () => {
+      if (photos.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, photos, finalScroll);
       }
     };
-
-    loadPhotos();
-  }, []);
+    
+    const handleBeforeUnload = () => {
+      if (photos.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, photos, finalScroll);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden && photos.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, photos, finalScroll);
+      }
+    };
+    
+    const handleBlur = () => {
+      if (photos.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, photos, finalScroll);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      if (photos.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, photos, finalScroll);
+      }
+    };
+  }, [photos, cacheKey, setCache]);
 
   if (loading) {
     return (

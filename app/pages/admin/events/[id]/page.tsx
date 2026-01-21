@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -24,6 +24,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SchoolIcon from '@mui/icons-material/School';
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { 
   getEventById, 
   EventResponse, 
@@ -50,6 +51,12 @@ export default function EventDetailsPage() {
   const eventId = Number(params.id);
   const { isAdmin } = useAuth();
   const { showToast } = useToast();
+
+  // ===== CACHE (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `admin-event-details-${eventId}`;
+  const [initialized, setInitialized] = useState(false);
+  // =========================================
 
   const [event, setEvent] = useState<EventResponse | null>(null);
   const [schools, setSchools] = useState<SambaSchoolResponse[]>([]);
@@ -114,31 +121,229 @@ export default function EventDetailsPage() {
     fetchPendingCount();
   }, [eventId, isAdmin]);
 
+  // ===== CACHE: Carregar escolas e músicas =====
   useEffect(() => {
-    if (!eventId) return;
+    if (!eventId || initialized) return;
 
-    const fetchSchoolsAndMusics = async () => {
-      try {
-        setLoadingSchools(true);
-        const [schoolsData, musicsData] = await Promise.all([
-          getSambaSchoolsByEvent(eventId, ITEMS_PER_PAGE, 0),
-          getMusicLyricsByEvent(eventId, ITEMS_PER_PAGE, 0),
-        ]);
-        setSchools(schoolsData);
-        setMusics(musicsData);
-        setSchoolsOffset(schoolsData.length);
-        setMusicsOffset(musicsData.length);
-        setHasMoreSchools(schoolsData.length >= ITEMS_PER_PAGE);
-        setHasMoreMusics(musicsData.length >= ITEMS_PER_PAGE);
-      } catch (err) {
-        console.error("Erro ao buscar escolas e músicas", err);
-      } finally {
-        setLoadingSchools(false);
+    console.log('🔍 [Admin Events] Verificando cache para:', cacheKey);
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      console.log('✅ [Admin Events] Cache encontrado!');
+      // ✅ Dados encontrados no cache!
+      const [cachedSchools, cachedMusics] = cached.data;
+      console.log('📦 [Admin Events] Escolas:', cachedSchools?.length || 0, 'Músicas:', cachedMusics?.length || 0);
+      setSchools(cachedSchools || []);
+      setMusics(cachedMusics || []);
+      setSchoolsOffset(cachedSchools?.length || 0);
+      setMusicsOffset(cachedMusics?.length || 0);
+      setHasMoreSchools((cachedSchools?.length || 0) >= ITEMS_PER_PAGE);
+      setHasMoreMusics((cachedMusics?.length || 0) >= ITEMS_PER_PAGE);
+      setLoadingSchools(false);
+      setInitialized(true);
+      
+      // Restaura posição do scroll
+      const targetPosition = cached.scrollPosition;
+      console.log(`🎯 [Admin Events] RESTAURANDO SCROLL para: ${targetPosition}px`);
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        const container = containerElementRef.current;
+        
+        if (container) {
+          container.scrollTop = targetPosition;
+        }
+        
+        const currentScroll = container?.scrollTop || 0;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff < 10) {
+          console.log(`✅ [Admin Events] SUCESSO! Scroll restaurado em ${attempts} tentativas: ${currentScroll}px`);
+        } else if (attempts < maxAttempts) {
+          console.log(`⏳ [Admin Events] Tentativa ${attempts}: atual=${currentScroll}, target=${targetPosition}, diff=${diff}`);
+          requestAnimationFrame(attemptRestore);
+        } else {
+          console.log(`⚠️ [Admin Events] Máximo de tentativas. Posição final: ${currentScroll}px`);
+        }
+      };
+      
+      requestAnimationFrame(attemptRestore);
+      
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          const container = containerElementRef.current;
+          if (container) {
+            container.scrollTop = targetPosition;
+          }
+        }, delay);
+      });
+    } else {
+      console.log('❌ [Admin Events] Sem cache - carregando da API');
+      // ❌ Sem cache - carrega da API
+      const fetchSchoolsAndMusics = async () => {
+        try {
+          setLoadingSchools(true);
+          const [schoolsData, musicsData] = await Promise.all([
+            getSambaSchoolsByEvent(eventId, ITEMS_PER_PAGE, 0),
+            getMusicLyricsByEvent(eventId, ITEMS_PER_PAGE, 0),
+          ]);
+          setSchools(schoolsData);
+          setMusics(musicsData);
+          setSchoolsOffset(schoolsData.length);
+          setMusicsOffset(musicsData.length);
+          setHasMoreSchools(schoolsData.length >= ITEMS_PER_PAGE);
+          setHasMoreMusics(musicsData.length >= ITEMS_PER_PAGE);
+        } catch (err) {
+          console.error("Erro ao buscar escolas e músicas", err);
+        } finally {
+          setLoadingSchools(false);
+        }
+      };
+
+      fetchSchoolsAndMusics();
+      setInitialized(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
+  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
+  const lastScrollPositionRef = useRef(0);
+  const schoolsRef = useRef(schools);
+  const musicsRef = useRef(musics);
+  const cleanupFnRef = useRef<(() => void) | null>(null);
+  const containerElementRef = useRef<HTMLDivElement | null>(null);
+  
+  // Atualiza refs quando schools/musics mudam
+  useEffect(() => {
+    schoolsRef.current = schools;
+    musicsRef.current = musics;
+  }, [schools, musics]);
+  
+  // Callback ref - chamado quando o elemento é montado/desmontado
+  const scrollContainerRef = useCallback((container: HTMLDivElement | null) => {
+    // Armazena a referência
+    containerElementRef.current = container;
+    
+    // Limpa listeners anteriores se existirem
+    if (cleanupFnRef.current) {
+      console.log('🧹 [Admin Events] Limpando listeners anteriores');
+      cleanupFnRef.current();
+      cleanupFnRef.current = null;
+    }
+    
+    if (!container) {
+      console.log('⚠️ [Admin Events] Container desmontado');
+      return;
+    }
+    
+    console.log('✅ [Admin Events] Container montado! Configurando listeners...');
+    
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 400; // Otimizado para performance
+    
+    const updateScrollPosition = () => {
+      const containerScroll = container.scrollTop;
+      const containerMaxScroll = container.scrollHeight - container.clientHeight;
+      
+      console.log(`📊 [Admin Events] SCROLL DETECTADO (CONTAINER):`, {
+        containerScrollTop: containerScroll,
+        containerMaxScroll,
+        containerScrollHeight: container.scrollHeight,
+        containerClientHeight: container.clientHeight
+      });
+      
+      lastScrollPositionRef.current = containerScroll;
+      
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        const currentSchools = schoolsRef.current;
+        const currentMusics = musicsRef.current;
+        if (currentSchools.length > 0 || currentMusics.length > 0) {
+          setCache(cacheKey, [currentSchools, currentMusics], containerScroll);
+          console.log(`💾 [Admin Events] Cache atualizado (scroll): ${containerScroll}px, escolas: ${currentSchools.length}, músicas: ${currentMusics.length}`);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    const handleScroll = () => {
+      console.log('🔔 [Admin Events] Evento de scroll disparado!');
+      updateScrollPosition();
+    };
+    
+    const handlePageHide = () => {
+      const currentSchools = schoolsRef.current;
+      const currentMusics = musicsRef.current;
+      if (currentSchools.length > 0 || currentMusics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [currentSchools, currentMusics], finalScroll);
+        console.log(`💾 [Admin Events] Cache salvo (pagehide): ${finalScroll}px`);
       }
     };
-
-    fetchSchoolsAndMusics();
-  }, [eventId]);
+    
+    const handleBeforeUnload = () => {
+      const currentSchools = schoolsRef.current;
+      const currentMusics = musicsRef.current;
+      if (currentSchools.length > 0 || currentMusics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [currentSchools, currentMusics], finalScroll);
+        console.log(`💾 [Admin Events] Cache salvo (beforeunload): ${finalScroll}px`);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      const currentSchools = schoolsRef.current;
+      const currentMusics = musicsRef.current;
+      if (document.hidden && (currentSchools.length > 0 || currentMusics.length > 0)) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [currentSchools, currentMusics], finalScroll);
+        console.log(`💾 [Admin Events] Cache salvo (visibilitychange): ${finalScroll}px`);
+      }
+    };
+    
+    const handleBlur = () => {
+      const currentSchools = schoolsRef.current;
+      const currentMusics = musicsRef.current;
+      if (currentSchools.length > 0 || currentMusics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [currentSchools, currentMusics], finalScroll);
+        console.log(`💾 [Admin Events] Cache salvo (blur): ${finalScroll}px`);
+      }
+    };
+    
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    // Armazena a função de cleanup
+    cleanupFnRef.current = () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      container.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      const currentSchools = schoolsRef.current;
+      const currentMusics = musicsRef.current;
+      if (currentSchools.length > 0 || currentMusics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [currentSchools, currentMusics], finalScroll);
+        console.log(`💾 [Admin Events] Cache salvo (cleanup): ${finalScroll}px`);
+      }
+    };
+  }, [cacheKey, setCache]);
 
   const loadMoreSchools = async () => {
     if (!eventId || loadingMoreSchools || !hasMoreSchools) return;
@@ -290,6 +495,7 @@ export default function EventDetailsPage() {
 
   return (
     <Box
+      ref={scrollContainerRef}
       sx={{
         minHeight: "100vh",
         height: "100vh",

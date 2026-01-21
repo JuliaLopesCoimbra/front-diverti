@@ -16,6 +16,7 @@ import {
 import CameraAltOutlinedIcon from "@mui/icons-material/CameraAltOutlined";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { searchFace } from "@/app/services/ai/searchFaceService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
@@ -33,6 +34,12 @@ interface PhotoAIPageProps {
 }
 
 export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
+  // ===== CACHE (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `photo-ai-results-event-${eventId}`;
+  const [initialized, setInitialized] = useState(false);
+  // =========================================
+  
   const [stage, setStage] = useState<Stage>("intro");
   const [isRequestingCamera, setIsRequestingCamera] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -52,6 +59,137 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
   useEffect(() => {
     return () => stopCamera();
   }, []);
+
+  // ===== CACHE: Carregar resultados ao montar =====
+  useEffect(() => {
+    if (initialized) return;
+
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      // ✅ Resultados encontrados no cache!
+      setResults(cached.data);
+      setStage("results");
+      setInitialized(true);
+      
+      // Restaura posição do scroll
+      const targetPosition = cached.scrollPosition;
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff >= 10 && attempts < maxAttempts) {
+          requestAnimationFrame(attemptRestore);
+        }
+      };
+      
+      requestAnimationFrame(attemptRestore);
+      
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      setInitialized(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ===== CACHE: Salvar scroll position quando em results =====
+  const lastScrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    if (stage !== "results" || results.length === 0) return;
+    
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 400; // Otimizado para performance
+    
+    const updateScrollPosition = () => {
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+      lastScrollPositionRef.current = currentScroll;
+      
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        if (results.length > 0) {
+          setCache(cacheKey, results, currentScroll);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    const handleScroll = () => {
+      updateScrollPosition();
+    };
+    
+    const handlePageHide = () => {
+      if (results.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, results, finalScroll);
+      }
+    };
+    
+    const handleBeforeUnload = () => {
+      if (results.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, results, finalScroll);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden && results.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, results, finalScroll);
+      }
+    };
+    
+    const handleBlur = () => {
+      if (results.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, results, finalScroll);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      if (results.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, results, finalScroll);
+      }
+    };
+  }, [stage, results, cacheKey, setCache]);
 
   // Garantir que o stream seja atribuído quando mudar para câmera
   useEffect(() => {

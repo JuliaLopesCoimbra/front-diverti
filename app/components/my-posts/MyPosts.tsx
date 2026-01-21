@@ -13,6 +13,7 @@ import {
   Chip,
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { getMyPosts } from "@/app/services/myPosts/myPostsService";
 import { NewsResponse } from "@/app/services/news/newsService";
 import { EventResponse } from "@/app/services/events/eventAppService";
@@ -56,6 +57,13 @@ interface MyPostsProps {
 
 export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProps) {
   const router = useRouter();
+  
+  // ===== CACHE DO FEED (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `my-posts-event-${currentEvent?.id || 'all'}`;
+  const [initialized, setInitialized] = useState(false);
+  // ==================================================
+  
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -94,14 +102,147 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     }
   };
 
+  // ===== CACHE: Carregar dados ao montar/trocar evento =====
   useEffect(() => {
-    // Resetar estado quando o evento mudar
-    setOffset(0);
-    setHasMore(true);
-    setPosts([]);
-    loadPosts(true);
+    if (initialized) {
+      // Se já inicializou, é uma troca de evento - limpa tudo
+      setPosts([]);
+      setOffset(0);
+      setHasMore(true);
+      setInitialized(false);
+      return;
+    }
+
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      // ✅ Dados encontrados no cache!
+      setPosts(cached.data);
+      setOffset(cached.data.length);
+      setHasMore(cached.data.length >= LIMIT);
+      setInitialized(true);
+      
+      // Restaura posição do scroll
+      const targetPosition = cached.scrollPosition;
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff >= 10 && attempts < maxAttempts) {
+          requestAnimationFrame(attemptRestore);
+        }
+      };
+      
+      requestAnimationFrame(attemptRestore);
+      
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      // ❌ Sem cache - carrega da API
+      setPosts([]);
+      setOffset(0);
+      setHasMore(true);
+      loadPosts(true);
+      setInitialized(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEvent?.id]);
+
+  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
+  const lastScrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 400; // Otimizado para performance
+    
+    const updateScrollPosition = () => {
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+      lastScrollPositionRef.current = currentScroll;
+      
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        if (posts.length > 0) {
+          setCache(cacheKey, posts, currentScroll);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    const handleScroll = () => {
+      updateScrollPosition();
+    };
+    
+    const handlePageHide = () => {
+      if (posts.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, posts, finalScroll);
+      }
+    };
+    
+    const handleBeforeUnload = () => {
+      if (posts.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, posts, finalScroll);
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden && posts.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, posts, finalScroll);
+      }
+    };
+    
+    const handleBlur = () => {
+      if (posts.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, posts, finalScroll);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      if (posts.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, posts, finalScroll);
+      }
+    };
+  }, [posts, cacheKey, setCache]);
 
   // infinite scroll
   useEffect(() => {

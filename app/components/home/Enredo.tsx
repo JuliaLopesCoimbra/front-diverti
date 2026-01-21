@@ -123,7 +123,7 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
   useEffect(() => {
     // Throttle para não salvar em todo scroll (performance)
     let throttleTimeout: NodeJS.Timeout | null = null;
-    const THROTTLE_MS = 300;
+    const THROTTLE_MS = 400; // Otimizado para performance
     
     const updateScrollPosition = () => {
       const currentScroll = window.scrollY || document.documentElement.scrollTop;
@@ -185,27 +185,9 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     
-    // Salva periodicamente em idle (quando navegador está ocioso)
-    let idleCallbackId: number | null = null;
-    
-    const scheduleIdleSave = () => {
-      if ('requestIdleCallback' in window) {
-        idleCallbackId = requestIdleCallback(() => {
-          if (schools.length > 0 || musics.length > 0) {
-            const currentScroll = lastScrollPositionRef.current;
-            setCache(cacheKey, [schools, musics], currentScroll);
-          }
-          scheduleIdleSave(); // Agenda próximo
-        }, { timeout: 5000 });
-      }
-    };
-    
-    scheduleIdleSave();
-    
     // CLEANUP: Remove todos os listeners
     return () => {
       if (throttleTimeout) clearTimeout(throttleTimeout);
-      if (idleCallbackId) cancelIdleCallback(idleCallbackId);
       
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', handlePageHide);

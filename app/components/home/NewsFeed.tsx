@@ -188,7 +188,7 @@ export default function NewsFeed({ eventId, event }: Props) {
   useEffect(() => {
     // Throttle para não salvar em todo scroll (performance)
     let throttleTimeout: NodeJS.Timeout | null = null;
-    const THROTTLE_MS = 300;
+    const THROTTLE_MS = 400; // Otimizado para performance
     
     const updateScrollPosition = () => {
       const currentScroll = window.scrollY || document.documentElement.scrollTop;
@@ -250,27 +250,9 @@ export default function NewsFeed({ eventId, event }: Props) {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     
-    // Salva periodicamente em idle (quando navegador está ocioso)
-    let idleCallbackId: number | null = null;
-    
-    const scheduleIdleSave = () => {
-      if ('requestIdleCallback' in window) {
-        idleCallbackId = requestIdleCallback(() => {
-          if (news.length > 0) {
-            const currentScroll = lastScrollPositionRef.current;
-            setCache(cacheKey, news, currentScroll);
-          }
-          scheduleIdleSave(); // Agenda próximo
-        }, { timeout: 5000 });
-      }
-    };
-    
-    scheduleIdleSave();
-    
     // CLEANUP: Remove todos os listeners
     return () => {
       if (throttleTimeout) clearTimeout(throttleTimeout);
-      if (idleCallbackId) cancelIdleCallback(idleCallbackId);
       
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', handlePageHide);

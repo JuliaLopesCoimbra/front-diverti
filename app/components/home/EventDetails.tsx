@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Box } from "@mui/material";
 import { EventResponse } from "@/app/services/events/eventAppService";
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
@@ -14,6 +16,146 @@ interface Props {
 }
 
 export default function EventDetails({ event }: Props) {
+  // ===== SCROLL RESTORATION (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `event-details-${event.id}`;
+  const lastScrollPositionRef = useRef(0);
+  
+  // Restaura scroll ao montar
+  useEffect(() => {
+    console.log('🔍 [EventDetails] Verificando cache para:', cacheKey);
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.scrollPosition > 0) {
+      console.log('✅ [EventDetails] Cache encontrado! Scroll:', cached.scrollPosition);
+      const targetPosition = cached.scrollPosition;
+      
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff < 10) {
+          console.log(`✅ [EventDetails] SUCESSO! Scroll restaurado em ${attempts} tentativas: ${currentScroll}px`);
+        } else if (attempts < maxAttempts) {
+          console.log(`⏳ [EventDetails] Tentativa ${attempts}: atual=${currentScroll}, target=${targetPosition}, diff=${diff}`);
+          requestAnimationFrame(attemptRestore);
+        } else {
+          console.log(`⚠️ [EventDetails] Máximo de tentativas. Posição final: ${currentScroll}px`);
+        }
+      };
+      
+      requestAnimationFrame(attemptRestore);
+      
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      console.log('❌ [EventDetails] Sem cache ou scroll = 0');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id]);
+  
+  // Salva scroll ao rolar/sair
+  useEffect(() => {
+    console.log('📌 [EventDetails] Iniciando listeners de scroll para:', cacheKey);
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 400; // Otimizado para performance
+    
+    const updateScrollPosition = () => {
+      const windowScroll = window.scrollY || window.pageYOffset;
+      const docScroll = document.documentElement.scrollTop;
+      const bodyScroll = document.body.scrollTop;
+      
+      console.log(`📊 [EventDetails] SCROLL DETECTADO:`, {
+        windowScrollY: window.scrollY,
+        windowPageYOffset: window.pageYOffset,
+        docScroll,
+        bodyScroll,
+        maxScroll: document.documentElement.scrollHeight - window.innerHeight
+      });
+      
+      const currentScroll = windowScroll || docScroll || bodyScroll;
+      lastScrollPositionRef.current = currentScroll;
+      
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        setCache(cacheKey, [], currentScroll);
+        console.log(`💾 [EventDetails] Cache atualizado (scroll): ${currentScroll}px`);
+      }, THROTTLE_MS);
+    };
+    
+    const handleScroll = () => {
+      console.log('🔔 [EventDetails] Evento de scroll disparado!');
+      updateScrollPosition();
+    };
+    
+    const handlePageHide = () => {
+      const finalScroll = lastScrollPositionRef.current;
+      setCache(cacheKey, [], finalScroll);
+      console.log(`💾 [EventDetails] Cache salvo (pagehide): ${finalScroll}px`);
+    };
+    
+    const handleBeforeUnload = () => {
+      const finalScroll = lastScrollPositionRef.current;
+      setCache(cacheKey, [], finalScroll);
+      console.log(`💾 [EventDetails] Cache salvo (beforeunload): ${finalScroll}px`);
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [], finalScroll);
+        console.log(`💾 [EventDetails] Cache salvo (visibilitychange): ${finalScroll}px`);
+      }
+    };
+    
+    const handleBlur = () => {
+      const finalScroll = lastScrollPositionRef.current;
+      setCache(cacheKey, [], finalScroll);
+      console.log(`💾 [EventDetails] Cache salvo (blur): ${finalScroll}px`);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      const finalScroll = lastScrollPositionRef.current;
+      setCache(cacheKey, [], finalScroll);
+      console.log(`💾 [EventDetails] Cache salvo (cleanup final): ${finalScroll}px`);
+    };
+  }, [cacheKey, setCache]);
+  // ======================================================
     const startDate = new Date(event.starts_at);
 const endDate = new Date(event.ends_at);
 
