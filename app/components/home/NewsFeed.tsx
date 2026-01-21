@@ -13,6 +13,7 @@ import {
   Avatar,
 } from "@mui/material";
 import { useAuth } from "@/app/context/AuthContext";
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
 import { EventResponse } from "@/app/services/events/eventAppService";
 import EmptyNews from "./EmptyNews";
@@ -60,6 +61,13 @@ function formatDate(dateString: string): string {
 export default function NewsFeed({ eventId, event }: Props) {
   const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
   const router = useRouter();
+  
+  // ===== CACHE DO FEED (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `feed-event-${eventId}`;
+  const [initialized, setInitialized] = useState(false);
+  // ==================================================
+  
   const [news, setNews] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -101,14 +109,182 @@ export default function NewsFeed({ eventId, event }: Props) {
     }
   };
 
-  // troca de evento
+  // ===== CACHE: Carregar dados ao montar/trocar evento =====
   useEffect(() => {
-    setNews([]);
-    setOffset(0);
-    setHasMore(true);
-    loadNews(true);
+    if (initialized) {
+      // Se já inicializou, é uma troca de evento - limpa tudo
+      setNews([]);
+      setOffset(0);
+      setHasMore(true);
+      setInitialized(false);
+      return;
+    }
+
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      // ✅ Dados encontrados no cache!
+      setNews(cached.data);
+      setOffset(cached.data.length);
+      setHasMore(cached.data.length >= LIMIT);
+      setInitialized(true);
+      
+      // Restaura posição do scroll ULTRA AGRESSIVO (igual Instagram/TikTok)
+      const targetPosition = cached.scrollPosition;
+      
+      // Desabilita scroll restoration do navegador
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      // MÚLTIPLAS tentativas até conseguir
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff >= 10 && attempts < maxAttempts) {
+          requestAnimationFrame(attemptRestore);
+        }
+      };
+      
+      // Inicia tentativas
+      requestAnimationFrame(attemptRestore);
+      
+      // Backup com timeouts também
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      // ❌ Sem cache - carrega da API
+      setNews([]);
+      setOffset(0);
+      setHasMore(true);
+      loadNews(true);
+      setInitialized(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
+  // Usa ref para sempre ter o último valor do scroll (não depende de timing)
+  const lastScrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    // Throttle para não salvar em todo scroll (performance)
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 300;
+    
+    const updateScrollPosition = () => {
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+      lastScrollPositionRef.current = currentScroll;
+      
+      // Salva imediatamente no cache (localStorage) - throttled
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        if (news.length > 0) {
+          setCache(cacheKey, news, currentScroll);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    // === MULTIPLATAFORMA: Todos os eventos possíveis ===
+    
+    // 1. SCROLL - atualiza a posição continuamente
+    const handleScroll = () => {
+      updateScrollPosition();
+    };
+    
+    // 2. PAGEHIDE - funciona melhor que beforeunload em mobile (iOS/Android)
+    const handlePageHide = () => {
+      if (news.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, news, finalScroll);
+      }
+    };
+    
+    // 3. BEFOREUNLOAD - desktop browsers
+    const handleBeforeUnload = () => {
+      if (news.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, news, finalScroll);
+      }
+    };
+    
+    // 4. VISIBILITYCHANGE - quando aba fica oculta (mobile/desktop)
+    const handleVisibilityChange = () => {
+      if (document.hidden && news.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, news, finalScroll);
+      }
+    };
+    
+    // 5. BLUR - quando window perde foco
+    const handleBlur = () => {
+      if (news.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, news, finalScroll);
+      }
+    };
+    
+    // Registra todos os listeners
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    // Salva periodicamente em idle (quando navegador está ocioso)
+    let idleCallbackId: number | null = null;
+    
+    const scheduleIdleSave = () => {
+      if ('requestIdleCallback' in window) {
+        idleCallbackId = requestIdleCallback(() => {
+          if (news.length > 0) {
+            const currentScroll = lastScrollPositionRef.current;
+            setCache(cacheKey, news, currentScroll);
+          }
+          scheduleIdleSave(); // Agenda próximo
+        }, { timeout: 5000 });
+      }
+    };
+    
+    scheduleIdleSave();
+    
+    // CLEANUP: Remove todos os listeners
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      if (idleCallbackId) cancelIdleCallback(idleCallbackId);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      // ÚLTIMO salvamento antes de desmontar (usa o ref!)
+      if (news.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, news, finalScroll);
+      }
+    };
+  }, [news, cacheKey, setCache]);
 
   // infinite scroll
   useEffect(() => {

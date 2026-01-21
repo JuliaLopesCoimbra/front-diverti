@@ -3,8 +3,10 @@ import { Roboto } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
+import { FeedCacheProvider } from './context/FeedCacheContext';
 import EmotionCacheProvider from './lib/emotion-cache';
 import ThemeProvider from './lib/theme-provider';
+import ScrollRestorer from './components/layout/ScrollRestorer';
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -35,7 +37,10 @@ export default function RootLayout({
           <ThemeProvider>
             <AuthProvider>
               <ToastProvider>
-                {children}
+                <FeedCacheProvider>
+                  <ScrollRestorer />
+                  {children}
+                </FeedCacheProvider>
               </ToastProvider>
             </AuthProvider>
           </ThemeProvider>

@@ -17,11 +17,20 @@ import Enredo from "@/app/components/home/Enredo";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
 
 const STORAGE_KEY = "selectedEventId";
+const SCROLL_KEY = "homeScrollY";
+const TAB_KEY = "homeActiveTab";
 
 const Home: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
     "home" | "eventos" | "foto" | "enredo"
-  >("home");
+  >(() => {
+    if (typeof window === "undefined") return "home";
+    const saved = sessionStorage.getItem(TAB_KEY);
+    if (saved === "home" || saved === "eventos" || saved === "foto" || saved === "enredo") {
+      return saved;
+    }
+    return "home";
+  });
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -29,6 +38,13 @@ const Home: React.FC = () => {
   const isCheckingRef = useRef(false); // Previne múltiplas verificações simultâneas
   const router = useRouter();
   const { isAdmin, authReady } = useAuth();
+
+  // Persist tab selection
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(TAB_KEY, activeTab);
+    }
+  }, [activeTab]);
 
   // Função para verificar e atualizar eventos
   const checkAndUpdateEvents = useCallback(async () => {
@@ -77,8 +93,27 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
+    // restaura scroll salvo
+    const savedScroll = sessionStorage.getItem(SCROLL_KEY);
+    if (savedScroll) {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, parseInt(savedScroll, 10) || 0);
+      });
+    }
+    const onScroll = () => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    window.addEventListener("scroll", onScroll);
+
+    // Se BottomNav marcou para restaurar home (volta da my-photos/liked), não mudar aba
+    // Caso contrário, deixar aba conforme saved/default
+    const forceRestore = sessionStorage.getItem("forceHomeRestore");
+    if (forceRestore) {
+      sessionStorage.removeItem("forceHomeRestore");
+    }
+
     // Aguarda o contexto de autenticação estar pronto
-    if (!authReady) return;
+    if (!authReady) {
+      return () => window.removeEventListener("scroll", onScroll);
+    }
 
     const fetchEvents = async () => {
       try {
@@ -152,6 +187,7 @@ const Home: React.FC = () => {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("scroll", onScroll);
     };
   }, [router, isAdmin, authReady, checkAndUpdateEvents]);
 

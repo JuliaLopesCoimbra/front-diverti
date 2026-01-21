@@ -101,7 +101,7 @@ export default function HamburgerMenu({
       await activateEvent(selectedEvent.id);
       setActivateModalOpen(false);
       setSelectedEvent(null);
-      window.location.reload();
+      router.refresh(); // evita reload completo
     } catch (error) {
       console.error("Erro ao ativar evento:", error);
     } finally {
@@ -116,7 +116,7 @@ export default function HamburgerMenu({
       await deactivateEvent(selectedEvent.id);
       setDeactivateModalOpen(false);
       setSelectedEvent(null);
-      window.location.reload();
+      router.refresh(); // evita reload completo
     } catch (error) {
       console.error("Erro ao desativar evento:", error);
     } finally {

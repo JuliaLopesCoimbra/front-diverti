@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,6 +8,8 @@ import {
   CardContent,
   Divider,
 } from "@mui/material";
+
+import { useFeedCache } from "@/app/context/FeedCacheContext";
 
 import {
   SambaSchoolResponse,
@@ -24,20 +26,200 @@ interface Props {
 }
 
 const Enredo: React.FC<Props> = ({ eventId }) => {
+  // ===== CACHE DO ENREDO (Instagram/TikTok style) =====
+  const { getCache, setCache } = useFeedCache();
+  const cacheKey = `enredo-event-${eventId}`;
+  const [initialized, setInitialized] = useState(false);
+  // ====================================================
+  
   const [schools, setSchools] = useState<SambaSchoolResponse[]>([]);
   const [musics, setMusics] = useState<MusicLyricsResponse[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ===== CACHE: Carregar dados ao montar/trocar evento =====
   useEffect(() => {
-    Promise.all([
-      getSambaSchoolsByEvent(eventId),
-      getMusicLyricsByEvent(eventId),
-    ])
-      .then(([schoolsData, musicsData]) => {
-        setSchools(schoolsData);
-        setMusics(musicsData);
-      })
-      .finally(() => setLoading(false));
+    if (initialized) {
+      // Se já inicializou, é uma troca de evento - limpa tudo
+      setSchools([]);
+      setMusics([]);
+      setLoading(true);
+      setInitialized(false);
+      return;
+    }
+
+    // Tenta carregar do cache
+    const cached = getCache(cacheKey);
+    
+    if (cached && cached.data.length > 0) {
+      // ✅ Dados encontrados no cache!
+      const [cachedSchools, cachedMusics] = cached.data;
+      setSchools(cachedSchools || []);
+      setMusics(cachedMusics || []);
+      setLoading(false);
+      setInitialized(true);
+      
+      // Restaura posição do scroll ULTRA AGRESSIVO (igual Instagram/TikTok)
+      const targetPosition = cached.scrollPosition;
+      
+      // Desabilita scroll restoration do navegador
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      
+      // MÚLTIPLAS tentativas até conseguir
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const attemptRestore = () => {
+        attempts++;
+        
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'instant' as ScrollBehavior
+        });
+        
+        const currentScroll = window.scrollY;
+        const diff = Math.abs(currentScroll - targetPosition);
+        
+        if (diff >= 10 && attempts < maxAttempts) {
+          requestAnimationFrame(attemptRestore);
+        }
+      };
+      
+      // Inicia tentativas
+      requestAnimationFrame(attemptRestore);
+      
+      // Backup com timeouts também
+      [50, 100, 200, 400, 800, 1600].forEach(delay => {
+        setTimeout(() => {
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'instant' as ScrollBehavior
+          });
+        }, delay);
+      });
+    } else {
+      // ❌ Sem cache - carrega da API
+      setLoading(true);
+      
+      Promise.all([
+        getSambaSchoolsByEvent(eventId),
+        getMusicLyricsByEvent(eventId),
+      ])
+        .then(([schoolsData, musicsData]) => {
+          setSchools(schoolsData);
+          setMusics(musicsData);
+          setInitialized(true);
+        })
+        .finally(() => setLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
+  // Usa ref para sempre ter o último valor do scroll (não depende de timing)
+  const lastScrollPositionRef = useRef(0);
+  
+  useEffect(() => {
+    // Throttle para não salvar em todo scroll (performance)
+    let throttleTimeout: NodeJS.Timeout | null = null;
+    const THROTTLE_MS = 300;
+    
+    const updateScrollPosition = () => {
+      const currentScroll = window.scrollY || document.documentElement.scrollTop;
+      lastScrollPositionRef.current = currentScroll;
+      
+      // Salva imediatamente no cache (localStorage) - throttled
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      
+      throttleTimeout = setTimeout(() => {
+        if (schools.length > 0 || musics.length > 0) {
+          setCache(cacheKey, [schools, musics], currentScroll);
+        }
+      }, THROTTLE_MS);
+    };
+    
+    // === MULTIPLATAFORMA: Todos os eventos possíveis ===
+    
+    // 1. SCROLL - atualiza a posição continuamente
+    const handleScroll = () => {
+      updateScrollPosition();
+    };
+    
+    // 2. PAGEHIDE - funciona melhor que beforeunload em mobile (iOS/Android)
+    const handlePageHide = () => {
+      if (schools.length > 0 || musics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [schools, musics], finalScroll);
+      }
+    };
+    
+    // 3. BEFOREUNLOAD - desktop browsers
+    const handleBeforeUnload = () => {
+      if (schools.length > 0 || musics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [schools, musics], finalScroll);
+      }
+    };
+    
+    // 4. VISIBILITYCHANGE - quando aba fica oculta (mobile/desktop)
+    const handleVisibilityChange = () => {
+      if (document.hidden && (schools.length > 0 || musics.length > 0)) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [schools, musics], finalScroll);
+      }
+    };
+    
+    // 5. BLUR - quando window perde foco
+    const handleBlur = () => {
+      if (schools.length > 0 || musics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [schools, musics], finalScroll);
+      }
+    };
+    
+    // Registra todos os listeners
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    
+    // Salva periodicamente em idle (quando navegador está ocioso)
+    let idleCallbackId: number | null = null;
+    
+    const scheduleIdleSave = () => {
+      if ('requestIdleCallback' in window) {
+        idleCallbackId = requestIdleCallback(() => {
+          if (schools.length > 0 || musics.length > 0) {
+            const currentScroll = lastScrollPositionRef.current;
+            setCache(cacheKey, [schools, musics], currentScroll);
+          }
+          scheduleIdleSave(); // Agenda próximo
+        }, { timeout: 5000 });
+      }
+    };
+    
+    scheduleIdleSave();
+    
+    // CLEANUP: Remove todos os listeners
+    return () => {
+      if (throttleTimeout) clearTimeout(throttleTimeout);
+      if (idleCallbackId) cancelIdleCallback(idleCallbackId);
+      
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      
+      // ÚLTIMO salvamento antes de desmontar (usa o ref!)
+      if (schools.length > 0 || musics.length > 0) {
+        const finalScroll = lastScrollPositionRef.current;
+        setCache(cacheKey, [schools, musics], finalScroll);
+      }
+    };
+  }, [schools, musics, cacheKey, setCache]);
 
   if (loading) {
     return (
