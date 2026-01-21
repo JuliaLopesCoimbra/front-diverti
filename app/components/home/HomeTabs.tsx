@@ -16,7 +16,16 @@ export default function HomeTabs({ active, onChange }: Props) {
   ];
 
   return (
-    <Box sx={{ display: "flex", gap: 1, padding: 2, }}>
+    <Box 
+      sx={{ 
+        display: "flex", 
+        gap: { xs: 1, md: 1.5, lg: 2 },
+        padding: { xs: 2, md: 3, lg: 4 },
+        justifyContent: { xs: "flex-start", md: "center" },
+        maxWidth: { md: "1200px", lg: "1400px" },
+        margin: { md: "0 auto" },
+      }}
+    >
       {tabs.map((tab) => {
         const isActive = active === tab.value;
 
@@ -28,9 +37,10 @@ export default function HomeTabs({ active, onChange }: Props) {
               borderRadius: "999px",
               textTransform: "none",
               fontWeight: 600,
-              px: 1.5,
-              minHeight: 36,
-              width:100,
+              px: { xs: 1.5, md: 2, lg: 2.5 },
+              minHeight: { xs: 36, md: 44, lg: 48 },
+              width: { xs: 100, md: 120, lg: 140 },
+              fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
               // Ativo
               backgroundColor: isActive ? "#ffc91f" : "transparent",
               color: isActive ? "#000" : "#fff",

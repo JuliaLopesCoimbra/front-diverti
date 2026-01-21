@@ -10,8 +10,21 @@ import {
   CircularProgress,
   Paper,
   IconButton,
+  Chip,
+  Fade,
+  Slide,
 } from "@mui/material";
-import { ArrowBackIos, Close, NavigateBefore, NavigateNext, PhotoCamera, AddPhotoAlternate } from "@mui/icons-material";
+import { 
+  ArrowBackIos, 
+  Close, 
+  NavigateBefore, 
+  NavigateNext, 
+  PhotoCamera, 
+  AddPhotoAlternate,
+  Event,
+  Title as TitleIcon,
+  Description,
+} from "@mui/icons-material";
 import { updateNews, getNewsDetails, NewsDetailsResponse } from "@/app/services/news/newsService";
 import { useToast } from "@/app/context/ToastContext";
 import { useAuth } from "@/app/context/AuthContext";
@@ -302,6 +315,9 @@ function EditNewsPageContent() {
     );
   }
 
+  const selectedEvent = events.find((e) => e.id === eventId);
+  const totalImagesCount = imagePreviews.length;
+
   return (
     <Box
       sx={{
@@ -311,58 +327,131 @@ function EditNewsPageContent() {
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
         padding: { xs: 2, sm: 3, md: 4 },
+        pb: { xs: 10, sm: 4 },
       }}
     >
-      <Box sx={{ maxWidth: "800px", margin: "0 auto" }}>
-        {/* Header */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 3 }}>
-          <IconButton
-            onClick={() => router.back()}
-            sx={{
-              color: "#fff",
-              padding: 0.5,
-              "&:hover": {
-                backgroundColor: "transparent",
-                opacity: 0.7,
-              },
+      <Box sx={{ maxWidth: "900px", margin: "0 auto" }}>
+        {/* Header com design melhorado */}
+        <Fade in timeout={400}>
+          <Box 
+            sx={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: 2, 
+              mb: 4,
+              position: "relative",
             }}
           >
-            <ArrowBackIos sx={{ fontSize: 20 }} />
-          </IconButton>
-          <Typography variant="h6" sx={{ color: "white", fontWeight: 600, fontSize: "1rem" }}>
-            Editar publicaçãoo
-          </Typography>
-        </Box>
+            <IconButton
+              onClick={() => router.back()}
+              sx={{
+                color: "#fff",
+                padding: 1.5,
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "translateX(-4px)",
+                },
+              }}
+            >
+              <ArrowBackIos sx={{ fontSize: 18 }} />
+            </IconButton>
+            <Box sx={{ flex: 1 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  color: "#fff", 
+                  fontWeight: 700, 
+                  fontSize: { xs: "1.25rem", sm: "1.5rem" },
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Editar Publicação
+              </Typography>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: "rgba(255,255,255,0.7)", 
+                  fontSize: "0.875rem",
+                  mt: 0.5,
+                }}
+              >
+                Atualize suas fotos e informações
+              </Typography>
+            </Box>
+          </Box>
+        </Fade>
 
-        {/* Form */}
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: "transparent",
-            overflow: "hidden",
-          }}
-        >
-          <form onSubmit={handleSubmit}>
-            <Box>
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {/* Upload de imagens */}
-                <Box>
-                  {/* Texto do evento */}
-                  {eventId && (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        color: "rgba(255,255,255,0.6)",
-                        fontSize: "0.75rem",
-                        mb: 1.5,
+        {/* Badge do Evento */}
+        {eventId && selectedEvent && (
+          <Slide direction="down" in timeout={500}>
+            <Box sx={{ mb: 3 }}>
+              <Chip
+                icon={<Event sx={{ fontSize: 16, color: "#ffcc01 !important" }} />}
+                label={
+                  <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>
+                    {selectedEvent.title}
+                  </Typography>
+                }
+                sx={{
+                  backgroundColor: "rgba(255, 204, 1, 0.15)",
+                  backdropFilter: "blur(10px)",
+                  border: "1px solid rgba(255, 204, 1, 0.3)",
+                  color: "#ffcc01",
+                  fontWeight: 600,
+                  padding: "8px 4px",
+                  height: "auto",
+                  "& .MuiChip-icon": {
+                    color: "#ffcc01",
+                  },
+                }}
+              />
+            </Box>
+          </Slide>
+        )}
+
+        {/* Form Container com Glassmorphism */}
+        <Fade in timeout={600}>
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: "rgba(255, 255, 255, 0.08)",
+              backdropFilter: "blur(20px)",
+              borderRadius: "24px",
+              border: "1px solid rgba(255, 255, 255, 0.15)",
+              overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <form onSubmit={handleSubmit}>
+              <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+                {/* Seção de Upload de Imagens */}
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                    <PhotoCamera sx={{ color: "#ffcc01", fontSize: 20 }} />
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        color: "#fff", 
+                        fontWeight: 600,
+                        fontSize: "1rem",
                       }}
                     >
-                      Este post está sendo editado no evento:{" "}
-                      <Box component="span" sx={{ fontWeight: 600, color: "rgba(255,255,255,0.9)" }}>
-                        {events.find((e) => e.id === eventId)?.title || "Carregando..."}
-                      </Box>
+                      Fotos
                     </Typography>
-                  )}
+                    {totalImagesCount > 0 && (
+                      <Chip
+                        label={`${totalImagesCount}/5`}
+                        size="small"
+                        sx={{
+                          backgroundColor: "rgba(255, 204, 1, 0.2)",
+                          color: "#ffcc01",
+                          fontWeight: 600,
+                          fontSize: "0.75rem",
+                          height: 20,
+                        }}
+                      />
+                    )}
+                  </Box>
 
                   <input
                     accept="image/*"
@@ -371,58 +460,69 @@ function EditNewsPageContent() {
                     type="file"
                     multiple
                     onChange={handleImageChange}
-                    disabled={loading || (imagePreviews.length + images.length) >= 5}
+                    disabled={loading || totalImagesCount >= 5}
                   />
-                  <label htmlFor="image-upload">
-                    <Button
-                      component="span"
-                      disabled={loading || (imagePreviews.length + images.length) >= 5}
-                      variant="outlined"
-                      startIcon={(imagePreviews.length + images.length) > 0 ? <AddPhotoAlternate /> : <PhotoCamera />}
-                      sx={{
-                        color: "rgba(255,255,255,0.95)",
-                        borderColor: "rgba(255,255,255,0.3)",
-                        textTransform: "none",
-                        fontSize: "0.9rem",
-                        fontWeight: 600,
-                        padding: "10px 20px",
-                        borderRadius: "8px",
-                        minWidth: "200px",
-                        transition: "all 0.3s ease",
-                        backgroundColor: (imagePreviews.length + images.length) > 0 
-                          ? "rgba(255,255,255,0.1)" 
-                          : "rgba(255,255,255,0.05)",
-                        backdropFilter: "blur(10px)",
-                        "&:hover": {
-                          backgroundColor: "rgba(255,255,255,0.15)",
-                          borderColor: "rgba(255,255,255,0.5)",
-                          color: "#fff",
-                          transform: "translateY(-2px)",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                        },
-                        "&:active": {
-                          transform: "translateY(0)",
-                        },
-                        "&:disabled": {
-                          color: "rgba(255,255,255,0.4)",
-                          borderColor: "rgba(255,255,255,0.15)",
-                          backgroundColor: "rgba(255,255,255,0.02)",
-                          cursor: "not-allowed",
-                        },
-                        "& .MuiButton-startIcon": {
-                          marginRight: "8px",
-                        },
-                      }}
-                    >
-                      {(imagePreviews.length + images.length) > 0 
-                        ? `Adicionar fotos (${imagePreviews.length + images.length}/5)` 
-                        : "Selecionar fotos"}
-                    </Button>
-                  </label>
-
-                  {imagePreviews.length > 0 && (
-                    <Box sx={{ mt: 3 }}>
-                      {/* Carrossel de imagens */}
+                  
+                  {imagePreviews.length === 0 ? (
+                    <label htmlFor="image-upload">
+                      <Box
+                        sx={{
+                          border: "2px dashed rgba(255, 255, 255, 0.3)",
+                          borderRadius: "16px",
+                          padding: { xs: 4, sm: 6 },
+                          textAlign: "center",
+                          cursor: loading || totalImagesCount >= 5 ? "not-allowed" : "pointer",
+                          transition: "all 0.3s ease",
+                          backgroundColor: "rgba(255, 255, 255, 0.03)",
+                          "&:hover": {
+                            borderColor: "rgba(255, 204, 1, 0.5)",
+                            backgroundColor: "rgba(255, 255, 255, 0.05)",
+                            transform: "translateY(-2px)",
+                          },
+                        }}
+                      >
+                        <PhotoCamera 
+                          sx={{ 
+                            fontSize: 48, 
+                            color: "rgba(255, 255, 255, 0.4)",
+                            mb: 2,
+                          }} 
+                        />
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            color: "rgba(255, 255, 255, 0.8)",
+                            fontWeight: 600,
+                            mb: 1,
+                          }}
+                        >
+                          Adicione suas fotos
+                        </Typography>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            color: "rgba(255, 255, 255, 0.5)",
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          Clique para selecionar ou arraste aqui
+                        </Typography>
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            color: "rgba(255, 255, 255, 0.4)",
+                            fontSize: "0.75rem",
+                            mt: 1,
+                            display: "block",
+                          }}
+                        >
+                          Máximo 5 imagens • 5MB por imagem • 20MB total
+                        </Typography>
+                      </Box>
+                    </label>
+                  ) : (
+                    <Box sx={{ mt: 2 }}>
+                      {/* Carrossel de imagens melhorado */}
                       <Box
                         onTouchStart={onTouchStart}
                         onTouchMove={onTouchMove}
@@ -430,48 +530,55 @@ function EditNewsPageContent() {
                         sx={{
                           position: "relative",
                           width: "100%",
-                          borderRadius: 0,
+                          borderRadius: "16px",
                           overflow: "hidden",
-                          backgroundColor: "transparent",
+                          backgroundColor: "rgba(0, 0, 0, 0.2)",
                           touchAction: "pan-y",
                           userSelect: "none",
+                          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
                         }}
                       >
                         {/* Imagem atual */}
-                        <Box
-                          component="img"
-                          src={imagePreviews[currentImageIndex]}
-                          alt={`Preview ${currentImageIndex + 1}`}
-                          sx={{
-                            width: "100%",
-                            aspectRatio: "1 / 1",
-                            objectFit: "cover",
-                            display: "block",
-                          }}
-                        />
+                        <Fade in key={currentImageIndex} timeout={300}>
+                          <Box
+                            component="img"
+                            src={imagePreviews[currentImageIndex]}
+                            alt={`Preview ${currentImageIndex + 1}`}
+                            sx={{
+                              width: "100%",
+                              aspectRatio: "1 / 1",
+                              objectFit: "cover",
+                              display: "block",
+                            }}
+                          />
+                        </Fade>
 
-                        {/* Botão de remover */}
+                        {/* Botão de remover melhorado */}
                         <IconButton
                           onClick={() => handleRemoveImage(currentImageIndex)}
                           disabled={loading}
                           sx={{
                             position: "absolute",
-                            top: 12,
-                            right: 12,
-                            backgroundColor: "rgba(0, 0, 0, 0.5)",
+                            top: 16,
+                            right: 16,
+                            backgroundColor: "rgba(0, 0, 0, 0.4)",
+                            backdropFilter: "blur(10px)",
                             color: "#fff",
-                            width: 32,
-                            height: 32,
+                            width: 40,
+                            height: 40,
+                            border: "1px solid rgba(255, 255, 255, 0.2)",
+                            transition: "all 0.2s ease",
                             "&:hover": {
-                              backgroundColor: "rgba(0, 0, 0, 0.7)",
+                              backgroundColor: "rgba(220, 38, 38, 0.8)",
+                              transform: "scale(1.1)",
                             },
                             zIndex: 2,
                           }}
                         >
-                          <Close sx={{ fontSize: 18 }} />
+                          <Close sx={{ fontSize: 20 }} />
                         </IconButton>
 
-                        {/* Botões de navegação (apenas se tiver mais de 1 imagem) */}
+                        {/* Botões de navegação melhorados */}
                         {imagePreviews.length > 1 && (
                           <>
                             <IconButton
@@ -479,55 +586,68 @@ function EditNewsPageContent() {
                               disabled={loading}
                               sx={{
                                 position: "absolute",
-                                left: 12,
+                                left: 16,
                                 top: "50%",
                                 transform: "translateY(-50%)",
-                                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                backdropFilter: "blur(10px)",
                                 color: "#fff",
-                                width: 32,
-                                height: 32,
+                                width: 44,
+                                height: 44,
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                transition: "all 0.2s ease",
                                 "&:hover": {
-                                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                  transform: "translateY(-50%) scale(1.1)",
                                 },
                                 zIndex: 2,
                               }}
                             >
-                              <NavigateBefore sx={{ fontSize: 20 }} />
+                              <NavigateBefore sx={{ fontSize: 24 }} />
                             </IconButton>
                             <IconButton
                               onClick={handleNextImage}
                               disabled={loading}
                               sx={{
                                 position: "absolute",
-                                right: 12,
+                                right: 16,
                                 top: "50%",
                                 transform: "translateY(-50%)",
-                                backgroundColor: "rgba(0, 0, 0, 0.5)",
+                                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                                backdropFilter: "blur(10px)",
                                 color: "#fff",
-                                width: 32,
-                                height: 32,
+                                width: 44,
+                                height: 44,
+                                border: "1px solid rgba(255, 255, 255, 0.2)",
+                                transition: "all 0.2s ease",
                                 "&:hover": {
-                                  backgroundColor: "rgba(0, 0, 0, 0.7)",
+                                  backgroundColor: "rgba(0, 0, 0, 0.8)",
+                                  transform: "translateY(-50%) scale(1.1)",
                                 },
                                 zIndex: 2,
                               }}
                             >
-                              <NavigateNext sx={{ fontSize: 20 }} />
+                              <NavigateNext sx={{ fontSize: 24 }} />
                             </IconButton>
                           </>
                         )}
 
-                        {/* Indicadores de página (dots) */}
+                        {/* Indicadores de página melhorados */}
                         {imagePreviews.length > 1 && (
                           <Box
                             sx={{
                               position: "absolute",
-                              bottom: 12,
+                              bottom: 16,
                               left: "50%",
                               transform: "translateX(-50%)",
                               display: "flex",
-                              gap: 0.75,
+                              gap: 1,
                               zIndex: 2,
+                              backgroundColor: "rgba(0, 0, 0, 0.4)",
+                              backdropFilter: "blur(10px)",
+                              padding: "6px 12px",
+                              borderRadius: "20px",
+                              border: "1px solid rgba(255, 255, 255, 0.2)",
                             }}
                           >
                             {imagePreviews.map((_, index) => (
@@ -535,147 +655,240 @@ function EditNewsPageContent() {
                                 key={index}
                                 onClick={() => setCurrentImageIndex(index)}
                                 sx={{
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: "50%",
+                                  width: index === currentImageIndex ? 24 : 8,
+                                  height: 8,
+                                  borderRadius: "4px",
                                   backgroundColor:
                                     index === currentImageIndex
-                                      ? "#fff"
+                                      ? "#ffcc01"
                                       : "rgba(255, 255, 255, 0.4)",
                                   cursor: "pointer",
-                                  transition: "all 0.2s ease",
+                                  transition: "all 0.3s ease",
+                                  "&:hover": {
+                                    backgroundColor:
+                                      index === currentImageIndex
+                                        ? "#ffcc01"
+                                        : "rgba(255, 255, 255, 0.6)",
+                                  },
                                 }}
                               />
                             ))}
                           </Box>
                         )}
                       </Box>
+
+                      {/* Botão para adicionar mais fotos */}
+                      {totalImagesCount < 5 && (
+                        <label htmlFor="image-upload" style={{ display: "block", marginTop: 16 }}>
+                          <Button
+                            component="span"
+                            disabled={loading}
+                            variant="outlined"
+                            startIcon={<AddPhotoAlternate />}
+                            fullWidth
+                            sx={{
+                              color: "rgba(255,255,255,0.9)",
+                              borderColor: "rgba(255,255,255,0.3)",
+                              textTransform: "none",
+                              fontSize: "0.875rem",
+                              fontWeight: 600,
+                              padding: "10px 20px",
+                              borderRadius: "12px",
+                              transition: "all 0.3s ease",
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                              backdropFilter: "blur(10px)",
+                              "&:hover": {
+                                backgroundColor: "rgba(255,255,255,0.1)",
+                                borderColor: "rgba(255, 204, 1, 0.5)",
+                                color: "#ffcc01",
+                                transform: "translateY(-2px)",
+                              },
+                            }}
+                          >
+                            Adicionar mais fotos ({totalImagesCount}/5)
+                          </Button>
+                        </label>
+                      )}
                     </Box>
                   )}
+                </Box>
 
-                  {/* Título */}
+                {/* Seção de Título */}
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                    <TitleIcon sx={{ color: "#ffcc01", fontSize: 20 }} />
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        color: "#fff", 
+                        fontWeight: 600,
+                        fontSize: "1rem",
+                      }}
+                    >
+                      Título
+                    </Typography>
+                  </Box>
                   <TextField
-                    fullWidth
-                    placeholder="Título"
+                    placeholder="Dê um título à sua publicação..."
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    disabled={loading}
-                    variant="standard"
-                    sx={{
-                      mt: 3,
-                      "& .MuiInput-underline:before": {
-                        borderBottomColor: "rgba(255,255,255,0.2)",
-                      },
-                      "& .MuiInput-underline:hover:before": {
-                        borderBottomColor: "rgba(255,255,255,0.4)",
-                      },
-                      "& .MuiInput-underline:after": {
-                        borderBottomColor: "rgba(255,255,255,0.6)",
-                      },
-                      "& input": {
-                        color: "#fff",
-                        fontSize: "1.5rem",
-                        fontWeight: 500,
-                        paddingBottom: 1,
-                      },
-                      "& input::placeholder": {
-                        color: "rgba(255,255,255,0.5)",
-                        opacity: 1,
-                      },
-                    }}
-                  />
-
-                  {/* Conteúdo */}
-                  <TextField
+                    required
                     fullWidth
-                    placeholder="Escreva uma legenda..."
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
                     disabled={loading}
-                    multiline
-                    rows={8}
-                    variant="standard"
                     sx={{
-                      mt: 2,
-                      "& .MuiInput-underline:before": {
-                        borderBottomColor: "rgba(255,255,255,0.2)",
+                      "& .MuiInputBase-root": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        backdropFilter: "blur(10px)",
+                        borderRadius: "12px",
+                        padding: "12px 16px",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          borderColor: "rgba(255, 255, 255, 0.2)",
+                        },
+                        "&.Mui-focused": {
+                          borderColor: "#ffcc01",
+                          backgroundColor: "rgba(255, 255, 255, 0.08)",
+                        },
                       },
-                      "& .MuiInput-underline:hover:before": {
-                        borderBottomColor: "rgba(255,255,255,0.4)",
-                      },
-                      "& .MuiInput-underline:after": {
-                        borderBottomColor: "rgba(255,255,255,0.6)",
-                      },
-                      "& textarea": {
+                      "& .MuiInputBase-input": {
                         color: "#fff",
-                        fontSize: "0.9375rem",
-                        lineHeight: 1.5,
-                        paddingBottom: 1,
-                      },
-                      "& textarea::placeholder": {
-                        color: "rgba(255,255,255,0.5)",
-                        opacity: 1,
+                        fontSize: "1.125rem",
+                        fontWeight: 500,
+                        "&::placeholder": {
+                          color: "rgba(255,255,255,0.4)",
+                          opacity: 1,
+                        },
                       },
                     }}
                   />
                 </Box>
-              </Box>
 
-              {/* Actions */}
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  gap: 2,
-                  mt: 4,
-                }}
-              >
-                <Button
-                  onClick={() => router.back()}
-                  disabled={loading}
+                {/* Seção de Conteúdo */}
+                <Box sx={{ mb: 4 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+                    <Description sx={{ color: "#ffcc01", fontSize: 20 }} />
+                    <Typography 
+                      variant="subtitle1" 
+                      sx={{ 
+                        color: "#fff", 
+                        fontWeight: 600,
+                        fontSize: "1rem",
+                      }}
+                    >
+                      Legenda
+                    </Typography>
+                  </Box>
+                  <TextField
+                    placeholder="Conte sua história, compartilhe seus momentos..."
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                    fullWidth
+                    multiline
+                    minRows={5}
+                    maxRows={12}
+                    disabled={loading}
+                    sx={{
+                      "& .MuiInputBase-root": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        backdropFilter: "blur(10px)",
+                        borderRadius: "12px",
+                        padding: "12px 16px",
+                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          borderColor: "rgba(255, 255, 255, 0.2)",
+                        },
+                        "&.Mui-focused": {
+                          borderColor: "#ffcc01",
+                          backgroundColor: "rgba(255, 255, 255, 0.08)",
+                        },
+                      },
+                      "& .MuiInputBase-input": {
+                        color: "#fff",
+                        fontSize: "1rem",
+                        lineHeight: 1.6,
+                        "&::placeholder": {
+                          color: "rgba(255,255,255,0.4)",
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+
+                {/* Actions melhoradas */}
+                <Box
                   sx={{
-                    color: "rgba(255,255,255,0.7)",
-                    textTransform: "none",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      color: "rgba(255,255,255,0.9)",
-                    },
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 2,
+                    mt: 5,
+                    pt: 4,
+                    borderTop: "1px solid rgba(255, 255, 255, 0.1)",
                   }}
                 >
-                  Cancelar
-                </Button>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  disabled={loading || !title.trim() || !content.trim() || (imagePreviews.length === 0 && images.length === 0) || !eventId || !newsId}
-                  sx={{
-                    backgroundColor: "#ffcc01",
-                    color: "#000",
-                    fontWeight: 600,
-                    borderRadius: "14px",
-                    textTransform: "none",
-                    px: 3,
-                    "&:hover": {
-                      backgroundColor: "#e6b800",
-                    },
-                    "&:disabled": {
-                      backgroundColor: "rgba(255, 201, 31, 0.3)",
-                      color: "rgba(0, 0, 0, 0.3)",
-                    },
-                  }}
-                >
-                  {loading ? (
-                    <CircularProgress size={20} sx={{ color: "#000" }} />
-                  ) : (
-                    "Salvar"
-                  )}
-                </Button>
+                  <Button
+                    onClick={() => router.back()}
+                    disabled={loading}
+                    sx={{
+                      color: "rgba(255,255,255,0.7)",
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      padding: "10px 24px",
+                      borderRadius: "12px",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255,255,255,0.9)",
+                      },
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    disabled={loading || !title.trim() || !content.trim() || (imagePreviews.length === 0 && images.length === 0) || !eventId || !newsId}
+                    sx={{
+                      backgroundColor: "#ffcc01",
+                      color: "#000",
+                      fontWeight: 700,
+                      borderRadius: "12px",
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      padding: "12px 32px",
+                      boxShadow: "0 4px 16px rgba(255, 204, 1, 0.3)",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor: "#e6b800",
+                        transform: "translateY(-2px)",
+                        boxShadow: "0 6px 20px rgba(255, 204, 1, 0.4)",
+                      },
+                      "&:active": {
+                        transform: "translateY(0)",
+                      },
+                      "&:disabled": {
+                        backgroundColor: "rgba(255, 201, 31, 0.3)",
+                        color: "rgba(0, 0, 0, 0.3)",
+                        boxShadow: "none",
+                      },
+                    }}
+                  >
+                    {loading ? (
+                      <CircularProgress size={20} sx={{ color: "#000" }} />
+                    ) : (
+                      "Salvar Alterações"
+                    )}
+                  </Button>
+                </Box>
               </Box>
-            </Box>
-          </form>
-        </Paper>
+            </form>
+          </Paper>
+        </Fade>
       </Box>
     </Box>
   );

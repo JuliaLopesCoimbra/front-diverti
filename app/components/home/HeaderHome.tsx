@@ -40,11 +40,11 @@ export default function HomeHeader({
   return (
     <Box
       sx={{
-        padding: 2,
+        padding: { xs: 2, md: 3, lg: 4 },
         borderBottom: "solid 1px rgba(255,255,255,0.2)",
         display: "flex",
         flexDirection: "column",
-        gap: 1,
+        gap: { xs: 1, md: 1.5, lg: 2 },
       }}
     >
       {/* LINHA SUPERIOR */}
@@ -56,20 +56,27 @@ export default function HomeHeader({
         }}
       >
         {/* ESQUERDA: HAMBURGER + NOME */}
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
           <HamburgerMenu
             events={events}
             currentEvent={currentEvent}
             onSelectEvent={onSelectEvent}
           />
 
-          <Typography variant="h6" fontWeight={700} sx={{ color: "white" }}>
+          <Typography 
+            variant="h6" 
+            fontWeight={700} 
+            sx={{ 
+              color: "white",
+              fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
+            }}
+          >
             {profile.name || profile.email}
           </Typography>
         </Box>
 
         {/* DIREITA: NOTIFICAÇÕES + AVATAR */}
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
           <IconButton
             onClick={() => setNotificationsOpen(true)}
             sx={{
@@ -77,17 +84,18 @@ export default function HomeHeader({
               "&:hover": {
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
               },
+              fontSize: { xs: "1.5rem", md: "1.75rem", lg: "2rem" },
             }}
           >
-            <NotificationsIcon />
+            <NotificationsIcon sx={{ fontSize: "inherit" }} />
           </IconButton>
           
           <Avatar 
             src={profile.profile_photo || undefined} 
             onClick={() => router.push("/pages/user/profile")}
             sx={{ 
-              width: 40, 
-              height: 40,
+              width: { xs: 40, md: 56, lg: 64 }, 
+              height: { xs: 40, md: 56, lg: 64 },
               border: "2px solid #FFD600",
               cursor: "pointer",
               transition: "transform 0.2s",
@@ -112,26 +120,35 @@ export default function HomeHeader({
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 0.4,
+          gap: { xs: 0.4, md: 0.6, lg: 0.8 },
         }}
       >
         <Typography
           variant="body1"
           fontWeight={600}
-          sx={{ color: "#fff" }}
+          sx={{ 
+            color: "#fff",
+            fontSize: { xs: "1rem", md: "1.25rem", lg: "1.5rem" },
+          }}
         >
           {event.title}
         </Typography>
 
-        <Box display="flex" alignItems="center" gap={0.6}>
-          <Typography variant="body2" sx={{ color: "white" }}>
+        <Box display="flex" alignItems="center" gap={{ xs: 0.6, md: 0.8, lg: 1 }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: "white",
+              fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+            }}
+          >
             {event.is_active ? "Ambiente ao vivo" : "Ambiente offline"}
           </Typography>
 
           <Box
             sx={{
-              width: 8,
-              height: 8,
+              width: { xs: 8, md: 10, lg: 12 },
+              height: { xs: 8, md: 10, lg: 12 },
               borderRadius: "50%",
               backgroundColor: event.is_active ? "#2ecc71" : "#9e9e9e",
               boxShadow: event.is_active 

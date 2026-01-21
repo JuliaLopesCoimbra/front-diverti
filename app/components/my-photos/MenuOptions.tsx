@@ -45,13 +45,7 @@ export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
 
   return (
     <Box padding={2}>
-      <Typography
-        variant="h6"
-        fontWeight={500}
-        sx={{ color: "#fff", marginBottom: 2, fontSize: "1rem" }}
-      >
-        Minhas Publicações
-      </Typography>
+   
 
       <Box display="flex" flexDirection="column" gap={2}>
         {options.map((option) => (

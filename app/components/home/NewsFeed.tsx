@@ -298,7 +298,15 @@ export default function NewsFeed({ eventId, event }: Props) {
   };
 
   return (
-    <Box padding={2} key={authVersion}>
+    <Box 
+      padding={{ xs: 2, md: 3, lg: 4 }}
+      key={authVersion}
+      sx={{
+        maxWidth: { xs: "100%", md: "800px", lg: "900px" },
+        margin: { xs: 0, md: "0 auto" },
+        width: { xs: "100%", md: "100%" },
+      }}
+    >
       {canCreatePost && isEventActive && (
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
           {canApprovePosts && isEventActive && <PendingPostsNotification eventId={eventId} />}
@@ -353,18 +361,25 @@ export default function NewsFeed({ eventId, event }: Props) {
                   }}
                 />
               )}
-              <CardContent>
+              <CardContent sx={{ padding: { xs: 2, md: 2.5, lg: 3 } }}>
                 <Typography
                   variant="h6"
                   fontWeight={700}
-                  sx={{ color: "#fff" }}
+                  sx={{ 
+                    color: "#fff",
+                    fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
+                  }}
                 >
                   {featured.title}
                 </Typography>
 
                 <Typography
                   variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.7)", marginTop: 1 }}
+                  sx={{ 
+                    color: "rgba(255,255,255,0.7)", 
+                    marginTop: 1,
+                    fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+                  }}
                 >
                   {formatDate(featured.created_at)}
                 </Typography>
@@ -423,8 +438,8 @@ export default function NewsFeed({ eventId, event }: Props) {
                       image={item.images[0].image_url}
                       alt={item.title}
                       sx={{
-                        width: 100,
-                        height: 100,
+                        width: { xs: 100, md: 120, lg: 140 },
+                        height: { xs: 100, md: 120, lg: 140 },
                         borderRadius: 1,
                         objectFit: "cover",
                         flexShrink: 0,
@@ -432,14 +447,22 @@ export default function NewsFeed({ eventId, event }: Props) {
                     />
                   )}
 
-                  <CardContent sx={{ padding: 1 }}>
-                    <Typography fontWeight={600} sx={{ color: "#fff" }}>
+                  <CardContent sx={{ padding: { xs: 1, md: 1.5, lg: 2 } }}>
+                    <Typography 
+                      fontWeight={600} 
+                      sx={{ 
+                        color: "#fff",
+                        fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+                      }}
+                    >
                       {item.title}
                     </Typography>
 
                     <Typography
-                      fontSize={12}
-                      sx={{ color: "rgba(255,255,255,0.6)" }}
+                      sx={{ 
+                        color: "rgba(255,255,255,0.6)",
+                        fontSize: { xs: 12, md: 13, lg: 14 },
+                      }}
                     >
                       {formatDate(item.created_at)}
                     </Typography>

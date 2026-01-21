@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Typography, Skeleton, IconButton } from "@mui/material";
+import { Box, Typography, Skeleton, IconButton, Tabs, Tab } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import { useAuth } from "@/app/context/AuthContext";
 import BottomNav from "@/app/components/layout/BottomNav";
@@ -23,6 +23,7 @@ export default function MyPhotosPage() {
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
+  const [postStatusFilter, setPostStatusFilter] = useState<"approved" | "pending" | "rejected">("approved");
   
   // Para usuários comuns, sempre mostrar fotos diretamente
   const isRegularUser = !isAdminMaster && !isSubadmin && !isColunista;
@@ -122,68 +123,132 @@ export default function MyPhotosPage() {
   };
 
   const renderContent = () => {
+    // Container centralizado para desktop
+    const CenteredContainer = ({ children }: { children: ReactNode }) => (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: { xs: "100%", sm: "100%", md: "600px", lg: "700px" },
+          }}
+        >
+          {children}
+        </Box>
+      </Box>
+    );
+
     if (isRegularUser) {
       // Usuários comuns veem apenas fotos compradas
-      return <MyPhotos />;
+      return (
+        <CenteredContainer>
+          <MyPhotos />
+        </CenteredContainer>
+      );
     }
 
     // Admin, subadmin e colunistas veem menu ou conteúdo específico
     switch (viewMode) {
       case "menu":
-        return <MenuOptions onSelectOption={handleSelectOption} />;
+        return (
+          <CenteredContainer>
+            <MenuOptions onSelectOption={handleSelectOption} />
+          </CenteredContainer>
+        );
       case "posts":
         return (
-          <Box>
-            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
-              <IconButton
-                onClick={handleBackToMenu}
-                sx={{ color: "#fff" }}
-              >
-                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
-                Meus Posts
-              </Typography>
+          <CenteredContainer>
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+                <IconButton
+                  onClick={handleBackToMenu}
+                  sx={{ color: "#fff" }}
+                >
+                  <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                  Meus Posts
+                </Typography>
+              </Box>
+              <Box sx={{ borderBottom: 1, borderColor: "rgba(255,255,255,0.2)", px: 2 }}>
+                <Tabs
+                  value={postStatusFilter}
+                  onChange={(_, newValue) => setPostStatusFilter(newValue)}
+                  sx={{
+                    "& .MuiTab-root": {
+                      color: "rgba(255,255,255,0.6)",
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      fontWeight: 500,
+                      minHeight: 48,
+                      "&.Mui-selected": {
+                        color: "#ffc91f",
+                      },
+                    },
+                    "& .MuiTabs-indicator": {
+                      backgroundColor: "#ffc91f",
+                    },
+                  }}
+                >
+                  <Tab label="Aprovados" value="approved" />
+                  <Tab label="Pendentes" value="pending" />
+                  <Tab label="Rejeitados" value="rejected" />
+                </Tabs>
+              </Box>
+              <MyPosts hideTitle currentEvent={currentEvent} statusFilter={postStatusFilter} />
             </Box>
-            <MyPosts hideTitle currentEvent={currentEvent} />
-          </Box>
+          </CenteredContainer>
         );
       case "photos":
         return (
-          <Box>
-            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
-              <IconButton
-                onClick={handleBackToMenu}
-                sx={{ color: "#fff" }}
-              >
-                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
-                Fotos Compradas
-              </Typography>
+          <CenteredContainer>
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+                <IconButton
+                  onClick={handleBackToMenu}
+                  sx={{ color: "#fff" }}
+                >
+                  <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                  Fotos Compradas
+                </Typography>
+              </Box>
+              <MyPhotos hideTitle />
             </Box>
-            <MyPhotos hideTitle />
-          </Box>
+          </CenteredContainer>
         );
       case "pending":
         return (
-          <Box>
-            <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
-              <IconButton
-                onClick={handleBackToMenu}
-                sx={{ color: "#fff" }}
-              >
-                <ArrowBackIosIcon sx={{ fontSize: 20 }} />
-              </IconButton>
-              <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
-                Posts Pendentes
-              </Typography>
+          <CenteredContainer>
+            <Box>
+              <Box display="flex" alignItems="center" gap={1} padding={2} paddingBottom={0}>
+                <IconButton
+                  onClick={handleBackToMenu}
+                  sx={{ color: "#fff" }}
+                >
+                  <ArrowBackIosIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+                <Typography variant="h6" fontWeight={500} sx={{ color: "#fff", fontSize: "1rem" }}>
+                  Posts Pendentes
+                </Typography>
+              </Box>
+              <MyPendingPosts hideTitle />
             </Box>
-            <MyPendingPosts hideTitle />
-          </Box>
+          </CenteredContainer>
         );
       default:
-        return <MenuOptions onSelectOption={handleSelectOption} />;
+        return (
+          <CenteredContainer>
+            <MenuOptions onSelectOption={handleSelectOption} />
+          </CenteredContainer>
+        );
     }
   };
 

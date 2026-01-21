@@ -47,7 +47,15 @@ export default function AdBanner() {
 
   if (loading) {
     return (
-      <Box sx={{ mx: 2, mt: 2, mb: 2 }}>
+      <Box 
+        sx={{ 
+          mx: { xs: 2, md: "auto" },
+          mt: 2, 
+          mb: 2,
+          maxWidth: { xs: "100%", md: "800px", lg: "900px" },
+          width: { xs: "calc(100% - 32px)", md: "100%" },
+        }}
+      >
         <Skeleton variant="rectangular" width="100%" height={200} sx={{ borderRadius: 2 }} />
       </Box>
     );
@@ -60,7 +68,9 @@ export default function AdBanner() {
       sx={{
         mt: 0,
         mb: 1,
-        mx: 2,
+        mx: { xs: 2, md: "auto" },
+        maxWidth: { xs: "100%", md: "800px", lg: "900px" },
+        width: { xs: "calc(100% - 32px)", md: "100%" },
         borderRadius: 2,
         overflow: "hidden",
         boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",

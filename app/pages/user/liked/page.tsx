@@ -11,6 +11,7 @@ import {
   Skeleton,
   Divider,
   Avatar,
+  Chip,
 } from "@mui/material";
 import { getLikedPosts } from "@/app/services/likes/likeService";
 import { NewsDetailsResponse } from "@/app/services/news/newsService";
@@ -351,22 +352,33 @@ export default function LikedPostsPage() {
     router.push(`/pages/news/${post.id}${eventIdParam}`);
   };
 
-  const formatTimeAgo = (dateString: string) => {
+  // Função para formatar data relativa ou extensa (mesma do NewsFeed)
+  const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
 
-    if (diffInSeconds < 60) return "agora";
-    if (diffInSeconds < 3600)
-      return `há ${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400)
-      return `há ${Math.floor(diffInSeconds / 3600)}h`;
-    if (diffInSeconds < 604800)
-      return `há ${Math.floor(diffInSeconds / 86400)}d`;
+    // Se for menos de 24 horas, mostra relativo
+    if (diffHours < 24) {
+      const diffMinutes = Math.floor(diffMs / (1000 * 60));
+      
+      if (diffMinutes < 1) {
+        return "há menos de 1 minuto";
+      } else if (diffMinutes < 60) {
+        return `há ${diffMinutes} ${diffMinutes === 1 ? "minuto" : "minutos"} atrás`;
+      } else {
+        const hours = Math.floor(diffHours);
+        return `há ${hours} ${hours === 1 ? "hora" : "horas"} atrás`;
+      }
+    }
 
+    // Se for mais de 24 horas, mostra data extensa
     return date.toLocaleDateString("pt-BR", {
+      weekday: "long",
       day: "numeric",
-      month: "short",
+      month: "long",
+      year: "numeric",
     });
   };
 
@@ -422,193 +434,282 @@ export default function LikedPostsPage() {
           />
         )}
 
-        {/* Título da página */}
+        {/* Container centralizado para desktop */}
         <Box
           sx={{
-            paddingX: 2,
-            paddingY: 1.5,
-           
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            width: "100%",
           }}
         >
-    
-        </Box>
-
-        <Box padding={2}>
-          {/* LOADING INICIAL */}
-          {loading && posts.length === 0 && (
-            <Box display="flex" flexDirection="column" gap={1}>
-              {Array.from({ length: 3 }).map((_, i) => (
-                <PostItemSkeleton key={i} />
-              ))}
-            </Box>
-          )}
-
-          {/* SEM POSTS */}
-          {!loading && posts.length === 0 && (
+          {/* Container interno com largura máxima */}
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: { xs: "100%", sm: "100%", md: "600px", lg: "700px" },
+            }}
+          >
+            {/* Título da página */}
             <Box
               sx={{
+                paddingX: 3,
+                paddingY: 3,
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
-                minHeight: "50vh",
+                justifyContent: "space-between",
                 gap: 2,
               }}
             >
-              <Typography
-                variant="h6"
-                sx={{ color: "rgba(255,255,255,0.7)", textAlign: "center" }}
-              >
-                Você ainda não curtiu nenhum post
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{ color: "rgba(255,255,255,0.5)", textAlign: "center" }}
-              >
-                Os posts que você curtir aparecerão aqui
-              </Typography>
-            </Box>
-          )}
-
-          {/* LISTA DE POSTS */}
-          {posts.length > 0 && (
-            <Box display="flex" flexDirection="column" gap={0}>
-              {posts.map((item, index) => (
-                <Box key={item.id}>
-                  <Card
-                    onClick={() => handlePostClick(item)}
+              <Box>
+                <Typography
+                  variant="h5"
+                  sx={{
+                    fontWeight: 700,
+                    color: "#fff",
+                    mb: 0.5,
+                    fontSize: { xs: "1.5rem", sm: "1.75rem" },
+                  }}
+                >
+                  Posts curtidos por mim
+                </Typography>
+                {posts.length > 0 && (
+                  <Typography
+                    variant="body2"
                     sx={{
-                      display: "flex",
-                      gap: 1.5,
-                      backgroundColor: "transparent",
-                      boxShadow: "none",
-                      color: "#fff",
-                      paddingY: 1.5,
-                      cursor: "pointer",
-                      transition: "opacity 0.2s",
-                      "&:hover": {
-                        opacity: 0.8,
-                        backgroundColor: "rgba(255,255,255,0.05)",
-                      },
+                      color: "rgba(255,255,255,0.6)",
+                      fontSize: "0.875rem",
                     }}
                   >
-                    {/* Foto pequena */}
-                    {item.images && item.images.length > 0 ? (
-                      <CardMedia
-                        component="img"
-                        image={item.images[0].image_url}
-                        alt={item.title}
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 1,
-                          objectFit: "cover",
-                        }}
-                      />
-                    ) : (
-                      <Box
-                        sx={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: 1,
-                          backgroundColor: "rgba(255,255,255,0.1)",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Typography
-                          variant="h6"
-                          sx={{ color: "rgba(255,255,255,0.3)" }}
-                        >
-                          📷
-                        </Typography>
-                      </Box>
-                    )}
-
-                    {/* Conteúdo */}
-                    <CardContent sx={{ padding: 0, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                      {/* Título */}
-                      <Typography
-                        fontWeight={600}
-                        fontSize={15}
-                        sx={{
-                          color: "#fff",
-                          mb: 0.5,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {item.title}
-                      </Typography>
-
-                      {/* Autor e tempo */}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 1,
-                          mt: 0.5,
-                        }}
-                      >
-                        {item.author && (
-                          <>
-                            <Avatar
-                              src={item.author.profile_photo}
-                              sx={{
-                                width: 20,
-                                height: 20,
-                              }}
-                            >
-                              {item.author.name?.[0]?.toUpperCase() || "?"}
-                            </Avatar>
-                            <Typography
-                              fontSize={12}
-                              sx={{ color: "rgba(255,255,255,0.6)" }}
-                            >
-                              {item.author.name || "Autor desconhecido"}
-                            </Typography>
-                            <Typography
-                              fontSize={12}
-                              sx={{ color: "rgba(255,255,255,0.4)" }}
-                            >
-                              •
-                            </Typography>
-                          </>
-                        )}
-                        <Typography
-                          fontSize={12}
-                          sx={{ color: "rgba(255,255,255,0.6)" }}
-                        >
-                          {formatTimeAgo(item.created_at)}
-                        </Typography>
-                      </Box>
-                    </CardContent>
-                  </Card>
-
-                  {/* Linha separadora */}
-                  {index !== posts.length - 1 && (
-                    <Divider
-                      sx={{
-                        borderColor: "rgba(255,255,255,0.15)",
-                        marginY: 0.5,
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-
-              {/* Skeleton ao carregar mais */}
-              {loading &&
-                Array.from({ length: 2 }).map((_, i) => (
-                  <PostItemSkeleton key={`skeleton-${i}`} />
-                ))}
+                    {posts.length} {posts.length === 1 ? "post curtido" : "posts curtidos"}
+                  </Typography>
+                )}
+              </Box>
+              {posts.length > 0 && (
+                <Chip
+                  label={posts.length}
+                  sx={{
+                    backgroundColor: "#ffc91f",
+                    color: "#000",
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                    height: "32px",
+                  }}
+                />
+              )}
             </Box>
-          )}
 
-          {hasMore && <div ref={loaderRef} />}
+            <Box paddingX={2} paddingBottom={2}>
+              {/* LOADING INICIAL */}
+              {loading && posts.length === 0 && (
+                <Box display="flex" flexDirection="column" gap={2} paddingX={2}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <PostItemSkeleton key={i} />
+                  ))}
+                </Box>
+              )}
+
+              {/* SEM POSTS */}
+              {!loading && posts.length === 0 && (
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: "50vh",
+                    gap: 3,
+                    padding: 4,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 120,
+                      height: 120,
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(255,201,31,0.1)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "4rem",
+                      mb: 2,
+                    }}
+                  >
+                    ❤️
+                  </Box>
+                  <Typography
+                    variant="h5"
+                    fontWeight={700}
+                    sx={{ 
+                      color: "#fff", 
+                      textAlign: "center",
+                      mb: 1,
+                    }}
+                  >
+                    Você ainda não curtiu nenhum post
+                  </Typography>
+                  <Typography
+                    variant="body1"
+                    sx={{ 
+                      color: "rgba(255,255,255,0.6)", 
+                      textAlign: "center",
+                      maxWidth: "400px",
+                    }}
+                  >
+                    Os posts que você curtir aparecerão aqui. Comece a explorar e curta os posts que mais gostar!
+                  </Typography>
+                </Box>
+              )}
+
+              {/* LISTA DE POSTS */}
+              {posts.length > 0 && (
+                <Box display="flex" flexDirection="column" gap={2}>
+                  {posts.map((item, index) => (
+                    <Card
+                      key={item.id}
+                      onClick={() => handlePostClick(item)}
+                      sx={{
+                        display: "flex",
+                        gap: 2,
+                        backgroundColor: "rgba(255,255,255,0.08)",
+                        backdropFilter: "blur(10px)",
+                        borderRadius: 3,
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+                        color: "#fff",
+                        padding: 2,
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        "&:hover": {
+                          transform: "translateY(-4px)",
+                         
+                        
+                        },
+                      }}
+                    >
+                      {/* Foto com borda arredondada */}
+                      {item.images && item.images.length > 0 ? (
+                        <CardMedia
+                          component="img"
+                          image={item.images[0].image_url}
+                          alt={item.title}
+                          sx={{
+                            width: { xs: 100, sm: 120 },
+                            height: { xs: 100, sm: 120 },
+                            minWidth: { xs: 100, sm: 120 },
+                            borderRadius: 2,
+                            objectFit: "cover",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                          }}
+                        />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: { xs: 100, sm: 120 },
+                            height: { xs: 100, sm: 120 },
+                            minWidth: { xs: 100, sm: 120 },
+                            borderRadius: 2,
+                            backgroundColor: "rgba(255,255,255,0.1)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+                          }}
+                        >
+                          <Typography
+                            variant="h4"
+                            sx={{ color: "rgba(255,255,255,0.3)" }}
+                          >
+                            📷
+                          </Typography>
+                        </Box>
+                      )}
+
+                      {/* Conteúdo */}
+                      <CardContent 
+                        sx={{ 
+                          padding: 0, 
+                          flex: 1, 
+                          display: "flex", 
+                          flexDirection: "column", 
+                          justifyContent: "space-between",
+                          gap: 1,
+                        }}
+                      >
+                        {/* Título */}
+                        <Typography
+                          fontWeight={700}
+                          fontSize={{ xs: 16, sm: 18 }}
+                          sx={{
+                            color: "#fff",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          {item.title}
+                        </Typography>
+
+                        {/* Autor e tempo */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1.5,
+                            mt: 1,
+                          }}
+                        >
+                          {item.author && (
+                            <>
+                              <Avatar
+                                src={item.author.profile_photo}
+                                sx={{
+                                  width: 24,
+                                  height: 24,
+                                  border: "2px solid rgba(255,255,255,0.2)",
+                                }}
+                              >
+                                {item.author.name?.[0]?.toUpperCase() || "?"}
+                              </Avatar>
+                              <Typography
+                                fontSize={13}
+                                fontWeight={500}
+                                sx={{ color: "rgba(255,255,255,0.8)" }}
+                              >
+                                {item.author.name || "Autor desconhecido"}
+                              </Typography>
+                              <Typography
+                                fontSize={12}
+                                sx={{ color: "rgba(255,255,255,0.5)" }}
+                              >
+                                •
+                              </Typography>
+                            </>
+                          )}
+                          <Typography
+                            fontSize={13}
+                            sx={{ color: "rgba(255,255,255,0.7)" }}
+                          >
+                            {formatDate(item.created_at)}
+                          </Typography>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {/* Skeleton ao carregar mais */}
+                  {loading &&
+                    Array.from({ length: 2 }).map((_, i) => (
+                      <PostItemSkeleton key={`skeleton-${i}`} />
+                    ))}
+                </Box>
+              )}
+
+              {hasMore && <div ref={loaderRef} />}
+            </Box>
+          </Box>
         </Box>
       </Box>
       <BottomNav />
@@ -620,44 +721,68 @@ export default function LikedPostsPage() {
 
 function PostItemSkeleton() {
   return (
-    <Box>
-      <Card
-        sx={{
-          display: "flex",
-          gap: 1.5,
-          backgroundColor: "transparent",
-          boxShadow: "none",
-          paddingY: 1.5,
-        }}
-      >
-        <Skeleton
-          variant="rectangular"
-          width={80}
-          height={80}
-          sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 1 }}
-        />
-
-        <CardContent sx={{ padding: 0, flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-          <Skeleton height={18} width="90%" sx={{ bgcolor: "rgba(255,255,255,0.1)", mb: 1 }} />
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Skeleton
-              variant="circular"
-              width={20}
-              height={20}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
-            <Skeleton height={14} width="30%" sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
-            <Skeleton height={14} width="20%" sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
-          </Box>
-        </CardContent>
-      </Card>
-      <Divider
-        sx={{
-          borderColor: "rgba(255,255,255,0.15)",
-          marginY: 0.5,
+    <Card
+      sx={{
+        display: "flex",
+        gap: 2,
+        backgroundColor: "rgba(255,255,255,0.08)",
+        backdropFilter: "blur(10px)",
+        borderRadius: 3,
+        boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
+        padding: 2,
+        border: "1px solid rgba(255,255,255,0.1)",
+      }}
+    >
+      <Skeleton
+        variant="rectangular"
+        sx={{ 
+          width: { xs: 100, sm: 120 },
+          height: { xs: 100, sm: 120 },
+          bgcolor: "rgba(255,255,255,0.1)", 
+          borderRadius: 2,
+          flexShrink: 0,
         }}
       />
-    </Box>
+
+      <CardContent 
+        sx={{ 
+          padding: 0, 
+          flex: 1, 
+          display: "flex", 
+          flexDirection: "column", 
+          justifyContent: "space-between",
+          gap: 1,
+        }}
+      >
+        <Skeleton 
+          height={24} 
+          width="90%" 
+          sx={{ 
+            bgcolor: "rgba(255,255,255,0.1)", 
+            borderRadius: 1,
+            mb: 1,
+          }} 
+        />  
+        <Skeleton 
+          height={20} 
+          width="70%" 
+          sx={{ 
+            bgcolor: "rgba(255,255,255,0.1)", 
+            borderRadius: 1,
+          }} 
+        />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 1 }}>
+          <Skeleton
+            variant="circular"
+            width={24}
+            height={24}
+            sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
+          />
+          <Skeleton height={16} width="30%" sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 1 }} />
+          <Skeleton height={16} width="20%" sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 1 }} />
+        </Box>
+      </CardContent>
+    </Card>
   );
 }
 

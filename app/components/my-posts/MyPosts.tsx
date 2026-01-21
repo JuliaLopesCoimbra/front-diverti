@@ -53,9 +53,10 @@ function formatDate(dateString: string): string {
 interface MyPostsProps {
   hideTitle?: boolean;
   currentEvent?: EventResponse | null;
+  statusFilter?: "approved" | "pending" | "rejected";
 }
 
-export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProps) {
+export default function MyPosts({ hideTitle = false, currentEvent, statusFilter = "approved" }: MyPostsProps) {
   const router = useRouter();
   
   // ===== CACHE DO FEED (Instagram/TikTok style) =====
@@ -271,6 +272,9 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     router.push(`/pages/news/${post.id}${eventIdParam}`);
   };
 
+  // Filtrar posts baseado no statusFilter
+  const filteredPosts = posts.filter(post => post.status === statusFilter);
+
   if (loading && posts.length === 0) {
     return (
       <Box padding={2}>
@@ -280,14 +284,20 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
     );
   }
 
-  if (!loading && posts.length === 0) {
+  if (!loading && filteredPosts.length === 0) {
+    const statusLabels: Record<string, string> = {
+      approved: "aprovados",
+      pending: "pendentes",
+      rejected: "rejeitados"
+    };
+    
     return (
       <Box padding={2} textAlign="center">
         <Typography variant="body1" fontWeight={500} sx={{ color: "#fff", marginBottom: 1, fontSize: "0.9375rem" }}>
-          Nenhum post encontrado
+          Nenhum post {statusLabels[statusFilter]} encontrado
         </Typography>
         <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
-          Você ainda não postou nenhuma notícia.
+          Você ainda não tem posts {statusLabels[statusFilter]}.
         </Typography>
       </Box>
     );
@@ -306,7 +316,7 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
       )}
 
       <Box display="flex" flexDirection="column" gap={2}>
-        {posts.map((post, index) => (
+        {filteredPosts.map((post, index) => (
           <Box key={post.id}>
             <Card
               onClick={() => handlePostClick(post)}
@@ -373,7 +383,7 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
               </CardContent>
             </Card>
 
-            {index !== posts.length - 1 && (
+            {index !== filteredPosts.length - 1 && (
               <Divider
                 sx={{
                   borderColor: "rgba(255,255,255,0.15)",

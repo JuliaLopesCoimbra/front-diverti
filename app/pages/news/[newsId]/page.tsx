@@ -1001,113 +1001,131 @@ export default function NewsDetailPage() {
         {/* Carrossel de imagens */}
         {sortedImages.length > 0 && (
           <Box
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
             sx={{
-              position: "relative",
+              display: "flex",
+              justifyContent: "center",
               width: "100%",
-              borderRadius: 0,
-              overflow: "hidden",
-              backgroundColor: "transparent",
-              touchAction: "pan-y",
-              userSelect: "none",
+              px: { xs: 0, sm: 2, md: 4 },
             }}
           >
-            {/* Imagem atual */}
             <Box
-              component="img"
-              src={sortedImages[currentImageIndex]?.image_url}
-              alt={news.title}
+              onTouchStart={onTouchStart}
+              onTouchMove={onTouchMove}
+              onTouchEnd={onTouchEnd}
               sx={{
+                position: "relative",
                 width: "100%",
-                aspectRatio: "1 / 1",
-                objectFit: "cover",
-                display: "block",
+                maxWidth: { xs: "100%", sm: "600px", md: "700px" },
+                margin: "0 auto",
+                borderRadius: 0,
+                overflow: "hidden",
+                backgroundColor: "transparent",
+                touchAction: "pan-y",
+                userSelect: "none",
               }}
-            />
-
-            {/* Botões de navegação (apenas se tiver mais de 1 imagem) */}
-            {sortedImages.length > 1 && (
-              <>
-                <IconButton
-                  onClick={handlePreviousImage}
-                  sx={{
-                    position: "absolute",
-                    left: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    color: "#fff",
-                    width: 32,
-                    height: 32,
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.7)",
-                    },
-                    zIndex: 2,
-                  }}
-                >
-                  <NavigateBeforeIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-                <IconButton
-                  onClick={handleNextImage}
-                  sx={{
-                    position: "absolute",
-                    right: 12,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    color: "#fff",
-                    width: 32,
-                    height: 32,
-                    "&:hover": {
-                      backgroundColor: "rgba(0, 0, 0, 0.7)",
-                    },
-                    zIndex: 2,
-                  }}
-                >
-                  <NavigateNextIcon sx={{ fontSize: 20 }} />
-                </IconButton>
-              </>
-            )}
-
-            {/* Indicadores de página (dots) */}
-            {sortedImages.length > 1 && (
+            >
+              {/* Imagem atual */}
               <Box
+                component="img"
+                src={sortedImages[currentImageIndex]?.image_url}
+                alt={news.title}
                 sx={{
-                  position: "absolute",
-                  bottom: 12,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  display: "flex",
-                  gap: 0.75,
-                  zIndex: 2,
+                  width: "100%",
+                  aspectRatio: "1 / 1",
+                  objectFit: "cover",
+                  display: "block",
                 }}
-              >
-                {sortedImages.map((_, index) => (
-                  <Box
-                    key={index}
-                    onClick={() => setCurrentImageIndex(index)}
+              />
+
+              {/* Botões de navegação (apenas se tiver mais de 1 imagem) */}
+              {sortedImages.length > 1 && (
+                <>
+                  <IconButton
+                    onClick={handlePreviousImage}
                     sx={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      backgroundColor:
-                        index === currentImageIndex
-                          ? "#fff"
-                          : "rgba(255, 255, 255, 0.4)",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
+                      position: "absolute",
+                      left: 12,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      color: "#fff",
+                      width: 32,
+                      height: 32,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                      },
+                      zIndex: 2,
                     }}
-                  />
-                ))}
-              </Box>
-            )}
+                  >
+                    <NavigateBeforeIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                  <IconButton
+                    onClick={handleNextImage}
+                    sx={{
+                      position: "absolute",
+                      right: 12,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      color: "#fff",
+                      width: 32,
+                      height: 32,
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                      },
+                      zIndex: 2,
+                    }}
+                  >
+                    <NavigateNextIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </>
+              )}
+
+              {/* Indicadores de página (dots) */}
+              {sortedImages.length > 1 && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    bottom: 12,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    display: "flex",
+                    gap: 0.75,
+                    zIndex: 2,
+                  }}
+                >
+                  {sortedImages.map((_, index) => (
+                    <Box
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        backgroundColor:
+                          index === currentImageIndex
+                            ? "#fff"
+                            : "rgba(255, 255, 255, 0.4)",
+                        cursor: "pointer",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
           </Box>
         )}
 
         {/* Conteúdo */}
-        <Box sx={{ p: 2 }}>
+        <Box 
+          sx={{ 
+            p: 2,
+            maxWidth: { xs: "100%", sm: "600px", md: "700px" },
+            margin: "0 auto",
+            width: "100%",
+          }}
+        >
           {/* Título */}
           <Typography
             variant="h5"
