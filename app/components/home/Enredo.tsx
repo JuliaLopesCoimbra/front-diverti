@@ -26,20 +26,16 @@ interface Props {
 }
 
 const Enredo: React.FC<Props> = ({ eventId }) => {
-  // ===== CACHE DO ENREDO (Instagram/TikTok style) =====
   const { getCache, setCache } = useFeedCache();
   const cacheKey = `enredo-event-${eventId}`;
   const [initialized, setInitialized] = useState(false);
-  // ====================================================
   
   const [schools, setSchools] = useState<SambaSchoolResponse[]>([]);
   const [musics, setMusics] = useState<MusicLyricsResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ===== CACHE: Carregar dados ao montar/trocar evento =====
   useEffect(() => {
     if (initialized) {
-      // Se já inicializou, é uma troca de evento - limpa tudo
       setSchools([]);
       setMusics([]);
       setLoading(true);
@@ -47,26 +43,21 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       return;
     }
 
-    // Tenta carregar do cache
     const cached = getCache(cacheKey);
     
     if (cached && cached.data.length > 0) {
-      // ✅ Dados encontrados no cache!
       const [cachedSchools, cachedMusics] = cached.data;
       setSchools(cachedSchools || []);
       setMusics(cachedMusics || []);
       setLoading(false);
       setInitialized(true);
       
-      // Restaura posição do scroll ULTRA AGRESSIVO (igual Instagram/TikTok)
       const targetPosition = cached.scrollPosition;
       
-      // Desabilita scroll restoration do navegador
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
       
-      // MÚLTIPLAS tentativas até conseguir
       let attempts = 0;
       const maxAttempts = 20;
       
@@ -86,10 +77,8 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
         }
       };
       
-      // Inicia tentativas
       requestAnimationFrame(attemptRestore);
       
-      // Backup com timeouts também
       [50, 100, 200, 400, 800, 1600].forEach(delay => {
         setTimeout(() => {
           window.scrollTo({
@@ -98,8 +87,43 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
           });
         }, delay);
       });
+      
+      (async () => {
+        try {
+          const [freshSchools, freshMusics] = await Promise.all([
+            getSambaSchoolsByEvent(eventId),
+            getMusicLyricsByEvent(eventId),
+          ]);
+          
+          const cachedSchoolIds = cachedSchools.map((s: SambaSchoolResponse) => s.id).sort().join(',');
+          const freshSchoolIds = freshSchools.map((s: SambaSchoolResponse) => s.id).sort().join(',');
+          const cachedMusicIds = cachedMusics.map((m: MusicLyricsResponse) => m.id).sort().join(',');
+          const freshMusicIds = freshMusics.map((m: MusicLyricsResponse) => m.id).sort().join(',');
+          
+          const schoolsChanged = cachedSchoolIds !== freshSchoolIds || cachedSchools.length !== freshSchools.length;
+          const musicsChanged = cachedMusicIds !== freshMusicIds || cachedMusics.length !== freshMusics.length;
+          
+          if (schoolsChanged || musicsChanged) {
+            setSchools(freshSchools);
+            setMusics(freshMusics);
+            
+            const hasNewItems = freshSchools.length > cachedSchools.length || freshMusics.length > cachedMusics.length;
+            setCache(cacheKey, [freshSchools, freshMusics], hasNewItems ? 0 : targetPosition);
+            
+            if (hasNewItems) {
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              }, 500);
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao revalidar cache:', err);
+        }
+      })();
     } else {
-      // ❌ Sem cache - carrega da API
       setLoading(true);
       
       Promise.all([
@@ -116,20 +140,16 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
-  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
-  // Usa ref para sempre ter o último valor do scroll (não depende de timing)
   const lastScrollPositionRef = useRef(0);
   
   useEffect(() => {
-    // Throttle para não salvar em todo scroll (performance)
     let throttleTimeout: NodeJS.Timeout | null = null;
-    const THROTTLE_MS = 400; // Otimizado para performance
+    const THROTTLE_MS = 400;
     
     const updateScrollPosition = () => {
       const currentScroll = window.scrollY || document.documentElement.scrollTop;
       lastScrollPositionRef.current = currentScroll;
       
-      // Salva imediatamente no cache (localStorage) - throttled
       if (throttleTimeout) clearTimeout(throttleTimeout);
       
       throttleTimeout = setTimeout(() => {
@@ -139,14 +159,10 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       }, THROTTLE_MS);
     };
     
-    // === MULTIPLATAFORMA: Todos os eventos possíveis ===
-    
-    // 1. SCROLL - atualiza a posição continuamente
     const handleScroll = () => {
       updateScrollPosition();
     };
     
-    // 2. PAGEHIDE - funciona melhor que beforeunload em mobile (iOS/Android)
     const handlePageHide = () => {
       if (schools.length > 0 || musics.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -154,7 +170,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       }
     };
     
-    // 3. BEFOREUNLOAD - desktop browsers
     const handleBeforeUnload = () => {
       if (schools.length > 0 || musics.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -162,7 +177,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       }
     };
     
-    // 4. VISIBILITYCHANGE - quando aba fica oculta (mobile/desktop)
     const handleVisibilityChange = () => {
       if (document.hidden && (schools.length > 0 || musics.length > 0)) {
         const finalScroll = lastScrollPositionRef.current;
@@ -170,7 +184,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       }
     };
     
-    // 5. BLUR - quando window perde foco
     const handleBlur = () => {
       if (schools.length > 0 || musics.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -178,14 +191,12 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       }
     };
     
-    // Registra todos os listeners
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     
-    // CLEANUP: Remove todos os listeners
     return () => {
       if (throttleTimeout) clearTimeout(throttleTimeout);
       
@@ -195,7 +206,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       
-      // ÚLTIMO salvamento antes de desmontar (usa o ref!)
       if (schools.length > 0 || musics.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
         setCache(cacheKey, [schools, musics], finalScroll);
@@ -213,7 +223,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
 
   return (
     <Box px={2} pb={4} >
-      {/* ================= ESCOLAS ================= */}
       <Typography 
         fontWeight={700} 
         mt={2}
@@ -268,7 +277,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                     pb: 2,
                   }}
                 >
-                  {/* Logo Quadrado */}
                   <Box
                     sx={{
                       width: 120,
@@ -308,7 +316,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                     )}
                   </Box>
 
-                  {/* Nome da Escola */}
                   <Typography
                     variant="h6"
                     fontWeight={700}
@@ -322,7 +329,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                     {school.name}
                   </Typography>
 
-                  {/* Descrição */}
                   {school.description && (
                     <Typography
                       variant="body2"
@@ -350,7 +356,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
 
       <Divider sx={{ my: 4 }} />
 
-      {/* ================= MÚSICAS ================= */}
       <Typography 
         variant="h6" 
         fontWeight={700} 
@@ -374,7 +379,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
         </Typography>
       ) : (
         musics.map((music) => {
-          // Divide a letra por linhas (quebras de linha)
           const lyricsLines = music.lyrics
             ? music.lyrics.split('\n').filter(line => line.trim() !== '')
             : [];
@@ -391,7 +395,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
               }}
             >
               <CardContent>
-                {/* Nome da música e cantor centralizados */}
                 <Box
                   sx={{
                     display: "flex",
@@ -425,7 +428,6 @@ const Enredo: React.FC<Props> = ({ eventId }) => {
                   )}
                 </Box>
 
-                {/* Letra formatada linha por linha */}
                 <Box
                   sx={{
                     display: "flex",

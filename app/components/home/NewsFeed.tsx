@@ -62,11 +62,9 @@ export default function NewsFeed({ eventId, event }: Props) {
   const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
   const router = useRouter();
   
-  // ===== CACHE DO FEED (Instagram/TikTok style) =====
   const { getCache, setCache } = useFeedCache();
   const cacheKey = `feed-event-${eventId}`;
   const [initialized, setInitialized] = useState(false);
-  // ==================================================
   
   const [news, setNews] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
@@ -76,8 +74,7 @@ export default function NewsFeed({ eventId, event }: Props) {
   const loaderRef = useRef<HTMLDivElement | null>(null);
   
   const canApprovePosts = isAdminMaster || isSubadmin;
-  // Evento está ativo apenas se existir e is_active for explicitamente true
-  const isEventActive = event ? event.is_active === true : true; // Default true se não tiver info (para não quebrar)
+  const isEventActive = event ? event.is_active === true : true;
 
   const loadNews = async (reset = false) => {
     if (loading) return;
@@ -109,10 +106,8 @@ export default function NewsFeed({ eventId, event }: Props) {
     }
   };
 
-  // ===== CACHE: Carregar dados ao montar/trocar evento =====
   useEffect(() => {
     if (initialized) {
-      // Se já inicializou, é uma troca de evento - limpa tudo
       setNews([]);
       setOffset(0);
       setHasMore(true);
@@ -120,25 +115,20 @@ export default function NewsFeed({ eventId, event }: Props) {
       return;
     }
 
-    // Tenta carregar do cache
     const cached = getCache(cacheKey);
     
     if (cached && cached.data.length > 0) {
-      // ✅ Dados encontrados no cache!
       setNews(cached.data);
       setOffset(cached.data.length);
       setHasMore(cached.data.length >= LIMIT);
       setInitialized(true);
       
-      // Restaura posição do scroll ULTRA AGRESSIVO (igual Instagram/TikTok)
       const targetPosition = cached.scrollPosition;
       
-      // Desabilita scroll restoration do navegador
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
       
-      // MÚLTIPLAS tentativas até conseguir
       let attempts = 0;
       const maxAttempts = 20;
       
@@ -158,10 +148,8 @@ export default function NewsFeed({ eventId, event }: Props) {
         }
       };
       
-      // Inicia tentativas
       requestAnimationFrame(attemptRestore);
       
-      // Backup com timeouts também
       [50, 100, 200, 400, 800, 1600].forEach(delay => {
         setTimeout(() => {
           window.scrollTo({
@@ -170,8 +158,36 @@ export default function NewsFeed({ eventId, event }: Props) {
           });
         }, delay);
       });
+      
+      (async () => {
+        try {
+          const limit = cached.data.length + (LIMIT * 3);
+          const freshData = await getEventNews(eventId, limit, 0);
+          
+          const cachedIds = cached.data.map((n: NewsResponse) => n.id).sort().join(',');
+          const freshIds = freshData.map((n: NewsResponse) => n.id).sort().join(',');
+          
+          if (cachedIds !== freshIds || cached.data.length !== freshData.length) {
+            setNews(freshData);
+            setOffset(freshData.length);
+            setHasMore(freshData.length >= limit);
+            const shouldResetScroll = freshData.length > cached.data.length;
+            setCache(cacheKey, freshData, shouldResetScroll ? 0 : targetPosition);
+            
+            if (shouldResetScroll) {
+              setTimeout(() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: 'smooth'
+                });
+              }, 500);
+            }
+          }
+        } catch (err) {
+          console.error('Erro ao revalidar cache:', err);
+        }
+      })();
     } else {
-      // ❌ Sem cache - carrega da API
       setNews([]);
       setOffset(0);
       setHasMore(true);
@@ -181,20 +197,16 @@ export default function NewsFeed({ eventId, event }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
-  // ===== CACHE: Salvar scroll position ULTRA ROBUSTO =====
-  // Usa ref para sempre ter o último valor do scroll (não depende de timing)
   const lastScrollPositionRef = useRef(0);
   
   useEffect(() => {
-    // Throttle para não salvar em todo scroll (performance)
     let throttleTimeout: NodeJS.Timeout | null = null;
-    const THROTTLE_MS = 400; // Otimizado para performance
+    const THROTTLE_MS = 400;
     
     const updateScrollPosition = () => {
       const currentScroll = window.scrollY || document.documentElement.scrollTop;
       lastScrollPositionRef.current = currentScroll;
       
-      // Salva imediatamente no cache (localStorage) - throttled
       if (throttleTimeout) clearTimeout(throttleTimeout);
       
       throttleTimeout = setTimeout(() => {
@@ -204,14 +216,10 @@ export default function NewsFeed({ eventId, event }: Props) {
       }, THROTTLE_MS);
     };
     
-    // === MULTIPLATAFORMA: Todos os eventos possíveis ===
-    
-    // 1. SCROLL - atualiza a posição continuamente
     const handleScroll = () => {
       updateScrollPosition();
     };
     
-    // 2. PAGEHIDE - funciona melhor que beforeunload em mobile (iOS/Android)
     const handlePageHide = () => {
       if (news.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -219,7 +227,6 @@ export default function NewsFeed({ eventId, event }: Props) {
       }
     };
     
-    // 3. BEFOREUNLOAD - desktop browsers
     const handleBeforeUnload = () => {
       if (news.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -227,7 +234,6 @@ export default function NewsFeed({ eventId, event }: Props) {
       }
     };
     
-    // 4. VISIBILITYCHANGE - quando aba fica oculta (mobile/desktop)
     const handleVisibilityChange = () => {
       if (document.hidden && news.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -235,7 +241,6 @@ export default function NewsFeed({ eventId, event }: Props) {
       }
     };
     
-    // 5. BLUR - quando window perde foco
     const handleBlur = () => {
       if (news.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
@@ -243,14 +248,12 @@ export default function NewsFeed({ eventId, event }: Props) {
       }
     };
     
-    // Registra todos os listeners
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('beforeunload', handleBeforeUnload);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     
-    // CLEANUP: Remove todos os listeners
     return () => {
       if (throttleTimeout) clearTimeout(throttleTimeout);
       
@@ -260,7 +263,6 @@ export default function NewsFeed({ eventId, event }: Props) {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       
-      // ÚLTIMO salvamento antes de desmontar (usa o ref!)
       if (news.length > 0) {
         const finalScroll = lastScrollPositionRef.current;
         setCache(cacheKey, news, finalScroll);
@@ -268,7 +270,6 @@ export default function NewsFeed({ eventId, event }: Props) {
     };
   }, [news, cacheKey, setCache]);
 
-  // infinite scroll
   useEffect(() => {
     if (!loaderRef.current || !hasMore) return;
 
@@ -293,13 +294,11 @@ export default function NewsFeed({ eventId, event }: Props) {
   };
 
   const handleUpdate = () => {
-    // Recarrega as news após atualização (curtir/comentar)
     loadNews(true);
   };
 
   return (
     <Box padding={2} key={authVersion}>
-          {/* AÇÕES ADMIN — SEMPRE NO TOPO */}
       {canCreatePost && isEventActive && (
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
           {canApprovePosts && isEventActive && <PendingPostsNotification eventId={eventId} />}
@@ -322,16 +321,12 @@ export default function NewsFeed({ eventId, event }: Props) {
         </Box>
       )}
 
-      {/* LOADING INICIAL */}
       {loading && news.length === 0 && <FeaturedNewsSkeleton />}
 
-      {/* SEM NOTÍCIAS */}
       {!loading && news.length === 0 && <EmptyNews />}
 
-      {/* FEED NORMAL */}
       {news.length > 0 && (
         <>
-          {/* NOTÍCIA PRINCIPAL */}
           {featured && (
             <Card
               onClick={() => handleNewsClick(featured.id)}
@@ -496,7 +491,6 @@ export default function NewsFeed({ eventId, event }: Props) {
               </Box>
             ))}
 
-            {/* Skeleton ao carregar mais */}
             {loading &&
               Array.from({ length: 2 }).map((_, i) => (
                 <NewsItemSkeleton key={i} />
@@ -509,8 +503,6 @@ export default function NewsFeed({ eventId, event }: Props) {
     </Box>
   );
 }
-
-/* ---------------- SKELETONS ---------------- */
 
 function FeaturedNewsSkeleton() {
   return (
