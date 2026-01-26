@@ -16,6 +16,7 @@ interface Props {
   events: EventResponse[];
   onSelectEvent: (event: EventResponse) => void;
   currentEvent: EventResponse | null;
+  profile?: ProfileResponse | null;
 }
 
 export default function HomeHeader({
@@ -23,23 +24,31 @@ export default function HomeHeader({
   events,
   onSelectEvent,
   currentEvent,
+  profile: profileProp,
 }: Props) {
   const router = useRouter();
   const { logout } = useAuth();
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [profile, setProfile] = useState<ProfileResponse | null>(profileProp || null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const menuOpen = Boolean(anchorEl);
 
   useEffect(() => {
+    // Se o perfil foi passado como prop, não precisa buscar
+    if (profileProp) {
+      setProfile(profileProp);
+      return;
+    }
+    
+    // Caso contrário, busca o perfil (compatibilidade com outros usos)
     getProfile()
       .then(setProfile)
       .catch((error) => {
         console.error("Erro ao buscar perfil:", error);
       });
-  }, []);
+  }, [profileProp]);
 
-
+  // Se não há perfil e não foi passado como prop, retorna null
   if (!profile) return null;
 
   return (

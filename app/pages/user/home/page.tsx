@@ -15,6 +15,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import PhotoAI from "@/app/components/home/PhotoAI";
 import Enredo from "@/app/components/home/Enredo";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
+import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 
 const STORAGE_KEY = "selectedEventId";
 const SCROLL_KEY = "homeScrollY";
@@ -34,6 +35,8 @@ const Home: React.FC = () => {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [eventsLoaded, setEventsLoaded] = useState(false);
+  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const currentEventIdRef = useRef<number | null>(null);
   const isCheckingRef = useRef(false); // Previne múltiplas verificações simultâneas
   const router = useRouter();
@@ -130,6 +133,18 @@ const Home: React.FC = () => {
       return () => window.removeEventListener("scroll", onScroll);
     }
 
+    // Carrega o perfil do usuário
+    const fetchProfile = async () => {
+      try {
+        const profileData = await getProfile();
+        setProfile(profileData);
+        setProfileLoaded(true);
+      } catch (error) {
+        console.error("Erro ao buscar perfil:", error);
+        setProfileLoaded(true); // Marca como carregado mesmo em caso de erro para não travar a tela
+      }
+    };
+
     const fetchEvents = async () => {
       try {
         const data = await getEvents();
@@ -180,7 +195,8 @@ const Home: React.FC = () => {
       }
     };
 
-    fetchEvents();
+    // Carrega eventos e perfil em paralelo
+    Promise.all([fetchEvents(), fetchProfile()]);
 
     // Verifica quando a página/aba fica visível
     const handleVisibilityChange = () => {
@@ -214,7 +230,8 @@ const Home: React.FC = () => {
     }
   }
 
-  if (!currentEvent) {
+  // Mostra skeleton até que tanto o evento quanto o perfil estejam carregados
+  if (!currentEvent || !profileLoaded) {
     return (
       <Box
         style={{
@@ -333,6 +350,7 @@ const Home: React.FC = () => {
           events={events}
           currentEvent={currentEvent}
           onSelectEvent={handleSelectEvent}
+          profile={profile}
         />
 
         {/* Tabs */}
