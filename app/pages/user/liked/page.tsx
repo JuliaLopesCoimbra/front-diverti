@@ -41,9 +41,11 @@ export default function LikedPostsPage() {
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isRevalidating, setIsRevalidating] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
@@ -182,6 +184,11 @@ export default function LikedPostsPage() {
     reloadPostsForEvent(event.id);
   }, [reloadPostsForEvent]);
 
+  // Marca como montado no cliente para evitar problemas de hidratação
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("/pages/auth/login");
@@ -198,10 +205,8 @@ export default function LikedPostsPage() {
         console.error("Erro ao carregar eventos", error);
       });
 
-    setPosts([]);
-    setOffset(0);
-    setHasMore(true);
-    loadPosts(true);
+    // Só carrega posts se não houver cache (o cache será verificado no outro useEffect)
+    // Não carrega aqui, será carregado no useEffect do cache se não houver cache
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
 
@@ -276,48 +281,55 @@ export default function LikedPostsPage() {
     const cached = getCache(cacheKey);
     
     if (cached && cached.data.length > 0) {
-      setPosts(cached.data);
-      setOffset(cached.data.length);
-      setHasMore(cached.data.length >= LIMIT);
-      setInitialized(true);
-      setInitialLoading(false);
+      // Mostra skeleton primeiro, depois carrega dados do cache
+      setIsRevalidating(true);
       
-      const targetPosition = cached.scrollPosition;
-      
-      if ('scrollRestoration' in history) {
-        history.scrollRestoration = 'manual';
-      }
-      
-      let attempts = 0;
-      const maxAttempts = 20;
-      
-      const attemptRestore = () => {
-        attempts++;
+      // Aguarda um pouco antes de mostrar dados do cache para exibir skeleton
+      setTimeout(() => {
+        setPosts(cached.data);
+        setOffset(cached.data.length);
+        setHasMore(cached.data.length >= LIMIT);
+        setInitialLoading(false);
+        setIsRevalidating(false);
         
-        window.scrollTo({
-          top: targetPosition,
-          behavior: 'instant' as ScrollBehavior
-        });
+        const targetPosition = cached.scrollPosition;
         
-        const currentScroll = window.scrollY;
-        const diff = Math.abs(currentScroll - targetPosition);
-        
-        if (diff >= 10 && attempts < maxAttempts) {
-          requestAnimationFrame(attemptRestore);
+        if ('scrollRestoration' in history) {
+          history.scrollRestoration = 'manual';
         }
-      };
-      
-      requestAnimationFrame(attemptRestore);
-      
-      [50, 100, 200, 400, 800, 1600].forEach(delay => {
-        setTimeout(() => {
+        
+        let attempts = 0;
+        const maxAttempts = 20;
+        
+        const attemptRestore = () => {
+          attempts++;
+          
           window.scrollTo({
             top: targetPosition,
             behavior: 'instant' as ScrollBehavior
           });
-        }, delay);
-      });
+          
+          const currentScroll = window.scrollY;
+          const diff = Math.abs(currentScroll - targetPosition);
+          
+          if (diff >= 10 && attempts < maxAttempts) {
+            requestAnimationFrame(attemptRestore);
+          }
+        };
+        
+        requestAnimationFrame(attemptRestore);
+        
+        [50, 100, 200, 400, 800, 1600].forEach(delay => {
+          setTimeout(() => {
+            window.scrollTo({
+              top: targetPosition,
+              behavior: 'instant' as ScrollBehavior
+            });
+          }, delay);
+        });
+      }, 400); // Delay para mostrar skeleton
       
+      // Revalida cache em background
       (async () => {
         try {
           const limit = Math.max(cached.data.length, LIMIT * 3);
@@ -343,24 +355,32 @@ export default function LikedPostsPage() {
                 });
               }, 500);
             } else if (hasRemovedItems) {
+              const targetPosition = cached.scrollPosition;
               const safeScrollPosition = Math.min(targetPosition, document.documentElement.scrollHeight - window.innerHeight);
               setCache(cacheKey, freshData, safeScrollPosition);
             } else {
-              setCache(cacheKey, freshData, targetPosition);
+              setCache(cacheKey, freshData, cached.scrollPosition);
             }
           } else {
             const contentChanged = JSON.stringify(cached.data) !== JSON.stringify(freshData);
             if (contentChanged) {
               setPosts([...freshData]);
             }
-            setCache(cacheKey, freshData, targetPosition);
+            setCache(cacheKey, freshData, cached.scrollPosition);
           }
         } catch (err) {
           console.error('Erro ao revalidar cache:', err);
+        } finally {
+          setInitialized(true);
         }
       })();
     } else {
+      // Não há cache, carrega posts normalmente
       setInitialized(true);
+      setPosts([]);
+      setOffset(0);
+      setHasMore(true);
+      loadPosts(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated]);
@@ -494,7 +514,8 @@ export default function LikedPostsPage() {
     });
   };
 
-  if (initialLoading) {
+  // Evita problemas de hidratação: só renderiza conteúdo específico do cliente após montagem
+  if (!mounted) {
     return (
       <Box
         sx={{
@@ -510,19 +531,57 @@ export default function LikedPostsPage() {
     );
   }
 
+  // Se não há evento ainda, mostra skeleton dentro do layout
   if (!currentEvent) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          backgroundColor: "#000",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress sx={{ color: "#ffc91f" }} />
-      </Box>
+      <>
+        <Box
+          style={{
+            minHeight: "100vh",
+            paddingBottom: "72px",
+            backgroundColor: "#f4f7fc",
+            backgroundImage: "url(/background/dashboard.png)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: "100%",
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: { xs: "100%", sm: "100%", md: "600px", lg: "700px" },
+              }}
+            >
+              <Box
+                sx={{
+                  paddingX: 3,
+                  paddingY: 3,
+                }}
+              >
+                <Skeleton
+                  variant="text"
+                  width={200}
+                  height={40}
+                  sx={{ bgcolor: "rgba(255,255,255,0.1)", mb: 2 }}
+                />
+              </Box>
+              <Box paddingX={2} paddingBottom={2}>
+                <Box display="flex" flexDirection="column" gap={2} paddingX={2}>
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <PostItemSkeleton key={i} />
+                  ))}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+        <BottomNav />
+      </>
     );
   }
 
@@ -580,7 +639,7 @@ export default function LikedPostsPage() {
                     fontWeight: 700,
                     color: "#fff",
                     mb: 0.5,
-                    fontSize: { xs: "1.5rem", sm: "1.75rem" },
+                    fontSize: { xs: "1.25rem", sm: "1.75rem" },
                   }}
                 >
                   Posts curtidos por mim
@@ -612,8 +671,8 @@ export default function LikedPostsPage() {
             </Box>
 
             <Box paddingX={2} paddingBottom={2}>
-              {/* LOADING INICIAL */}
-              {loading && posts.length === 0 && (
+              {/* LOADING INICIAL OU REVALIDAÇÃO */}
+              {(initialLoading || isRevalidating || (loading && posts.length === 0)) && (
                 <Box display="flex" flexDirection="column" gap={2} paddingX={2}>
                   {Array.from({ length: 3 }).map((_, i) => (
                     <PostItemSkeleton key={i} />
@@ -622,7 +681,7 @@ export default function LikedPostsPage() {
               )}
 
               {/* SEM POSTS */}
-              {!loading && posts.length === 0 && (
+              {!initialLoading && !isRevalidating && !loading && posts.length === 0 && (
                 <Box
                   sx={{
                     display: "flex",
@@ -674,7 +733,7 @@ export default function LikedPostsPage() {
               )}
 
               {/* LISTA DE POSTS */}
-              {posts.length > 0 && (
+              {!initialLoading && !isRevalidating && posts.length > 0 && !loading && (
                 <Box display="flex" flexDirection="column" gap={2}>
                   {posts.map((item, index) => (
                     <Card
