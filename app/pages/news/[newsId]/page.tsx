@@ -214,9 +214,9 @@ export default function NewsDetailPage() {
     }
 
     setLiking(true);
+    const wasLiked = news.likes.user_liked;
+    
     try {
-      const wasLiked = news.likes.user_liked;
-
       if (wasLiked) {
         // Remove o like usando o endpoint específico
         await unlikeNews(newsId);
