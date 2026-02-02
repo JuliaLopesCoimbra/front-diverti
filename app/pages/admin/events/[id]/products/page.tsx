@@ -364,77 +364,37 @@ export default function EventProductsPage() {
                     <Box 
                       sx={{ 
                         display: "flex", 
-                        justifyContent: "space-between", 
-                        alignItems: "flex-end",
+                        justifyContent: "flex-start", 
+                        alignItems: "center",
                         mt: "auto",
                         pt: 0.5,
                         borderTop: "1px solid rgba(255,255,255,0.08)",
                       }}
                     >
-                      <Box>
-                        <Typography 
-                          variant="h6" 
-                          sx={{ 
-                            color: "#ffc91f", 
-                            fontWeight: 800, 
-                            fontSize: "0.813rem",
-                            lineHeight: 1,
-                            mb: 0.125,
-                          }}
-                        >
-                          R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
-                        </Typography>
-                        <Box
-                          sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            px: 0.5,
-                            py: 0.1,
-                            borderRadius: "2px",
-                            backgroundColor: product.status === "active" 
-                              ? "rgba(76, 175, 80, 0.15)" 
-                              : "rgba(244, 67, 54, 0.15)",
-                            border: `1px solid ${product.status === "active" ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)"}`,
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              color: product.status === "active" ? "#4caf50" : "#f44336",
-                              fontSize: "0.5rem",
-                              fontWeight: 700,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.15px",
-                            }}
-                          >
-                            {product.status === "active" ? "Ativo" : "Inativo"}
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Box sx={{ textAlign: "right" }}>
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          px: 0.5,
+                          py: 0.1,
+                          borderRadius: "2px",
+                          backgroundColor: product.status === "active" 
+                            ? "rgba(76, 175, 80, 0.15)" 
+                            : "rgba(244, 67, 54, 0.15)",
+                          border: `1px solid ${product.status === "active" ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)"}`,
+                        }}
+                      >
                         <Typography
                           variant="caption"
                           sx={{
-                            display: "block",
-                            color: "rgba(255,255,255,0.5)",
+                            color: product.status === "active" ? "#4caf50" : "#f44336",
                             fontSize: "0.5rem",
-                            fontWeight: 500,
-                            mb: 0.1,
+                            fontWeight: 700,
                             textTransform: "uppercase",
                             letterSpacing: "0.15px",
                           }}
                         >
-                          Estoque
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: product.stock > 0 ? "#4caf50" : "#f44336",
-                            fontWeight: 700,
-                            fontSize: "0.688rem",
-                          }}
-                        >
-                          {product.stock}
+                          {product.status === "active" ? "Ativo" : "Inativo"}
                         </Typography>
                       </Box>
                     </Box>

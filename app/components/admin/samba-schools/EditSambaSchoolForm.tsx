@@ -8,8 +8,10 @@ import {
   CircularProgress,
   IconButton,
   Paper,
+  Chip,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import PhotoCamera from "@mui/icons-material/PhotoCamera";
 import {
   updateSambaSchool,
   UpdateSambaSchoolData,
@@ -63,6 +65,14 @@ export default function EditSambaSchoolForm({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validação de tamanho: máximo 5MB
+      const maxSizePerImage = 5 * 1024 * 1024; // 5MB
+      
+      if (file.size > maxSizePerImage) {
+        showToast("A imagem é muito grande. Máximo de 5MB por imagem.", "error");
+        return;
+      }
+      
       setImage(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -190,76 +200,35 @@ export default function EditSambaSchoolForm({
             border: "1px solid rgba(255, 255, 255, 0.1)",
           }}
         >
-          <TextField
-            fullWidth
-            label="Nome *"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={loading}
-            required
-            variant="standard"
-            sx={{
-              "& .MuiInput-underline:before": {
-                borderBottomColor: "rgba(255,255,255,0.2)",
-              },
-              "& .MuiInput-underline:hover:before": {
-                borderBottomColor: "rgba(255,255,255,0.3)",
-              },
-              "& .MuiInput-underline:after": {
-                borderBottomColor: "#ffc91f",
-              },
-              "& .MuiInputBase-input": {
-                color: "#fff",
-                fontSize: "1rem",
-              },
-              "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.6)",
-                "&.Mui-focused": {
-                  color: "#ffc91f",
-                },
-              },
-            }}
-          />
+          {/* Upload de imagem - Primeiro campo */}
+          <Box sx={{ mb: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <PhotoCamera sx={{ color: "#ffcc01", fontSize: 20 }} />
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  color: "#fff",
+                  fontWeight: 600,
+                  fontSize: "1rem",
+                }}
+              >
+                Imagem da Escola de Samba
+              </Typography>
+              {preview && (
+                <Chip
+                  label="1/1"
+                  size="small"
+                  sx={{
+                    backgroundColor: "rgba(255, 204, 1, 0.2)",
+                    color: "#ffcc01",
+                    fontWeight: 600,
+                    fontSize: "0.75rem",
+                    height: 20,
+                  }}
+                />
+              )}
+            </Box>
 
-          <TextField
-            fullWidth
-            label="Descrição"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            multiline
-            rows={4}
-            disabled={loading}
-            variant="standard"
-            sx={{
-              "& .MuiInput-underline:before": {
-                borderBottomColor: "rgba(255,255,255,0.2)",
-              },
-              "& .MuiInput-underline:hover:before": {
-                borderBottomColor: "rgba(255,255,255,0.3)",
-              },
-              "& .MuiInput-underline:after": {
-                borderBottomColor: "#ffc91f",
-              },
-              "& .MuiInputBase-input": {
-                color: "#fff",
-                fontSize: "1rem",
-              },
-              "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.6)",
-                "&.Mui-focused": {
-                  color: "#ffc91f",
-                },
-              },
-            }}
-          />
-
-          <Box>
-            <Typography
-              variant="body2"
-              sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}
-            >
-              Imagem da Escola de Samba
-            </Typography>
             <input
               accept="image/*"
               style={{ display: "none" }}
@@ -268,58 +237,212 @@ export default function EditSambaSchoolForm({
               onChange={handleImageChange}
               disabled={loading}
             />
-            <label htmlFor="samba-school-image-upload-edit">
-              <Button
-                variant="outlined"
-                component="span"
-                disabled={loading}
-                fullWidth
-                sx={{
-                  borderColor: "rgba(255,255,255,0.2)",
-                  color: "#fff",
-                  py: 1.5,
-                  textTransform: "none",
-                  borderRadius: "14px",
-                  "&:hover": {
-                    borderColor: "#ffc91f",
-                    backgroundColor: "rgba(255,201,31,0.1)",
-                  },
-                }}
-              >
-                {preview ? "Alterar Imagem" : "Trocar Imagem (Opcional)"}
-              </Button>
-            </label>
-            {preview && (
-              <Box
-                component="img"
-                src={preview}
-                alt="Preview"
-                sx={{
-                  mt: 2,
-                  maxWidth: "100%",
-                  maxHeight: 200,
-                  objectFit: "contain",
-                  borderRadius: 2,
-                }}
-              />
+
+            {!preview ? (
+              <label htmlFor="samba-school-image-upload-edit">
+                <Box
+                  sx={{
+                    border: "2px dashed rgba(255, 255, 255, 0.3)",
+                    borderRadius: "16px",
+                    padding: { xs: 4, sm: 6 },
+                    textAlign: "center",
+                    cursor: loading ? "not-allowed" : "pointer",
+                    transition: "all 0.3s ease",
+                    backgroundColor: "rgba(255, 255, 255, 0.03)",
+                    "&:hover": {
+                      borderColor: "rgba(255, 204, 1, 0.5)",
+                      backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      transform: "translateY(-2px)",
+                    },
+                  }}
+                >
+                  <PhotoCamera
+                    sx={{
+                      fontSize: 48,
+                      color: "rgba(255, 255, 255, 0.4)",
+                      mb: 2,
+                    }}
+                  />
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.8)",
+                      fontWeight: 600,
+                      mb: 1,
+                    }}
+                  >
+                    Adicione a imagem
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.5)",
+                      fontSize: "0.875rem",
+                    }}
+                  >
+                    Clique para selecionar ou arraste aqui
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.4)",
+                      fontSize: "0.75rem",
+                      mt: 1,
+                      display: "block",
+                    }}
+                  >
+                    Máximo 1 imagem • 5MB por imagem
+                  </Typography>
+                </Box>
+              </label>
+            ) : (
+              <Box sx={{ mt: 2 }}>
+                <Box
+                  component="img"
+                  src={preview}
+                  alt="Preview"
+                  sx={{
+                    width: "100%",
+                    maxHeight: 400,
+                    objectFit: "contain",
+                    borderRadius: 2,
+                    mb: 2,
+                  }}
+                />
+                <label htmlFor="samba-school-image-upload-edit" style={{ display: "block" }}>
+                  <Button
+                    component="span"
+                    disabled={loading}
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      color: "rgba(255,255,255,0.9)",
+                      borderColor: "rgba(255,255,255,0.3)",
+                      textTransform: "none",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      padding: "10px 20px",
+                      borderRadius: "12px",
+                      transition: "all 0.3s ease",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      backdropFilter: "blur(10px)",
+                      "&:hover": {
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                        borderColor: "rgba(255, 204, 1, 0.5)",
+                        color: "#ffcc01",
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    Alterar Imagem
+                  </Button>
+                </label>
+              </Box>
             )}
           </Box>
+
+          <TextField
+            fullWidth
+            label="Nome *"
+            value={name}
+            onChange={(e) => {
+              if (e.target.value.length <= 100) {
+                setName(e.target.value);
+              }
+            }}
+            disabled={loading}
+            required
+            variant="standard"
+            inputProps={{ maxLength: 100 }}
+            helperText={`${name.length}/100 caracteres`}
+            sx={{
+              "& .MuiInput-underline:before": {
+                borderBottomColor: "rgba(255,255,255,0.2)",
+              },
+              "& .MuiInput-underline:hover:before": {
+                borderBottomColor: "rgba(255,255,255,0.3)",
+              },
+              "& .MuiInput-underline:after": {
+                borderBottomColor: "#ffc91f",
+              },
+              "& .MuiInputBase-input": {
+                color: "#fff",
+                fontSize: "1rem",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(255,255,255,0.6)",
+                "&.Mui-focused": {
+                  color: "#ffc91f",
+                },
+              },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="Descrição"
+            value={description}
+            onChange={(e) => {
+              if (e.target.value.length <= 200) {
+                setDescription(e.target.value);
+              }
+            }}
+            multiline
+            rows={4}
+            disabled={loading}
+            variant="standard"
+            inputProps={{ maxLength: 200 }}
+            helperText={`${description.length}/200 caracteres`}
+            sx={{
+              "& .MuiInput-underline:before": {
+                borderBottomColor: "rgba(255,255,255,0.2)",
+              },
+              "& .MuiInput-underline:hover:before": {
+                borderBottomColor: "rgba(255,255,255,0.3)",
+              },
+              "& .MuiInput-underline:after": {
+                borderBottomColor: "#ffc91f",
+              },
+              "& .MuiInputBase-input": {
+                color: "#fff",
+                fontSize: "1rem",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(255,255,255,0.6)",
+                "&.Mui-focused": {
+                  color: "#ffc91f",
+                },
+              },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.875rem",
+              },
+            }}
+          />
         </Paper>
 
-        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="outlined"
             onClick={() => router.back()}
             disabled={loading}
             sx={{
               flex: 1,
+              borderRadius: "999px",
               borderColor: "rgba(255,255,255,0.2)",
-              color: "rgba(255,255,255,0.7)",
+              borderWidth: "2px",
+              color: "rgba(255,255,255,0.9)",
+              fontWeight: 600,
+              fontSize: { xs: "0.875rem", sm: "1.1rem" },
+              py: { xs: 1, sm: 1.5 },
               textTransform: "none",
-              borderRadius: "14px",
-              py: 1.5,
               "&:hover": {
-                borderColor: "rgba(255,255,255,0.3)",
+                borderColor: "rgba(255,255,255,0.4)",
+                borderWidth: "2px",
                 backgroundColor: "rgba(255,255,255,0.05)",
               },
             }}
@@ -332,18 +455,18 @@ export default function EditSambaSchoolForm({
             disabled={loading || !name.trim()}
             sx={{
               flex: 1,
+              borderRadius: "999px",
               backgroundColor: "#ffc91f",
               color: "#000",
-              fontWeight: 600,
+              fontWeight: 700,
+              fontSize: { xs: "0.875rem", sm: "1.1rem" },
+              py: { xs: 1, sm: 1.5 },
               textTransform: "none",
-              borderRadius: "14px",
-              py: 1.5,
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "#ffd54f",
               },
               "&:disabled": {
-                backgroundColor: "rgba(255,201,31,0.3)",
-                color: "rgba(0,0,0,0.3)",
+                backgroundColor: "rgba(255, 201, 31, 0.5)",
               },
             }}
           >

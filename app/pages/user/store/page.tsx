@@ -8,9 +8,9 @@ import {
   CircularProgress,
   Paper,
   Card,
-  CardContent,
   CardMedia,
   Skeleton,
+  Chip,
 } from "@mui/material";
 import { useAuth } from "@/app/context/AuthContext";
 import BottomNav from "@/app/components/layout/BottomNav";
@@ -277,53 +277,11 @@ export default function StorePage() {
                     <Skeleton
                       variant="rectangular"
                       width="100%"
-                      height={80}
                       sx={{
+                        height: { xs: 200, md: 250 },
                         bgcolor: "rgba(255, 255, 255, 0.1)",
                       }}
                     />
-                    <CardContent sx={{ p: 1 }}>
-                      <Skeleton
-                        variant="text"
-                        width="80%"
-                        height={16}
-                        sx={{
-                          bgcolor: "rgba(255, 255, 255, 0.1)",
-                          mb: 0.5,
-                          borderRadius: 1,
-                        }}
-                      />
-                      <Skeleton
-                        variant="text"
-                        width="60%"
-                        height={14}
-                        sx={{
-                          bgcolor: "rgba(255, 255, 255, 0.1)",
-                          mb: 0.5,
-                          borderRadius: 1,
-                        }}
-                      />
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.75, pt: 0.75, borderTop: "1px solid rgba(255,255,255,0.08)" }}>
-                        <Skeleton
-                          variant="text"
-                          width={60}
-                          height={16}
-                          sx={{
-                            bgcolor: "rgba(255, 255, 255, 0.1)",
-                            borderRadius: 1,
-                          }}
-                        />
-                        <Skeleton
-                          variant="text"
-                          width={40}
-                          height={14}
-                          sx={{
-                            bgcolor: "rgba(255, 255, 255, 0.1)",
-                            borderRadius: 1,
-                          }}
-                        />
-                      </Box>
-                    </CardContent>
                   </Card>
                 ))}
               </Box>
@@ -371,24 +329,31 @@ export default function StorePage() {
             <>
               <Box
                 sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
                   mb: 4,
-                  pb: 2,
-                  borderBottom: "1px solid rgba(255,255,255,0.1)",
+                  textAlign: "center",
                 }}
               >
                 <Typography
-                  variant="h4"
+                  variant="h6"
                   fontWeight={700}
                   sx={{
                     color: "#fff",
-                    fontSize: { xs: "1.1rem", sm: "1.5rem", md: "2rem" },
-                    letterSpacing: "0.5px",
+                    fontSize: { xs: "1rem", md: "1.25rem" },
+                    mb: 1,
                   }}
                 >
-                  {currentEvent.title}
+                  Lojinha do Evento
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: "rgba(255,255,255,0.7)",
+                    fontSize: { xs: "0.875rem", md: "1rem" },
+                    maxWidth: "600px",
+                    mx: "auto",
+                  }}
+                >
+                  Estes produtos estão sendo vendidos na lojinha do evento. Clique em qualquer produto para ver mais detalhes.
                 </Typography>
               </Box>
 
@@ -413,6 +378,7 @@ export default function StorePage() {
                       borderRadius: "12px",
                       border: "1px solid rgba(255,255,255,0.08)",
                       overflow: "hidden",
+                      position: "relative",
                       "&:hover": {
                         transform: "translateY(-6px)",
                         boxShadow: "0 12px 24px rgba(255, 201, 31, 0.25)",
@@ -421,49 +387,50 @@ export default function StorePage() {
                     }}
                     onClick={() => router.push(`/pages/user/store/${product.id}`)}
                   >
+                    {product.last_pieces && (
+                      <Chip
+                        label="Últimas Peças"
+                        sx={{
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                          zIndex: 2,
+                          backgroundColor: "#ff1744",
+                          color: "#fff",
+                          fontWeight: 700,
+                          fontSize: { xs: "0.625rem", md: "0.75rem" },
+                          height: { xs: 24, md: 28 },
+                          "& .MuiChip-label": {
+                            px: { xs: 1, md: 1.5 },
+                          },
+                          boxShadow: "0 2px 8px rgba(255, 23, 68, 0.4)",
+                        }}
+                      />
+                    )}
                     {product.images && product.images.length > 0 ? (
-                      <Box
+                      <CardMedia
+                        component="img"
+                        image={product.images[0].image_url}
+                        alt={product.name}
                         sx={{
                           width: "100%",
-                          height: 80,
-                          overflow: "hidden",
-                          position: "relative",
-                          "&::after": {
-                            content: '""',
-                            position: "absolute",
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            height: "30%",
-                            background: "linear-gradient(to top, rgba(0,0,0,0.3), transparent)",
+                          height: { xs: 200, md: 250 },
+                          objectFit: "cover",
+                          transition: "transform 0.3s ease",
+                          "&:hover": {
+                            transform: "scale(1.05)",
                           },
                         }}
-                      >
-                        <CardMedia
-                          component="img"
-                          image={product.images[0].image_url}
-                          alt={product.name}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            transition: "transform 0.3s ease",
-                            "&:hover": {
-                              transform: "scale(1.05)",
-                            },
-                          }}
-                        />
-                      </Box>
+                      />
                     ) : (
                       <Box
                         sx={{
                           width: "100%",
-                          height: 80,
+                          height: { xs: 200, md: 250 },
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           backgroundColor: "rgba(255,255,255,0.05)",
-                          borderBottom: "1px solid rgba(255,255,255,0.08)",
                         }}
                       >
                         <Typography
@@ -478,91 +445,6 @@ export default function StorePage() {
                         </Typography>
                       </Box>
                     )}
-                    <CardContent sx={{ flexGrow: 1, p: 1, display: "flex", flexDirection: "column", gap: 0.5 }}>
-                      <Typography
-                        variant="h6"
-                        fontWeight={700}
-                        sx={{
-                          mb: 0,
-                          fontSize: "0.75rem",
-                          lineHeight: 1.2,
-                          color: "#fff",
-                          letterSpacing: "0.05px",
-                        }}
-                      >
-                        {product.name}
-                      </Typography>
-                      {product.description && (
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            color: "rgba(255,255,255,0.65)",
-                            mb: 0,
-                            fontSize: "0.625rem",
-                            lineHeight: 1.3,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            minHeight: "1.6rem",
-                          }}
-                        >
-                          {product.description}
-                        </Typography>
-                      )}
-                      <Box
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-end",
-                          mt: "auto",
-                          pt: 0.75,
-                          borderTop: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              color: "#ffc91f",
-                              fontWeight: 800,
-                              fontSize: "0.875rem",
-                              lineHeight: 1,
-                              mb: 0.25,
-                            }}
-                          >
-                            R$ {parseFloat(product.price).toFixed(2).replace(".", ",")}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ textAlign: "right" }}>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: "block",
-                              color: "rgba(255,255,255,0.5)",
-                              fontSize: "0.563rem",
-                              fontWeight: 500,
-                              mb: 0.125,
-                              textTransform: "uppercase",
-                              letterSpacing: "0.2px",
-                            }}
-                          >
-                            Estoque
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              color: product.stock > 0 ? "#4caf50" : "#f44336",
-                              fontWeight: 700,
-                              fontSize: "0.75rem",
-                            }}
-                          >
-                            {product.stock}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
                   </Card>
                 ))}
               </Box>

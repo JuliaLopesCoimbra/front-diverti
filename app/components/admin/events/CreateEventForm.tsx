@@ -219,9 +219,15 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Título *"
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 100) {
+                setTitle(e.target.value);
+              }
+            }}
             disabled={loading}
             required
+            inputProps={{ maxLength: 100 }}
+            helperText={`${title.length}/100 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -251,6 +257,11 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
                   color: "#ffc91f",
                 },
               },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.95rem",
+                marginTop: "6px",
+              },
             }}
           />
 
@@ -258,10 +269,16 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Descrição"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 200) {
+                setDescription(e.target.value);
+              }
+            }}
             multiline
             rows={4}
             disabled={loading}
+            inputProps={{ maxLength: 200 }}
+            helperText={`${description.length}/200 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -291,6 +308,11 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
                   color: "#ffc91f",
                 },
               },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.95rem",
+                marginTop: "6px",
+              },
             }}
           />
 
@@ -298,8 +320,14 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Localização"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 200) {
+                setLocation(e.target.value);
+              }
+            }}
             disabled={loading}
+            inputProps={{ maxLength: 200 }}
+            helperText={`${location.length}/200 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -328,6 +356,11 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
                 "&.Mui-focused": {
                   color: "#ffc91f",
                 },
+              },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.95rem",
+                marginTop: "6px",
               },
             }}
           />
@@ -426,19 +459,24 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Dias do Evento"
             value={eventDates}
-            onChange={(e) => setEventDates(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 200) {
+                setEventDates(e.target.value);
+              }
+            }}
             disabled={loading}
             placeholder="Ex: 2024-01-09,2024-01-10,2024-01-20,2024-01-21"
-            helperText="Separe múltiplas datas por vírgula (formato: YYYY-MM-DD,YYYY-MM-DD)"
+            inputProps={{ maxLength: 200 }}
+            helperText={`Separe múltiplas datas por vírgula (formato: YYYY-MM-DD,YYYY-MM-DD) - ${eventDates.length}/200 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
                 color: "#fff",
-                fontSize: "1.1rem",
+                fontSize: "0.9rem",
                 padding: "4px 0",
                 "& input": {
                   padding: "14px 16px",
-                  fontSize: "1.1rem",
+                  fontSize: "0.9rem",
                 },
                 "& fieldset": {
                   borderColor: "rgba(255,255,255,0.1)",
@@ -454,14 +492,14 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
               },
               "& .MuiInputLabel-root": {
                 color: "rgba(255,255,255,0.7)",
-                fontSize: "1.1rem",
+                fontSize: "0.9rem",
                 "&.Mui-focused": {
                   color: "#ffc91f",
                 },
               },
               "& .MuiFormHelperText-root": {
                 color: "rgba(255,255,255,0.5)",
-                fontSize: "0.95rem",
+                fontSize: "0.8rem",
                 marginTop: "6px",
               },
             }}
@@ -620,11 +658,17 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Line Up (Programação do Show)"
             value={lineUp}
-            onChange={(e) => setLineUp(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 2000) {
+                setLineUp(e.target.value);
+              }
+            }}
             multiline
             rows={6}
             disabled={loading}
             placeholder="Ex: 20:00 - Artista A&#10;21:30 - Artista B&#10;23:00 - Artista C"
+            inputProps={{ maxLength: 2000 }}
+            helperText={`${lineUp.length}/2000 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -654,6 +698,11 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
                   color: "#ffc91f",
                 },
               },
+              "& .MuiFormHelperText-root": {
+                color: "rgba(255,255,255,0.5)",
+                fontSize: "0.95rem",
+                marginTop: "6px",
+              },
             }}
           />
 
@@ -661,19 +710,24 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             fullWidth
             label="Link do Iframe da Playlist Spotify"
             value={spotifyPlaylistUrl}
-            onChange={(e) => setSpotifyPlaylistUrl(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value.length <= 500) {
+                setSpotifyPlaylistUrl(e.target.value);
+              }
+            }}
             disabled={loading}
             placeholder="Ex: https://open.spotify.com/embed/playlist/7yhX7bo1ytC94v3alLA5Tp?utm_source=generator"
-            helperText="Cole aqui o link completo do iframe da playlist do Spotify"
+            inputProps={{ maxLength: 500 }}
+            helperText={`Cole aqui o link completo do iframe da playlist do Spotify - ${spotifyPlaylistUrl.length}/500 caracteres`}
             sx={{
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255,255,255,0.05)",
                 color: "#fff",
-                fontSize: "1.1rem",
+                fontSize: "0.9rem",
                 padding: "4px 0",
                 "& input": {
                   padding: "14px 16px",
-                  fontSize: "1.1rem",
+                  fontSize: "0.9rem",
                 },
                 "& fieldset": {
                   borderColor: "rgba(255,255,255,0.1)",
@@ -689,14 +743,14 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
               },
               "& .MuiInputLabel-root": {
                 color: "rgba(255,255,255,0.7)",
-                fontSize: "1.1rem",
+                fontSize: "0.9rem",
                 "&.Mui-focused": {
                   color: "#ffc91f",
                 },
               },
               "& .MuiFormHelperText-root": {
                 color: "rgba(255,255,255,0.5)",
-                fontSize: "0.95rem",
+                fontSize: "0.8rem",
                 marginTop: "6px",
               },
             }}
@@ -710,6 +764,7 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             disabled={loading}
             sx={{
               flex: 1,
+              borderRadius: "999px",
               borderColor: "rgba(255,255,255,0.2)",
               borderWidth: "2px",
               color: "rgba(255,255,255,0.9)",
@@ -732,6 +787,7 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             disabled={loading || !title.trim()}
             sx={{
               flex: 1,
+              borderRadius: "999px",
               backgroundColor: "#ffc91f",
               color: "#000",
               fontWeight: 600,

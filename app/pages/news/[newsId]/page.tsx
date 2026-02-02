@@ -132,36 +132,30 @@ export default function NewsDetailPage() {
         }
       }
       
-      // Carrega apenas os primeiros comentários se não vierem do backend
+      // Os comentários sempre vêm do backend (primeiros 20)
       const initialComments = data.comments || [];
       setNews(data);
       
-      // Se os comentários vieram do backend, verifica se há mais
-      if (initialComments.length > 0) {
-        setHasMoreComments(data.comments_count > initialComments.length);
-        setCommentsOffset(initialComments.length);
-      } else {
-        // Se não vieram comentários, carrega os primeiros
-        try {
-          const firstComments = await listComments(newsId, COMMENTS_PER_PAGE, 0);
-          setNews((prev) => prev ? { ...prev, comments: firstComments } : null);
-          setHasMoreComments(data.comments_count > firstComments.length);
-          setCommentsOffset(firstComments.length);
-        } catch (error) {
-          console.error("Erro ao carregar comentários iniciais", error);
-          setHasMoreComments(false);
-          setCommentsOffset(0);
-        }
-      }
+      // Configura paginação baseada nos comentários recebidos
+      setHasMoreComments(data.comments_count > initialComments.length);
+      setCommentsOffset(initialComments.length);
 
-      // Busca dados do usuário logado
+      // Busca dados do usuário logado em paralelo (otimização de performance)
       if (isAuthenticated) {
         try {
-          const profile = await getProfile();
-          setCurrentUser(profile);
-          // Verifica se é autor (para admin ou colunista)
+          // Faz chamadas paralelas para melhor performance
+          const promises: Promise<any>[] = [getProfile()];
           if (canCreatePost) {
-            const me = await getMe();
+            promises.push(getMe());
+          }
+          
+          const results = await Promise.all(promises);
+          const profile = results[0];
+          setCurrentUser(profile);
+          
+          // Verifica se é autor (para admin ou colunista)
+          if (canCreatePost && results[1]) {
+            const me = results[1];
             setIsAuthor(data.author?.id === me.id);
           }
         } catch (error) {
@@ -227,7 +221,7 @@ export default function NewsDetailPage() {
         // Remove o like usando o endpoint específico
         await unlikeNews(newsId);
         
-        // Atualiza o estado otimisticamente
+        // Atualiza o estado otimisticamente (não precisa sincronizar - confia na resposta do servidor)
         setNews({
           ...news,
           likes: {
@@ -235,32 +229,11 @@ export default function NewsDetailPage() {
             user_liked: false,
           },
         });
-        
-        // Sincroniza com o servidor usando os endpoints de likes
-        try {
-          const [likeStatus, likesCount] = await Promise.all([
-            didILike(newsId),
-            getLikesCount(newsId),
-          ]);
-          setNews((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  likes: {
-                    count: likesCount.count,
-                    user_liked: likeStatus.liked,
-                  },
-                }
-              : null
-          );
-        } catch (syncError) {
-          console.error("Erro ao sincronizar likes", syncError);
-        }
       } else {
         // Adiciona o like usando o endpoint específico
         await likeNews(newsId);
         
-        // Atualiza o estado otimisticamente
+        // Atualiza o estado otimisticamente (não precisa sincronizar - confia na resposta do servidor)
         setNews({
           ...news,
           likes: {
@@ -268,52 +241,19 @@ export default function NewsDetailPage() {
             user_liked: true,
           },
         });
-        
-        // Sincroniza com o servidor usando os endpoints de likes
-        try {
-          const [likeStatus, likesCount] = await Promise.all([
-            didILike(newsId),
-            getLikesCount(newsId),
-          ]);
-          setNews((prev) =>
-            prev
-              ? {
-                  ...prev,
-                  likes: {
-                    count: likesCount.count,
-                    user_liked: likeStatus.liked,
-                  },
-                }
-              : null
-          );
-        } catch (syncError) {
-          console.error("Erro ao sincronizar likes", syncError);
-        }
       }
     } catch (error) {
       console.error("Erro ao curtir/descurtir", error);
       showToast("Erro ao processar curtida", "error");
       
-      // Recarrega os dados em caso de erro usando os endpoints de likes
-      try {
-        const [likeStatus, likesCount] = await Promise.all([
-          didILike(newsId),
-          getLikesCount(newsId),
-        ]);
-        setNews((prev) =>
-          prev
-            ? {
-                ...prev,
-                likes: {
-                  count: likesCount.count,
-                  user_liked: likeStatus.liked,
-                },
-              }
-            : null
-        );
-      } catch (reloadError) {
-        console.error("Erro ao recarregar likes", reloadError);
-      }
+      // Em caso de erro, reverte o estado otimista
+      setNews({
+        ...news,
+        likes: {
+          count: wasLiked ? news.likes.count + 1 : Math.max(0, news.likes.count - 1),
+          user_liked: wasLiked,
+        },
+      });
     } finally {
       setLiking(false);
     }

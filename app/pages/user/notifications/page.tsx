@@ -762,17 +762,19 @@ const NotificationsPage: React.FC = () => {
             onClick={handleSave}
             disabled={saving}
             sx={{
-              backgroundColor: "#ffcc01",
+              borderRadius: "999px",
+              backgroundColor: "#ffc91f",
               color: "#000",
               fontWeight: 700,
-              padding: 1.5,
-              fontSize: "1.1rem",
+              fontSize: { xs: "0.875rem", sm: "1.1rem" },
+              py: { xs: 1, sm: 1.5 },
+              textTransform: "none",
               "&:hover": {
-                backgroundColor: "#ffd633",
+                backgroundColor: "#ffd54f",
               },
               "&:disabled": {
-                backgroundColor: "rgba(255, 204, 1, 0.5)",
-                color: "rgba(0, 0, 0, 0.5)",
+                backgroundColor: "rgba(255, 201, 31, 0.5)",
+                color: "rgba(0, 0, 0, 0.3)",
               },
             }}
           >

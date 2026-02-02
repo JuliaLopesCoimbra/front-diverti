@@ -16,6 +16,7 @@ export interface ProductEventResponse {
   price: string; // Decimal como string
   status: string;
   stock: number;
+  last_pieces: boolean;
   event_id: number;
   created_by_id: number;
   created_at: string;
@@ -32,6 +33,7 @@ export interface CreateProductEventData {
   price: string;
   status?: string;
   stock?: number;
+  last_pieces?: boolean;
   event_id: number;
   images?: File[];
 }
@@ -42,6 +44,7 @@ export interface UpdateProductEventData {
   price?: string;
   status?: string;
   stock?: number;
+  last_pieces?: boolean;
   event_id?: number;
   images?: File[];
   replace_images?: boolean;
@@ -90,6 +93,7 @@ export const createProductEvent = async (
   formData.append("price", data.price);
   formData.append("status", data.status || "active");
   formData.append("stock", String(data.stock || 0));
+  formData.append("last_pieces", String(data.last_pieces || false));
   formData.append("event_id", String(data.event_id));
   
   if (data.images && data.images.length > 0) {
@@ -121,6 +125,7 @@ export const updateProductEvent = async (
   if (data.price !== undefined) formData.append("price", data.price);
   if (data.status !== undefined) formData.append("status", data.status);
   if (data.stock !== undefined) formData.append("stock", String(data.stock));
+  if (data.last_pieces !== undefined) formData.append("last_pieces", String(data.last_pieces));
   if (data.event_id !== undefined) formData.append("event_id", String(data.event_id));
   if (data.replace_images !== undefined) formData.append("replace_images", String(data.replace_images));
   if (data.removed_image_ids && data.removed_image_ids.length > 0) {

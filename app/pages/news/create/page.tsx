@@ -270,8 +270,6 @@ function CreateNewsPageContent() {
                 <Box
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
                     gap: 2,
                     mt: 5,
                     pt: 4,
@@ -279,19 +277,23 @@ function CreateNewsPageContent() {
                   }}
                 >
                   <Button
+                    variant="outlined"
                     onClick={() => router.back()}
                     disabled={loading}
                     sx={{
-                      color: "rgba(255,255,255,0.7)",
-                      textTransform: "none",
-                      fontSize: "0.875rem",
+                      flex: 1,
+                      borderRadius: "999px",
+                      borderColor: "rgba(255,255,255,0.2)",
+                      borderWidth: "2px",
+                      color: "rgba(255,255,255,0.9)",
                       fontWeight: 600,
-                      padding: "10px 24px",
-                      borderRadius: "12px",
-                      transition: "all 0.3s ease",
+                      fontSize: { xs: "0.875rem", sm: "1.1rem" },
+                      py: { xs: 1, sm: 1.5 },
+                      textTransform: "none",
                       "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                        color: "rgba(255,255,255,0.9)",
+                        borderColor: "rgba(255,255,255,0.4)",
+                        borderWidth: "2px",
+                        backgroundColor: "rgba(255,255,255,0.05)",
                       },
                     }}
                   >
@@ -302,32 +304,25 @@ function CreateNewsPageContent() {
                     variant="contained"
                     disabled={loading || !title.trim() || !content.trim() || images.length === 0 || !eventId}
                     sx={{
-                      backgroundColor: "#ffcc01",
+                      flex: 1,
+                      borderRadius: "999px",
+                      backgroundColor: "#ffc91f",
                       color: "#000",
                       fontWeight: 700,
-                      borderRadius: "12px",
+                      fontSize: { xs: "0.875rem", sm: "1.1rem" },
+                      py: { xs: 1, sm: 1.5 },
                       textTransform: "none",
-                      fontSize: "0.875rem",
-                      padding: "12px 32px",
-                      boxShadow: "0 4px 16px rgba(255, 204, 1, 0.3)",
-                      transition: "all 0.3s ease",
                       "&:hover": {
-                        backgroundColor: "#e6b800",
-                        transform: "translateY(-2px)",
-                        boxShadow: "0 6px 20px rgba(255, 204, 1, 0.4)",
-                      },
-                      "&:active": {
-                        transform: "translateY(0)",
+                        backgroundColor: "#ffd54f",
                       },
                       "&:disabled": {
-                        backgroundColor: "rgba(255, 201, 31, 0.3)",
+                        backgroundColor: "rgba(255, 201, 31, 0.5)",
                         color: "rgba(0, 0, 0, 0.3)",
-                        boxShadow: "none",
                       },
                     }}
                   >
                     {loading ? (
-                      <CircularProgress size={20} sx={{ color: "#000" }} />
+                      <CircularProgress size={24} sx={{ color: "#000" }} />
                     ) : (
                       "Publicar"
                     )}

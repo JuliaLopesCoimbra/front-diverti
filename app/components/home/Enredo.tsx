@@ -325,11 +325,11 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
                   flexDirection: "column",
                   boxShadow: "none",
                   border: "none",
+                  color: "#fff",
                   cursor: "pointer",
-                  transition: "transform 0.2s, opacity 0.2s",
+                  transition: "opacity 0.2s",
                   "&:hover": {
-                    transform: "scale(1.05)",
-                    opacity: 0.9,
+                    opacity: 0.8,
                   },
                 }}
               >
@@ -346,13 +346,13 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
                     sx={{
                       width: { xs: 120, md: 160, lg: 180 },
                       height: { xs: 120, md: 160, lg: 180 },
-                      borderRadius: 2,
+                      borderRadius: "16px",
                       backgroundColor: "transparent",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       mb: 2,
-                   
+                      overflow: "hidden",
                     }}
                   >
                     {school.image_url ? (
@@ -364,6 +364,7 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
                           width: "100%",
                           height: "100%",
                           objectFit: "cover",
+                          borderRadius: "16px",
                         }}
                       />
                     ) : (
@@ -887,7 +888,7 @@ function EnredoSkeleton() {
                   width: { xs: 120, md: 160, lg: 180 },
                   height: { xs: 120, md: 160, lg: 180 },
                   bgcolor: "rgba(255,255,255,0.1)",
-                  borderRadius: 2,
+                  borderRadius: "16px",
                   mb: 2,
                 }}
               />

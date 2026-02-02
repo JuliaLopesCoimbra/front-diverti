@@ -266,26 +266,6 @@ export default function ProductDetailsPage() {
 
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 3 }}>
               <Chip
-                label={`R$ ${parseFloat(product.price).toFixed(2).replace(".", ",")}`}
-                sx={{
-                  backgroundColor: "#ffc91f",
-                  color: "#000",
-                  fontWeight: 700,
-                  fontSize: "1.1rem",
-                  px: 2,
-                  py: 3,
-                }}
-              />
-              <Chip
-                label={`Estoque: ${product.stock}`}
-                sx={{
-                  backgroundColor: product.stock > 0 ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)",
-                  color: product.stock > 0 ? "#4caf50" : "#f44336",
-                  fontWeight: 600,
-                  border: `1px solid ${product.stock > 0 ? "#4caf50" : "#f44336"}`,
-                }}
-              />
-              <Chip
                 label={product.status === "active" ? "Ativo" : "Inativo"}
                 sx={{
                   backgroundColor: product.status === "active" ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)",

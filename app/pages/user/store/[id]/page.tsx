@@ -7,9 +7,6 @@ import {
   Typography,
   CircularProgress,
   IconButton,
-  Paper,
-  Chip,
-  Divider,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
@@ -387,99 +384,42 @@ export default function ProductDetailsPage() {
             </Box>
           )}
 
-          <Paper
-            elevation={0}
+          {/* Informações */}
+          <Box
             sx={{
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-              borderRadius: 3,
-              p: { xs: 2, sm: 4 },
               display: "flex",
               flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
               gap: { xs: 2, sm: 3 },
             }}
           >
-            <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", display: "none" }} />
-
-            {/* Informações */}
-            <Box>
+            <Typography 
+              variant="h4" 
+              fontWeight={700} 
+              sx={{ 
+                mb: { xs: 1.5, sm: 2 }, 
+                color: "#fff",
+                fontSize: { xs: "1.25rem", sm: "2.125rem" },
+              }}
+            >
+              {product.name}
+            </Typography>
+            {product.description && (
               <Typography 
-                variant="h4" 
-                fontWeight={700} 
+                variant="body1" 
                 sx={{ 
-                  mb: { xs: 1.5, sm: 2 }, 
-                  color: "#fff",
-                  fontSize: { xs: "1.25rem", sm: "2.125rem" },
+                  mb: { xs: 2, sm: 3 }, 
+                  color: "rgba(255,255,255,0.8)", 
+                  lineHeight: 1.8,
+                  fontSize: { xs: "0.875rem", sm: "1rem" },
+                  maxWidth: { xs: "100%", sm: "600px" },
                 }}
               >
-                {product.name}
+                {product.description}
               </Typography>
-              {product.description && (
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    mb: { xs: 2, sm: 3 }, 
-                    color: "rgba(255,255,255,0.8)", 
-                    lineHeight: 1.8,
-                    fontSize: { xs: "0.875rem", sm: "1rem" },
-                  }}
-                >
-                  {product.description}
-                </Typography>
-              )}
-
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 3 } }}>
-                <Chip
-                  label={`R$ ${parseFloat(product.price).toFixed(2).replace(".", ",")}`}
-                  sx={{
-                    backgroundColor: "#ffc91f",
-                    color: "#000",
-                    fontWeight: 700,
-                    fontSize: { xs: "0.875rem", sm: "1.1rem" },
-                    px: { xs: 1.5, sm: 2 },
-                    py: { xs: 2, sm: 3 },
-                    height: { xs: 32, sm: "auto" },
-                  }}
-                />
-                <Chip
-                  label={`Estoque: ${product.stock}`}
-                  sx={{
-                    backgroundColor: product.stock > 0 ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)",
-                    color: product.stock > 0 ? "#4caf50" : "#f44336",
-                    fontWeight: 600,
-                    border: `1px solid ${product.stock > 0 ? "#4caf50" : "#f44336"}`,
-                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                    px: { xs: 1.5, sm: 2 },
-                    py: { xs: 2, sm: 3 },
-                    height: { xs: 32, sm: "auto" },
-                  }}
-                />
-              </Box>
-
-              {product.stock === 0 && (
-                <Paper
-                  elevation={0}
-                  sx={{
-                    backgroundColor: "rgba(244, 67, 54, 0.1)",
-                    border: "1px solid rgba(244, 67, 54, 0.3)",
-                    borderRadius: 2,
-                    p: { xs: 1.5, sm: 2 },
-                    mb: { xs: 2, sm: 3 },
-                  }}
-                >
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      color: "#f44336", 
-                      fontWeight: 600,
-                      fontSize: { xs: "0.813rem", sm: "0.875rem" },
-                    }}
-                  >
-                    Produto esgotado
-                  </Typography>
-                </Paper>
-              )}
-            </Box>
-          </Paper>
+            )}
+          </Box>
         </Box>
       </Box>
       <BottomNav />
