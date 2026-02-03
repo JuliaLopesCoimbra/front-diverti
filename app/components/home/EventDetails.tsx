@@ -12,6 +12,7 @@ import MapIcon from "@mui/icons-material/Map";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { formatEventDates } from "@/app/utils/eventDateFormatter";
+import ImageCarousel from "@/app/components/news/ImageCarousel";
 
 interface Props {
   event: EventResponse;
@@ -271,9 +272,12 @@ const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
   minute: "2-digit",
 });
 
-const vanDepartureTime = event.van_departure_time 
-  ? new Date(event.van_departure_time)
-  : null;
+// Formata horário para exibição (formato HH:mm)
+const formatTime = (timeStr: string | undefined): string => {
+  if (!timeStr) return "";
+  // Remove segundos se existirem (formato pode ser "HH:mm:ss" ou "HH:mm")
+  return timeStr.substring(0, 5);
+};
   return (
      <div
           style={{
@@ -433,18 +437,26 @@ const vanDepartureTime = event.van_departure_time
                 </Box>
               )}
 
-              {/* HORÁRIO DE SAÍDA DAS VANS */}
-              {vanDepartureTime && (
+              {/* HORÁRIO DE IDA DAS VANS */}
+              {(event.van_arrival_time_start || event.van_arrival_time_end) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <DirectionsBusIcon style={{ color: "yellow" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
-                    Saída das Vans: {new Date(event.van_departure_time!).toLocaleString("pt-BR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    Ida das Vans: {event.van_arrival_time_start ? formatTime(event.van_arrival_time_start) : "?"} 
+                    {event.van_arrival_time_start && event.van_arrival_time_end ? " às " : ""}
+                    {event.van_arrival_time_end ? formatTime(event.van_arrival_time_end) : ""}
+                  </p>
+                </Box>
+              )}
+
+              {/* HORÁRIO DE VOLTA DAS VANS */}
+              {(event.van_departure_time_start || event.van_departure_time_end) && (
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <DirectionsBusIcon style={{ color: "yellow" }} />
+                  <p style={{ margin: 0, fontSize: 15 }}>
+                    Volta das Vans: {event.van_departure_time_start ? formatTime(event.van_departure_time_start) : "?"} 
+                    {event.van_departure_time_start && event.van_departure_time_end ? " às " : ""}
+                    {event.van_departure_time_end ? formatTime(event.van_departure_time_end) : ""}
                   </p>
                 </Box>
               )}
@@ -459,12 +471,11 @@ const vanDepartureTime = event.van_departure_time
             </Box>
 
             {/* MAPA DO EVENTO */}
-            {event.image_map && (
+            {(event.map_images && event.map_images.length > 0) || event.image_map ? (
               <Box
                 sx={{
                   maxWidth: 700,
                   width: "100%",
-                
                   padding: "20px",
                 }}
               >
@@ -474,19 +485,27 @@ const vanDepartureTime = event.van_departure_time
                     Mapa do Evento
                   </h3>
                 </Box>
-                <Box
-                  component="img"
-                  src={event.image_map}
-                  alt="Mapa do Evento"
-                  sx={{
-                    width: "100%",
-                    maxHeight: 400,
-                    objectFit: "contain",
-                    borderRadius: 2,
-                  }}
-                />
+                {event.map_images && event.map_images.length > 0 ? (
+                  <ImageCarousel
+                    images={event.map_images.map(img => img.image_url)}
+                    showRemoveButton={false}
+                    disabled={false}
+                  />
+                ) : event.image_map ? (
+                  <Box
+                    component="img"
+                    src={event.image_map}
+                    alt="Mapa do Evento"
+                    sx={{
+                      width: "100%",
+                      maxHeight: 400,
+                      objectFit: "contain",
+                      borderRadius: 2,
+                    }}
+                  />
+                ) : null}
               </Box>
-            )}
+            ) : null}
 
             {/* LINE UP / PROGRAMAÇÃO */}
             {event.line_up && (

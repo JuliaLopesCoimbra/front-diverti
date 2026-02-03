@@ -8,7 +8,14 @@ export interface EventResponse {
   description: string;
   location?: string;
   banner_image?: string;
-  image_map?: string;
+  image_map?: string; // Mantido para compatibilidade, mas usar map_images
+  map_images?: Array<{
+    id: number;
+    event_id: number;
+    image_url: string;
+    image_order: number;
+    created_at: string;
+  }>;
   line_up?: string;
   spotify_playlist_url?: string;
   starts_at: string;
@@ -17,7 +24,10 @@ export interface EventResponse {
   is_active: boolean;
   requires_post_approval: boolean;
   event_dates?: string; // Campo opcional para múltiplas datas (formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21" ou "09,10,20,21 de janeiro")
-  van_departure_time?: string;
+  van_arrival_time_start?: string; // Horário de início da ida (formato: HH:mm)
+  van_arrival_time_end?: string; // Horário de fim da ida (formato: HH:mm)
+  van_departure_time_start?: string; // Horário de início da volta (formato: HH:mm)
+  van_departure_time_end?: string; // Horário de fim da volta (formato: HH:mm)
   deleted_at?: string;
   deleted_by_id?: number;
 }
@@ -33,7 +43,10 @@ export interface CreateEventData {
   image_map?: File;
   line_up?: string;
   spotify_playlist_url?: string;
-  van_departure_time?: string;
+  van_arrival_time_start?: string; // Horário de início da ida (formato: HH:mm)
+  van_arrival_time_end?: string; // Horário de fim da ida (formato: HH:mm)
+  van_departure_time_start?: string; // Horário de início da volta (formato: HH:mm)
+  van_departure_time_end?: string; // Horário de fim da volta (formato: HH:mm)
 }
 
 export interface UpdateEventData {
@@ -44,10 +57,14 @@ export interface UpdateEventData {
   end_date: string;
   event_dates?: string; // Formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21"
   banner_image?: File;
-  image_map?: File;
+  map_images?: File[]; // Múltiplas imagens do mapa (máximo 5)
+  replace_map_images?: boolean; // Se True, substitui todas as imagens antigas
   line_up?: string;
   spotify_playlist_url?: string;
-  van_departure_time?: string;
+  van_arrival_time_start?: string; // Horário de início da ida (formato: HH:mm)
+  van_arrival_time_end?: string; // Horário de fim da ida (formato: HH:mm)
+  van_departure_time_start?: string; // Horário de início da volta (formato: HH:mm)
+  van_departure_time_end?: string; // Horário de fim da volta (formato: HH:mm)
 }
 
 export const getEvents = async (limit: number = 5, offset: number = 0): Promise<EventResponse[]> => {
@@ -95,9 +112,16 @@ export const createEvent = async (data: CreateEventData): Promise<EventResponse>
   if (data.starts_at) formData.append("starts_at", data.starts_at);
   if (data.ends_at) formData.append("ends_at", data.ends_at);
   if (data.event_dates) formData.append("event_dates", data.event_dates);
-  if (data.van_departure_time) formData.append("van_departure_time", data.van_departure_time);
+  if (data.van_arrival_time_start) formData.append("van_arrival_time_start", data.van_arrival_time_start);
+  if (data.van_arrival_time_end) formData.append("van_arrival_time_end", data.van_arrival_time_end);
+  if (data.van_departure_time_start) formData.append("van_departure_time_start", data.van_departure_time_start);
+  if (data.van_departure_time_end) formData.append("van_departure_time_end", data.van_departure_time_end);
   if (data.banner_image) formData.append("banner_image", data.banner_image);
-  if (data.image_map) formData.append("image_map", data.image_map);
+  if (data.map_images && data.map_images.length > 0) {
+    data.map_images.forEach((image) => {
+      formData.append("map_images", image);
+    });
+  }
   if (data.line_up) formData.append("line_up", data.line_up);
   if (data.spotify_playlist_url) formData.append("spotify_playlist_url", data.spotify_playlist_url);
 
@@ -120,9 +144,16 @@ export const updateEvent = async (
   formData.append("start_date", data.start_date);
   formData.append("end_date", data.end_date);
   if (data.event_dates) formData.append("event_dates", data.event_dates);
-  if (data.van_departure_time) formData.append("van_departure_time", data.van_departure_time);
+  if (data.van_arrival_time_start) formData.append("van_arrival_time_start", data.van_arrival_time_start);
+  if (data.van_arrival_time_end) formData.append("van_arrival_time_end", data.van_arrival_time_end);
+  if (data.van_departure_time_start) formData.append("van_departure_time_start", data.van_departure_time_start);
+  if (data.van_departure_time_end) formData.append("van_departure_time_end", data.van_departure_time_end);
   if (data.banner_image) formData.append("banner_image", data.banner_image);
-  if (data.image_map) formData.append("image_map", data.image_map);
+  if (data.map_images && data.map_images.length > 0) {
+    data.map_images.forEach((image) => {
+      formData.append("map_images", image);
+    });
+  }
   if (data.line_up) formData.append("line_up", data.line_up);
   if (data.spotify_playlist_url) formData.append("spotify_playlist_url", data.spotify_playlist_url);
 

@@ -26,6 +26,7 @@ import MusicNoteIcon from '@mui/icons-material/MusicNote';
 import SchoolIcon from '@mui/icons-material/School';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import StoreIcon from '@mui/icons-material/Store';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { 
   getEventById, 
@@ -55,9 +56,10 @@ export default function EventDetailsPage() {
   const { showToast } = useToast();
 
   // ===== CACHE (Instagram/TikTok style) =====
-  const { getCache, setCache } = useFeedCache();
+  const { getCache, setCache, clearCache } = useFeedCache();
   const cacheKey = `admin-event-details-${eventId}`;
   const [initialized, setInitialized] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   // =========================================
 
   const [event, setEvent] = useState<EventResponse | null>(null);
@@ -78,7 +80,7 @@ export default function EventDetailsPage() {
   const [hasMoreMusics, setHasMoreMusics] = useState(false);
   const [loadingMoreSchools, setLoadingMoreSchools] = useState(false);
   const [loadingMoreMusics, setLoadingMoreMusics] = useState(false);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 100;
 
   useEffect(() => {
     if (!eventId || isDeleted) return;
@@ -142,46 +144,58 @@ export default function EventDetailsPage() {
       setLoadingSchools(false);
       setInitialized(true);
       
-      // Restaura posição do scroll
+      // Restaura posição do scroll de forma mais suave e respeitando interação do usuário
       const targetPosition = cached.scrollPosition;
       
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
       
-      let attempts = 0;
-      const maxAttempts = 20;
+      // Limpa timeouts anteriores se existirem
+      scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      scrollRestoreTimeoutsRef.current = [];
+      isRestoringScrollRef.current = true;
+      userInteractedRef.current = false;
       
-      const attemptRestore = () => {
-        attempts++;
-        const container = containerElementRef.current;
-        
-        if (container) {
-          container.scrollTop = targetPosition;
-        }
-        
-        const currentScroll = container?.scrollTop || 0;
-        const diff = Math.abs(currentScroll - targetPosition);
-        
-        if (diff < 10) {
-          // Scroll restaurado com sucesso
-        } else if (attempts < maxAttempts) {
-          requestAnimationFrame(attemptRestore);
-        } else {
-          // Máximo de tentativas atingido
+      // Função para parar a restauração se o usuário interagir
+      const stopRestoreIfUserInteracted = () => {
+        if (userInteractedRef.current) {
+          isRestoringScrollRef.current = false;
+          scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+          scrollRestoreTimeoutsRef.current = [];
         }
       };
       
-      requestAnimationFrame(attemptRestore);
+      // Tenta restaurar apenas algumas vezes, de forma menos agressiva
+      const attemptRestore = () => {
+        if (!isRestoringScrollRef.current || userInteractedRef.current) {
+          return;
+        }
+        
+        const container = containerElementRef.current;
+        if (container && !userInteractedRef.current) {
+          container.scrollTop = targetPosition;
+        }
+      };
       
-      [50, 100, 200, 400, 800, 1600].forEach(delay => {
-        setTimeout(() => {
-          const container = containerElementRef.current;
-          if (container) {
-            container.scrollTop = targetPosition;
+      // Restauração mais suave - apenas alguns timeouts essenciais
+      const timeouts = [100, 300, 600];
+      timeouts.forEach(delay => {
+        const timeout = setTimeout(() => {
+          stopRestoreIfUserInteracted();
+          if (isRestoringScrollRef.current && !userInteractedRef.current) {
+            attemptRestore();
           }
         }, delay);
+        scrollRestoreTimeoutsRef.current.push(timeout);
       });
+      
+      // Para a restauração após um tempo máximo
+      const finalTimeout = setTimeout(() => {
+        isRestoringScrollRef.current = false;
+        scrollRestoreTimeoutsRef.current = [];
+      }, 2000);
+      scrollRestoreTimeoutsRef.current.push(finalTimeout);
     } else {
       // ❌ Sem cache - carrega da API
       const fetchSchoolsAndMusics = async () => {
@@ -207,6 +221,14 @@ export default function EventDetailsPage() {
       fetchSchoolsAndMusics();
       setInitialized(true);
     }
+    
+    // Cleanup: limpa timeouts quando o componente é desmontado ou eventId muda
+    return () => {
+      scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      scrollRestoreTimeoutsRef.current = [];
+      isRestoringScrollRef.current = false;
+      userInteractedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
@@ -216,6 +238,9 @@ export default function EventDetailsPage() {
   const musicsRef = useRef(musics);
   const cleanupFnRef = useRef<(() => void) | null>(null);
   const containerElementRef = useRef<HTMLDivElement | null>(null);
+  const isRestoringScrollRef = useRef(false);
+  const userInteractedRef = useRef(false);
+  const scrollRestoreTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
   // Atualiza refs quando schools/musics mudam
   useEffect(() => {
@@ -259,6 +284,15 @@ export default function EventDetailsPage() {
     };
     
     const handleScroll = () => {
+      // Se o usuário está rolando manualmente, para a restauração automática
+      if (isRestoringScrollRef.current) {
+        userInteractedRef.current = true;
+        isRestoringScrollRef.current = false;
+        // Limpa todos os timeouts de restauração
+        scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+        scrollRestoreTimeoutsRef.current = [];
+      }
+      
       updateScrollPosition();
     };
     
@@ -364,6 +398,76 @@ export default function EventDetailsPage() {
       setLoadingMoreMusics(false);
     }
   };
+
+  // Função para recarregar escolas e músicas forçando atualização
+  const refreshSchoolsAndMusics = async () => {
+    if (!eventId || refreshing) return;
+
+    setRefreshing(true);
+    try {
+      // Limpa o cache antes de recarregar
+      clearCache(cacheKey);
+      
+      setLoadingSchools(true);
+      const [schoolsData, musicsData] = await Promise.all([
+        getSambaSchoolsByEvent(eventId, ITEMS_PER_PAGE, 0),
+        getMusicLyricsByEvent(eventId, ITEMS_PER_PAGE, 0),
+      ]);
+      
+      setSchools(schoolsData);
+      setMusics(musicsData);
+      setSchoolsOffset(schoolsData.length);
+      setMusicsOffset(musicsData.length);
+      setHasMoreSchools(schoolsData.length >= ITEMS_PER_PAGE);
+      setHasMoreMusics(musicsData.length >= ITEMS_PER_PAGE);
+      
+      showToast("Escolas de samba atualizadas!", "success");
+    } catch (err) {
+      console.error("Erro ao atualizar escolas e músicas", err);
+      showToast("Erro ao atualizar escolas de samba", "error");
+    } finally {
+      setLoadingSchools(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Detecta quando a página volta a ter foco e recarrega os dados
+  useEffect(() => {
+    if (!eventId || !initialized) return;
+
+    let lastRefreshTime = 0;
+    const MIN_REFRESH_INTERVAL = 2000; // Mínimo de 2 segundos entre atualizações
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const now = Date.now();
+        // Só recarrega se passou tempo suficiente desde a última atualização
+        if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
+          lastRefreshTime = now;
+          refreshSchoolsAndMusics();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Também detecta quando a janela recebe foco (útil quando volta de outra aba)
+    const handleFocus = () => {
+      const now = Date.now();
+      if (now - lastRefreshTime > MIN_REFRESH_INTERVAL) {
+        lastRefreshTime = now;
+        refreshSchoolsAndMusics();
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, initialized]);
 
   const handleDelete = async () => {
     if (!event) return;
@@ -703,21 +807,32 @@ export default function EventDetailsPage() {
             </Box>
           )}
 
-          {/* HORÁRIO DE SAÍDA DAS VANS */}
-          {event.van_departure_time && (
+          {/* HORÁRIO DE IDA DAS VANS */}
+          {(event.van_arrival_time_start || event.van_arrival_time_end) && (
             <Box sx={{ mb: 3 }}>
               <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBusIcon sx={{ fontSize: "1rem" }} />
-                Horário de Saída das Vans
+                Horário de Ida das Vans
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
-                {new Date(event.van_departure_time).toLocaleString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {event.van_arrival_time_start ? event.van_arrival_time_start.substring(0, 5) : "?"} 
+                {event.van_arrival_time_start && event.van_arrival_time_end ? " às " : ""}
+                {event.van_arrival_time_end ? event.van_arrival_time_end.substring(0, 5) : ""}
+              </Typography>
+            </Box>
+          )}
+
+          {/* HORÁRIO DE VOLTA DAS VANS */}
+          {(event.van_departure_time_start || event.van_departure_time_end) && (
+            <Box sx={{ mb: 3 }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
+                <DirectionsBusIcon sx={{ fontSize: "1rem" }} />
+                Horário de Volta das Vans
+              </Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
+                {event.van_departure_time_start ? event.van_departure_time_start.substring(0, 5) : "?"} 
+                {event.van_departure_time_start && event.van_departure_time_end ? " às " : ""}
+                {event.van_departure_time_end ? event.van_departure_time_end.substring(0, 5) : ""}
               </Typography>
             </Box>
           )}
@@ -855,6 +970,26 @@ export default function EventDetailsPage() {
               <SchoolIcon sx={{ verticalAlign: "middle", mr: 1 }} />
               Escolas de Samba
             </Typography>
+            <IconButton
+              onClick={refreshSchoolsAndMusics}
+              disabled={refreshing || loadingSchools}
+              sx={{
+                color: "#ffc91f",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 201, 31, 0.1)",
+                },
+                "&:disabled": {
+                  color: "rgba(255, 201, 31, 0.3)",
+                },
+              }}
+              title="Atualizar lista de escolas"
+            >
+              {refreshing || loadingSchools ? (
+                <CircularProgress size={20} sx={{ color: "#ffc91f" }} />
+              ) : (
+                <RefreshIcon />
+              )}
+            </IconButton>
           </Box>
 
           {loadingSchools ? (

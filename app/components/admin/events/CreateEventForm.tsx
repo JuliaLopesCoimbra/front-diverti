@@ -10,6 +10,7 @@ import {
   Paper,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
+import CloseIcon from "@mui/icons-material/Close";
 import { createEvent, CreateEventData } from "@/app/services/events/eventAppService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
@@ -26,12 +27,15 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
   const [endsAt, setEndsAt] = useState("");
   const [bannerImage, setBannerImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [imageMap, setImageMap] = useState<File | null>(null);
-  const [previewMap, setPreviewMap] = useState<string | null>(null);
+  const [mapImages, setMapImages] = useState<File[]>([]);
+  const [mapImagePreviews, setMapImagePreviews] = useState<string[]>([]);
   const [lineUp, setLineUp] = useState("");
   const [eventDates, setEventDates] = useState("");
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState("");
-  const [vanDepartureTime, setVanDepartureTime] = useState("");
+  const [vanArrivalTimeStart, setVanArrivalTimeStart] = useState("");
+  const [vanArrivalTimeEnd, setVanArrivalTimeEnd] = useState("");
+  const [vanDepartureTimeStart, setVanDepartureTimeStart] = useState("");
+  const [vanDepartureTimeEnd, setVanDepartureTimeEnd] = useState("");
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
   const router = useRouter();
@@ -57,23 +61,46 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
   };
 
   const handleMapImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Validação: máximo de 5 imagens
+    const totalImages = mapImages.length + files.length;
+    if (totalImages > 5) {
+      showToast("Máximo de 5 imagens do mapa permitidas", "error");
+      return;
+    }
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    Array.from(files).forEach((file) => {
       // Validação de tamanho: máximo 5MB por imagem
       const maxSizePerImage = 5 * 1024 * 1024; // 5MB
       
       if (file.size > maxSizePerImage) {
-        showToast("A imagem é muito grande. Máximo de 5MB por imagem.", "error");
+        showToast(`A imagem ${file.name} é muito grande. Máximo de 5MB por imagem.`, "error");
         return;
       }
       
-      setImageMap(file);
+      newFiles.push(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewMap(reader.result as string);
+        newPreviews.push(reader.result as string);
+        if (newPreviews.length === newFiles.length) {
+          setMapImages([...mapImages, ...newFiles]);
+          setMapImagePreviews([...mapImagePreviews, ...newPreviews]);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const handleRemoveMapImage = (index: number) => {
+    const newImages = mapImages.filter((_, i) => i !== index);
+    const newPreviews = mapImagePreviews.filter((_, i) => i !== index);
+    setMapImages(newImages);
+    setMapImagePreviews(newPreviews);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,9 +150,12 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
         starts_at: startsAt || undefined,
         ends_at: endsAt || undefined,
         event_dates: eventDates.trim() || undefined,
-        van_departure_time: vanDepartureTime || undefined,
+        van_arrival_time_start: vanArrivalTimeStart || undefined,
+        van_arrival_time_end: vanArrivalTimeEnd || undefined,
+        van_departure_time_start: vanDepartureTimeStart || undefined,
+        van_departure_time_end: vanDepartureTimeEnd || undefined,
         banner_image: bannerImage || undefined,
-        image_map: imageMap || undefined,
+        map_images: mapImages.length > 0 ? mapImages : undefined,
         line_up: lineUp.trim() || undefined,
         spotify_playlist_url: spotifyPlaylistUrl.trim() || undefined,
       };
@@ -505,50 +535,175 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             }}
           />
 
-          <TextField
-            fullWidth
-            label="Horário de Saída das Vans"
-            type="datetime-local"
-            value={vanDepartureTime}
-            onChange={(e) => setVanDepartureTime(e.target.value)}
-            disabled={loading}
-            inputProps={{
-              min: new Date().toISOString().slice(0, 16),
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                backgroundColor: "rgba(255,255,255,0.05)",
-                color: "#fff",
-                fontSize: "1.1rem",
-                padding: "4px 0",
-                "& input": {
-                  padding: "14px 16px",
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Horário de Início da Ida"
+              type="time"
+              value={vanArrivalTimeStart}
+              onChange={(e) => setVanArrivalTimeStart(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  color: "#fff",
                   fontSize: "1.1rem",
+                  padding: "4px 0",
+                  "& input": {
+                    padding: "14px 16px",
+                    fontSize: "1.1rem",
+                  },
+                  "& fieldset": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255,255,255,0.3)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#ffc91f",
+                    borderWidth: "2px",
+                  },
                 },
-                "& fieldset": {
-                  borderColor: "rgba(255,255,255,0.1)",
-                  borderWidth: "2px",
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "1.1rem",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
                 },
-                "&:hover fieldset": {
-                  borderColor: "rgba(255,255,255,0.3)",
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Horário de Fim da Ida"
+              type="time"
+              value={vanArrivalTimeEnd}
+              onChange={(e) => setVanArrivalTimeEnd(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  padding: "4px 0",
+                  "& input": {
+                    padding: "14px 16px",
+                    fontSize: "1.1rem",
+                  },
+                  "& fieldset": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255,255,255,0.3)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#ffc91f",
+                    borderWidth: "2px",
+                  },
                 },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#ffc91f",
-                  borderWidth: "2px",
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "1.1rem",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
                 },
-              },
-              "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.7)",
-                fontSize: "1.1rem",
-                "&.Mui-focused": {
-                  color: "#ffc91f",
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Horário de Início da Volta"
+              type="time"
+              value={vanDepartureTimeStart}
+              onChange={(e) => setVanDepartureTimeStart(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  padding: "4px 0",
+                  "& input": {
+                    padding: "14px 16px",
+                    fontSize: "1.1rem",
+                  },
+                  "& fieldset": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255,255,255,0.3)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#ffc91f",
+                    borderWidth: "2px",
+                  },
                 },
-              },
-            }}
-          />
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "1.1rem",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Horário de Fim da Volta"
+              type="time"
+              value={vanDepartureTimeEnd}
+              onChange={(e) => setVanDepartureTimeEnd(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  color: "#fff",
+                  fontSize: "1.1rem",
+                  padding: "4px 0",
+                  "& input": {
+                    padding: "14px 16px",
+                    fontSize: "1.1rem",
+                  },
+                  "& fieldset": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    borderWidth: "2px",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255,255,255,0.3)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#ffc91f",
+                    borderWidth: "2px",
+                  },
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.7)",
+                  fontSize: "1.1rem",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+          </Box>
 
           <Box>
             <Typography variant="body1" sx={{ mb: 2, color: "rgba(255,255,255,0.9)", fontSize: "1.1rem", fontWeight: 500 }}>
@@ -604,21 +759,22 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
 
           <Box>
             <Typography variant="body1" sx={{ mb: 2, color: "rgba(255,255,255,0.9)", fontSize: "1.1rem", fontWeight: 500 }}>
-              Mapa do Evento
+              Mapa do Evento (máximo 5 imagens)
             </Typography>
             <input
               accept="image/*"
               style={{ display: "none" }}
               id="map-image-upload"
               type="file"
+              multiple
               onChange={handleMapImageChange}
-              disabled={loading}
+              disabled={loading || mapImages.length >= 5}
             />
             <label htmlFor="map-image-upload">
               <Button
                 variant="outlined"
                 component="span"
-                disabled={loading}
+                disabled={loading || mapImages.length >= 5}
                 fullWidth
                 sx={{
                   borderColor: "rgba(255,255,255,0.2)",
@@ -633,24 +789,66 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
                     borderWidth: "2px",
                     backgroundColor: "rgba(255,201,31,0.1)",
                   },
+                  "&:disabled": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.3)",
+                  },
                 }}
               >
-                {previewMap ? "Alterar Mapa" : "Selecionar Mapa"}
+                {mapImages.length > 0 ? `Adicionar mais imagens (${mapImages.length}/5)` : "Selecionar Imagens do Mapa"}
               </Button>
             </label>
-            {previewMap && (
-              <Box
-                component="img"
-                src={previewMap}
-                alt="Preview Mapa"
-                sx={{
-                  mt: 2,
-                  maxWidth: "100%",
-                  maxHeight: 200,
-                  objectFit: "contain",
-                  borderRadius: 2,
-                }}
-              />
+            {mapImagePreviews.length > 0 && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1, color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
+                  {mapImages.length} imagem(ns) selecionada(s)
+                </Typography>
+                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+                  {mapImagePreviews.map((preview, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        position: "relative",
+                        width: "150px",
+                        height: "150px",
+                        borderRadius: 2,
+                        overflow: "hidden",
+                        border: "2px solid rgba(255,255,255,0.2)",
+                      }}
+                    >
+                      <Box
+                        component="img"
+                        src={preview}
+                        alt={`Preview Mapa ${index + 1}`}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                      <IconButton
+                        onClick={() => handleRemoveMapImage(index)}
+                        disabled={loading}
+                        sx={{
+                          position: "absolute",
+                          top: 4,
+                          right: 4,
+                          backgroundColor: "rgba(0, 0, 0, 0.6)",
+                          color: "#fff",
+                          "&:hover": {
+                            backgroundColor: "rgba(255, 0, 0, 0.8)",
+                          },
+                          width: 32,
+                          height: 32,
+                        }}
+                        size="small"
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
             )}
           </Box>
 

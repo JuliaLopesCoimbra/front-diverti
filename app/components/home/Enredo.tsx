@@ -31,6 +31,9 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
   const { getCache, setCache } = useFeedCache();
   const cacheKey = `enredo-event-${eventId}`;
   const [initialized, setInitialized] = useState(false);
+  const isRestoringScrollRef = useRef(false);
+  const userInteractedRef = useRef(false);
+  const scrollRestoreTimeoutsRef = useRef<NodeJS.Timeout[]>([]);
   
   const [schools, setSchools] = useState<SambaSchoolResponse[]>([]);
   const [musics, setMusics] = useState<MusicLyricsResponse[]>([]);
@@ -79,41 +82,79 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
       setLoading(false);
       setInitialized(true);
       
+      // Restaura posição do scroll de forma mais suave e respeitando interação do usuário
       const targetPosition = cached.scrollPosition;
       
       if ('scrollRestoration' in history) {
         history.scrollRestoration = 'manual';
       }
       
-      let attempts = 0;
-      const maxAttempts = 20;
+      // Limpa timeouts anteriores se existirem
+      scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      scrollRestoreTimeoutsRef.current = [];
+      isRestoringScrollRef.current = true;
+      userInteractedRef.current = false;
       
-      const attemptRestore = () => {
-        attempts++;
-        
-        window.scrollTo({
-          top: targetPosition,
-          behavior: 'instant' as ScrollBehavior
-        });
-        
-        const currentScroll = window.scrollY;
-        const diff = Math.abs(currentScroll - targetPosition);
-        
-        if (diff >= 10 && attempts < maxAttempts) {
-          requestAnimationFrame(attemptRestore);
+      // Função para parar a restauração se o usuário interagir
+      const stopRestoreIfUserInteracted = () => {
+        if (userInteractedRef.current) {
+          isRestoringScrollRef.current = false;
+          scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+          scrollRestoreTimeoutsRef.current = [];
         }
       };
       
-      requestAnimationFrame(attemptRestore);
-      
-      [50, 100, 200, 400, 800, 1600].forEach(delay => {
-        setTimeout(() => {
+      // Tenta restaurar apenas algumas vezes, de forma menos agressiva
+      const attemptRestore = () => {
+        if (!isRestoringScrollRef.current || userInteractedRef.current) {
+          return;
+        }
+        
+        if (!userInteractedRef.current) {
           window.scrollTo({
             top: targetPosition,
             behavior: 'instant' as ScrollBehavior
           });
+        }
+      };
+      
+      // Restauração mais suave - apenas alguns timeouts essenciais
+      const timeouts = [100, 300, 600];
+      timeouts.forEach(delay => {
+        const timeout = setTimeout(() => {
+          stopRestoreIfUserInteracted();
+          if (isRestoringScrollRef.current && !userInteractedRef.current) {
+            attemptRestore();
+          }
         }, delay);
+        scrollRestoreTimeoutsRef.current.push(timeout);
       });
+      
+      // Para a restauração após um tempo máximo
+      const finalTimeout = setTimeout(() => {
+        isRestoringScrollRef.current = false;
+        scrollRestoreTimeoutsRef.current = [];
+      }, 2000);
+      scrollRestoreTimeoutsRef.current.push(finalTimeout);
+      
+      // Detecta se o usuário está rolando manualmente
+      const handleUserScroll = () => {
+        if (isRestoringScrollRef.current) {
+          userInteractedRef.current = true;
+          isRestoringScrollRef.current = false;
+          scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+          scrollRestoreTimeoutsRef.current = [];
+        }
+      };
+      
+      // Adiciona listener temporário para detectar scroll do usuário
+      window.addEventListener('scroll', handleUserScroll, { passive: true });
+      
+      // Remove o listener após um tempo
+      const cleanupTimeout = setTimeout(() => {
+        window.removeEventListener('scroll', handleUserScroll);
+      }, 2000);
+      scrollRestoreTimeoutsRef.current.push(cleanupTimeout);
       
       (async () => {
         try {
@@ -180,6 +221,14 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
         })
         .finally(() => setLoading(false));
     }
+    
+    // Cleanup: limpa timeouts quando o componente é desmontado ou eventId muda
+    return () => {
+      scrollRestoreTimeoutsRef.current.forEach(timeout => clearTimeout(timeout));
+      scrollRestoreTimeoutsRef.current = [];
+      isRestoringScrollRef.current = false;
+      userInteractedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 

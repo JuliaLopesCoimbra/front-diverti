@@ -18,6 +18,7 @@ import {
 } from "@/app/services/events/eventAppService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
+import ImageCarousel from "@/app/components/news/ImageCarousel";
 
 interface EditEventFormProps {
   eventId: number;
@@ -35,12 +36,17 @@ export default function EditEventForm({
   const [endDate, setEndDate] = useState("");
   const [bannerImage, setBannerImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [imageMap, setImageMap] = useState<File | null>(null);
-  const [previewMap, setPreviewMap] = useState<string | null>(null);
+  const [mapImages, setMapImages] = useState<File[]>([]);
+  const [mapImagePreviews, setMapImagePreviews] = useState<string[]>([]);
+  const [existingMapImages, setExistingMapImages] = useState<Array<{id: number; image_url: string; image_order: number}>>([]);
+  const [replaceMapImages, setReplaceMapImages] = useState(false);
   const [lineUp, setLineUp] = useState("");
   const [eventDates, setEventDates] = useState("");
   const [spotifyPlaylistUrl, setSpotifyPlaylistUrl] = useState("");
-  const [vanDepartureTime, setVanDepartureTime] = useState("");
+  const [vanArrivalTimeStart, setVanArrivalTimeStart] = useState("");
+  const [vanArrivalTimeEnd, setVanArrivalTimeEnd] = useState("");
+  const [vanDepartureTimeStart, setVanDepartureTimeStart] = useState("");
+  const [vanDepartureTimeEnd, setVanDepartureTimeEnd] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const { showToast } = useToast();
@@ -75,8 +81,14 @@ export default function EditEventForm({
           setPreview(event.banner_image);
         }
         
-        if (event.image_map) {
-          setPreviewMap(event.image_map);
+        // Carrega imagens do mapa existentes
+        if (event.map_images && event.map_images.length > 0) {
+          const sortedImages = [...event.map_images].sort((a, b) => a.image_order - b.image_order);
+          setExistingMapImages(sortedImages);
+          setMapImagePreviews(sortedImages.map(img => img.image_url));
+        } else {
+          setExistingMapImages([]);
+          setMapImagePreviews([]);
         }
         
         if (event.line_up) {
@@ -93,14 +105,33 @@ export default function EditEventForm({
           setEventDates("");
         }
 
-        if (event.van_departure_time) {
-          const vanDepartureTimeObj = new Date(event.van_departure_time);
-          const vanDepartureTimeStr = new Date(vanDepartureTimeObj.getTime() - vanDepartureTimeObj.getTimezoneOffset() * 60000)
-            .toISOString()
-            .slice(0, 16);
-          setVanDepartureTime(vanDepartureTimeStr);
+        if (event.van_arrival_time_start) {
+          // Formato time vem como "HH:mm:ss" ou "HH:mm", precisamos apenas "HH:mm"
+          const timeStr = event.van_arrival_time_start.substring(0, 5);
+          setVanArrivalTimeStart(timeStr);
         } else {
-          setVanDepartureTime("");
+          setVanArrivalTimeStart("");
+        }
+
+        if (event.van_arrival_time_end) {
+          const timeStr = event.van_arrival_time_end.substring(0, 5);
+          setVanArrivalTimeEnd(timeStr);
+        } else {
+          setVanArrivalTimeEnd("");
+        }
+
+        if (event.van_departure_time_start) {
+          const timeStr = event.van_departure_time_start.substring(0, 5);
+          setVanDepartureTimeStart(timeStr);
+        } else {
+          setVanDepartureTimeStart("");
+        }
+
+        if (event.van_departure_time_end) {
+          const timeStr = event.van_departure_time_end.substring(0, 5);
+          setVanDepartureTimeEnd(timeStr);
+        } else {
+          setVanDepartureTimeEnd("");
         }
       } catch (err) {
         showToast("Erro ao carregar evento", "error");
@@ -134,22 +165,59 @@ export default function EditEventForm({
   };
 
   const handleMapImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    // Validação: máximo de 5 imagens (incluindo existentes)
+    const totalImages = existingMapImages.length + mapImages.length + files.length;
+    if (totalImages > 5) {
+      showToast("Máximo de 5 imagens do mapa permitidas", "error");
+      return;
+    }
+    
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
+    
+    Array.from(files).forEach((file) => {
       // Validação de tamanho: máximo 5MB por imagem
       const maxSizePerImage = 5 * 1024 * 1024; // 5MB
       
       if (file.size > maxSizePerImage) {
-        showToast("A imagem é muito grande. Máximo de 5MB por imagem.", "error");
+        showToast(`A imagem ${file.name} é muito grande. Máximo de 5MB por imagem.`, "error");
         return;
       }
       
-      setImageMap(file);
+      newFiles.push(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreviewMap(reader.result as string);
+        newPreviews.push(reader.result as string);
+        if (newPreviews.length === newFiles.length) {
+          setMapImages([...mapImages, ...newFiles]);
+          setMapImagePreviews([...mapImagePreviews, ...newPreviews]);
+        }
       };
       reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemoveMapImage = (index: number) => {
+    // O índice do carrossel corresponde à ordem: primeiro as existentes, depois as novas
+    if (index < existingMapImages.length) {
+      // Remove imagem existente - marca para remoção no backend
+      const newExisting = existingMapImages.filter((_, i) => i !== index);
+      setExistingMapImages(newExisting);
+      // Remove também do preview (que inclui existentes + novas)
+      const newPreviews = mapImagePreviews.filter((_, i) => i !== index);
+      setMapImagePreviews(newPreviews);
+    } else {
+      // Remove nova imagem (ainda não enviada)
+      // O índice no carrossel menos o número de existentes = índice nas novas imagens
+      const newImageIndex = index - existingMapImages.length;
+      const newImages = mapImages.filter((_, i) => i !== newImageIndex);
+      setMapImages(newImages);
+      // Remove do preview (que inclui existentes + novas)
+      const newPreviews = mapImagePreviews.filter((_, i) => i !== index);
+      setMapImagePreviews(newPreviews);
     }
   };
 
@@ -220,9 +288,13 @@ export default function EditEventForm({
         start_date: startDate,
         end_date: endDate,
         event_dates: eventDates.trim() || undefined,
-        van_departure_time: vanDepartureTime || undefined,
+        van_arrival_time_start: vanArrivalTimeStart || undefined,
+        van_arrival_time_end: vanArrivalTimeEnd || undefined,
+        van_departure_time_start: vanDepartureTimeStart || undefined,
+        van_departure_time_end: vanDepartureTimeEnd || undefined,
         banner_image: bannerImage || undefined,
-        image_map: imageMap || undefined,
+        map_images: mapImages.length > 0 ? mapImages : undefined,
+        replace_map_images: replaceMapImages,
         line_up: lineUp.trim() || undefined,
         spotify_playlist_url: spotifyPlaylistUrl.trim() || undefined,
       };
@@ -552,42 +624,143 @@ export default function EditEventForm({
             }}
           />
 
-          <TextField
-            fullWidth
-            label="Horário de Saída das Vans"
-            type="datetime-local"
-            value={vanDepartureTime}
-            onChange={(e) => setVanDepartureTime(e.target.value)}
-            disabled={loading}
-            inputProps={{
-              min: new Date().toISOString().slice(0, 16),
-            }}
-            InputLabelProps={{
-              shrink: true,
-            }}
-            variant="standard"
-            sx={{
-              "& .MuiInput-underline:before": {
-                borderBottomColor: "rgba(255,255,255,0.2)",
-              },
-              "& .MuiInput-underline:hover:before": {
-                borderBottomColor: "rgba(255,255,255,0.3)",
-              },
-              "& .MuiInput-underline:after": {
-                borderBottomColor: "#ffc91f",
-              },
-              "& .MuiInputBase-input": {
-                color: "#fff",
-                fontSize: "1rem",
-              },
-              "& .MuiInputLabel-root": {
-                color: "rgba(255,255,255,0.6)",
-                "&.Mui-focused": {
-                  color: "#ffc91f",
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Horário de Início da Ida"
+              type="time"
+              value={vanArrivalTimeStart}
+              onChange={(e) => setVanArrivalTimeStart(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="standard"
+              sx={{
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "rgba(255,255,255,0.2)",
                 },
-              },
-            }}
-          />
+                "& .MuiInput-underline:hover:before": {
+                  borderBottomColor: "rgba(255,255,255,0.3)",
+                },
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#ffc91f",
+                },
+                "& .MuiInputBase-input": {
+                  color: "#fff",
+                  fontSize: "1rem",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.6)",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Horário de Fim da Ida"
+              type="time"
+              value={vanArrivalTimeEnd}
+              onChange={(e) => setVanArrivalTimeEnd(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="standard"
+              sx={{
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "rgba(255,255,255,0.2)",
+                },
+                "& .MuiInput-underline:hover:before": {
+                  borderBottomColor: "rgba(255,255,255,0.3)",
+                },
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#ffc91f",
+                },
+                "& .MuiInputBase-input": {
+                  color: "#fff",
+                  fontSize: "1rem",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.6)",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Horário de Início da Volta"
+              type="time"
+              value={vanDepartureTimeStart}
+              onChange={(e) => setVanDepartureTimeStart(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="standard"
+              sx={{
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "rgba(255,255,255,0.2)",
+                },
+                "& .MuiInput-underline:hover:before": {
+                  borderBottomColor: "rgba(255,255,255,0.3)",
+                },
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#ffc91f",
+                },
+                "& .MuiInputBase-input": {
+                  color: "#fff",
+                  fontSize: "1rem",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.6)",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+            <TextField
+              fullWidth
+              label="Horário de Fim da Volta"
+              type="time"
+              value={vanDepartureTimeEnd}
+              onChange={(e) => setVanDepartureTimeEnd(e.target.value)}
+              disabled={loading}
+              InputLabelProps={{
+                shrink: true,
+              }}
+              variant="standard"
+              sx={{
+                "& .MuiInput-underline:before": {
+                  borderBottomColor: "rgba(255,255,255,0.2)",
+                },
+                "& .MuiInput-underline:hover:before": {
+                  borderBottomColor: "rgba(255,255,255,0.3)",
+                },
+                "& .MuiInput-underline:after": {
+                  borderBottomColor: "#ffc91f",
+                },
+                "& .MuiInputBase-input": {
+                  color: "#fff",
+                  fontSize: "1rem",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(255,255,255,0.6)",
+                  "&.Mui-focused": {
+                    color: "#ffc91f",
+                  },
+                },
+              }}
+            />
+          </Box>
 
           <Box>
             <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
@@ -640,21 +813,22 @@ export default function EditEventForm({
 
           <Box>
             <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
-              Mapa do Evento
+              Mapa do Evento (máximo 5 imagens)
             </Typography>
             <input
               accept="image/*"
               style={{ display: "none" }}
               id="map-image-upload-edit"
               type="file"
+              multiple
               onChange={handleMapImageChange}
-              disabled={loading}
+              disabled={loading || (existingMapImages.length + mapImages.length) >= 5}
             />
             <label htmlFor="map-image-upload-edit">
               <Button
                 variant="outlined"
                 component="span"
-                disabled={loading}
+                disabled={loading || (existingMapImages.length + mapImages.length) >= 5}
                 fullWidth
                 sx={{
                   borderColor: "rgba(255,255,255,0.2)",
@@ -666,24 +840,55 @@ export default function EditEventForm({
                     borderColor: "#ffc91f",
                     backgroundColor: "rgba(255,201,31,0.1)",
                   },
+                  "&:disabled": {
+                    borderColor: "rgba(255,255,255,0.1)",
+                    color: "rgba(255,255,255,0.3)",
+                  },
                 }}
               >
-                {previewMap ? "Alterar Mapa" : "Trocar Mapa (Opcional)"}
+                {(existingMapImages.length + mapImages.length) > 0 
+                  ? `Adicionar mais imagens (${existingMapImages.length + mapImages.length}/5)` 
+                  : "Selecionar Imagens do Mapa"}
               </Button>
             </label>
-            {previewMap && (
-              <Box
-                component="img"
-                src={previewMap}
-                alt="Preview Mapa"
-                sx={{
-                  mt: 2,
-                  maxWidth: "100%",
-                  maxHeight: 200,
-                  objectFit: "contain",
-                  borderRadius: 2,
-                }}
-              />
+            
+            {/* Checkbox para substituir todas as imagens */}
+            {existingMapImages.length > 0 && (
+              <Box sx={{ mt: 1, display: "flex", alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  id="replace-map-images"
+                  checked={replaceMapImages}
+                  onChange={(e) => setReplaceMapImages(e.target.checked)}
+                  disabled={loading}
+                  style={{ marginRight: 8, cursor: "pointer" }}
+                />
+                <label 
+                  htmlFor="replace-map-images"
+                  style={{ 
+                    color: "rgba(255,255,255,0.7)", 
+                    fontSize: "0.875rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  Substituir todas as imagens existentes
+                </label>
+              </Box>
+            )}
+            
+            {/* Exibe imagens existentes e novas em carrossel */}
+            {(existingMapImages.length > 0 || mapImagePreviews.length > 0) && (
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
+                  {existingMapImages.length + mapImages.length} imagem(ns) {existingMapImages.length > 0 ? "(existentes + novas)" : "(novas)"}
+                </Typography>
+                <ImageCarousel
+                  images={mapImagePreviews}
+                  onRemove={handleRemoveMapImage}
+                  showRemoveButton={true}
+                  disabled={loading}
+                />
+              </Box>
             )}
           </Box>
 
