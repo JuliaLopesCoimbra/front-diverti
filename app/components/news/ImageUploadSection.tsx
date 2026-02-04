@@ -75,7 +75,7 @@ export default function ImageUploadSection({
       />
 
       {imagePreviews.length === 0 ? (
-        <label htmlFor={inputId}>
+        <label htmlFor={inputId} style={{ display: "block", width: "100%" }}>
           <Box
             sx={{
               border: "2px dashed rgba(255, 255, 255, 0.3)",
@@ -85,6 +85,9 @@ export default function ImageUploadSection({
               cursor: loading || totalImagesCount >= maxImages ? "not-allowed" : "pointer",
               transition: "all 0.3s ease",
               backgroundColor: "rgba(255, 255, 255, 0.03)",
+              width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
               "&:hover": {
                 borderColor: "rgba(255, 204, 1, 0.5)",
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
@@ -118,17 +121,46 @@ export default function ImageUploadSection({
             >
               Clique para selecionar ou arraste aqui
             </Typography>
-            <Typography
-              variant="caption"
+            <Box
               sx={{
-                color: "rgba(255, 255, 255, 0.4)",
-                fontSize: "0.75rem",
                 mt: 1,
-                display: "block",
+                px: 1,
+                width: "100%",
+                maxWidth: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 0.5,
+                boxSizing: "border-box",
               }}
             >
-              Máximo {maxImages} imagens • 5MB por imagem • 20MB total
-            </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontSize: "0.75rem",
+                  textAlign: "center",
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  width: "100%",
+                }}
+              >
+                Máximo {maxImages} imagens • 5MB por imagem
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "rgba(255, 255, 255, 0.4)",
+                  fontSize: "0.75rem",
+                  textAlign: "center",
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  width: "100%",
+                }}
+              >
+                20MB total
+              </Typography>
+            </Box>
           </Box>
         </label>
       ) : (

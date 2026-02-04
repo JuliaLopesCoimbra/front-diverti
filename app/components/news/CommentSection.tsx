@@ -125,6 +125,23 @@ export default function CommentSection({
 
       <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 1.5 }} />
 
+      {/* Campo de input de comentário - ANTES da lista */}
+      {isAuthenticated && (
+        <Box sx={{ mb: 2 }}>
+          <CommentInput
+            value={commentText}
+            onChange={onCommentTextChange}
+            onSubmit={onCommentSubmit}
+            placeholder="Adicione um comentário..."
+            disabled={news?.status === "pending" || news?.status === "rejected"}
+            submitting={submittingComment}
+            userPhoto={currentUser?.profile_photo || undefined}
+            userName={currentUser?.name || undefined}
+            userEmail={currentUser?.email || undefined}
+          />
+        </Box>
+      )}
+
       {/* Lista de comentários */}
       <Box
         sx={{
@@ -144,7 +161,15 @@ export default function CommentSection({
           },
         }}
       >
-        {news.comments.map((comment) => (
+        {news.comments.length === 0 ? (
+          <Typography
+            fontSize={13}
+            sx={{ color: "rgba(255,255,255,0.5)", textAlign: "center", py: 3 }}
+          >
+            Nenhum comentário ainda. Seja o primeiro a comentar!
+          </Typography>
+        ) : (
+          news.comments.map((comment) => (
           <Box 
             key={comment.id} 
             id={`comment-${comment.id}`}
@@ -325,6 +350,7 @@ export default function CommentSection({
                         }
                       }}
                       multiline
+                      minRows={1}
                       maxRows={3}
                       disabled={submittingReply[comment.id]}
                       size="small"
@@ -359,10 +385,17 @@ export default function CommentSection({
                           fontSize: "13px",
                           wordBreak: "break-word",
                           overflowWrap: "break-word",
+                          whiteSpace: "pre-wrap",
+                          overflow: "hidden",
+                          resize: "none",
                           "&::placeholder": {
                             color: "rgba(255,255,255,0.5)",
                             opacity: 1,
                           },
+                        },
+                        "& .MuiInputBase-inputMultiline": {
+                          overflow: "hidden !important",
+                          resize: "none",
                         },
                       }}
                     />
@@ -464,7 +497,8 @@ export default function CommentSection({
               </Box>
             </Box>
           </Box>
-        ))}
+          ))
+        )}
         
         {/* Botão para carregar mais comentários */}
         {hasMoreComments && (
@@ -509,20 +543,6 @@ export default function CommentSection({
           </Box>
         )}
       </Box>
-
-      {isAuthenticated && (
-        <CommentInput
-          value={commentText}
-          onChange={onCommentTextChange}
-          onSubmit={onCommentSubmit}
-          placeholder="Adicione um comentário..."
-          disabled={news?.status === "pending" || news?.status === "rejected"}
-          submitting={submittingComment}
-          userPhoto={currentUser?.profile_photo || undefined}
-          userName={currentUser?.name || undefined}
-          userEmail={currentUser?.email || undefined}
-        />
-      )}
 
       {selectedUserId && (
         <UserProfileModal

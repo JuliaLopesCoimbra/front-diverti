@@ -391,6 +391,8 @@ export default function NewsFeed({ eventId, event }: Props) {
                 color: "#fff",
                 cursor: "pointer",
                 transition: "opacity 0.2s",
+                maxWidth: "100%",
+                boxSizing: "border-box",
                 "&:hover": {
                   opacity: 0.8,
                 },
@@ -408,13 +410,17 @@ export default function NewsFeed({ eventId, event }: Props) {
                   }}
                 />
               )}
-              <CardContent sx={{ padding: { xs: 2, md: 2.5, lg: 3 } }}>
+              <CardContent sx={{ padding: { xs: 2, md: 2.5, lg: 3 }, maxWidth: "100%", boxSizing: "border-box" }}>
                 <Typography
                   variant="h6"
                   fontWeight={700}
                   sx={{ 
                     color: "#fff",
                     fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
+                    wordWrap: "break-word",
+                    overflowWrap: "break-word",
+                    maxWidth: "100%",
+                    hyphens: "auto",
                   }}
                 >
                   {featured.title}
@@ -474,6 +480,8 @@ export default function NewsFeed({ eventId, event }: Props) {
                     paddingBottom: 1,
                     cursor: "pointer",
                     transition: "opacity 0.2s",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
                     "&:hover": {
                       opacity: 0.8,
                     },
@@ -494,12 +502,16 @@ export default function NewsFeed({ eventId, event }: Props) {
                     />
                   )}
 
-                  <CardContent sx={{ padding: { xs: 1, md: 1.5, lg: 2 } }}>
+                  <CardContent sx={{ padding: { xs: 1, md: 1.5, lg: 2 }, maxWidth: "100%", boxSizing: "border-box", minWidth: 0, flex: 1 }}>
                     <Typography 
                       fontWeight={600} 
                       sx={{ 
                         color: "#fff",
                         fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+                        wordWrap: "break-word",
+                        overflowWrap: "break-word",
+                        maxWidth: "100%",
+                        hyphens: "auto",
                       }}
                     >
                       {item.title}

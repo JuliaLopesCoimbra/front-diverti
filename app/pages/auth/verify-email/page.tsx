@@ -25,16 +25,30 @@ function VerifyEmailContent() {
     type: "age_verification" | "profile_completion" | "login";
     tempToken?: string;
   } | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
+    if (!token || isVerifying) {
+      if (!token) {
+        setStatus("error");
+      }
       return;
     }
 
     const verify = async () => {
+      if (isVerifying) return; // Evitar múltiplas requisições
+      
+      setIsVerifying(true);
       try {
-        const result = await verifyEmail(token) as VerifyEmailResponse;
+        // Limpar e validar token
+        const cleanToken = token?.trim() || "";
+        if (!cleanToken) {
+          setStatus("error");
+          showToast("Token inválido", "error");
+          return;
+        }
+        
+        const result = await verifyEmail(cleanToken) as VerifyEmailResponse;
         setStatus("success");
         showToast("E-mail confirmado com sucesso!", "success");
         
@@ -57,11 +71,13 @@ function VerifyEmailContent() {
       } catch {
         setStatus("error");
         showToast("Token inválido ou expirado", "error");
+      } finally {
+        setIsVerifying(false);
       }
     };
 
     verify();
-  }, [token, showToast]);
+  }, [token, showToast, isVerifying]);
 
   return (
     <Box

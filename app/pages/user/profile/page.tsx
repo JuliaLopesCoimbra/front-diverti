@@ -216,6 +216,17 @@ export default function ProfilePage() {
                 border: "4px solid #FFD600",
                 boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
                 position: "relative",
+                "& > span": {
+                  width: "100% !important",
+                  height: "100% !important",
+                  display: "block !important",
+                  borderRadius: "50% !important",
+                  overflow: "hidden !important",
+                },
+                "& img": {
+                  borderRadius: "50% !important",
+                  objectFit: "cover !important",
+                },
               }}
             >
               {profile.profile_photo ? (
@@ -228,6 +239,7 @@ export default function ProfilePage() {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
+                    borderRadius: "50%",
                   }}
                 />
               ) : (
@@ -239,6 +251,7 @@ export default function ProfilePage() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    borderRadius: "50%",
                   }}
                 >
                   <PersonIcon sx={{ fontSize: { xs: 80, md: 100 }, color: "white" }} />

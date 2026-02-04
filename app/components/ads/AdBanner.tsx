@@ -17,11 +17,7 @@ const MOCK_ADS: AdPlacement[] = [
     redirect_url: "https://www.ambev.com.br/marcas/brahma",
     alt_text: "Brahma - Oferta Exclusiva N1",
   },
-  {
-    image_url: "/ads/coca.png",
-    redirect_url: "https://www.coca-cola.com/br/pt",
-    alt_text: "Coca-Cola - Oferta Exclusiva N1",
-  },
+  
   {
     image_url: "/ads/maturatta.jpg",
     redirect_url: "https://www.maturatta.com.br",

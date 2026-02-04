@@ -47,6 +47,9 @@ export default function NewsFormFields({
           }}
           required
           fullWidth
+          multiline
+          minRows={1}
+          maxRows={3}
           disabled={loading}
           inputProps={{
             maxLength: 100,
@@ -81,10 +84,17 @@ export default function NewsFormFields({
               fontWeight: 500,
               wordBreak: "break-word",
               overflowWrap: "break-word",
+              whiteSpace: "pre-wrap",
+              overflow: "hidden",
+              resize: "none",
               "&::placeholder": {
                 color: "rgba(255,255,255,0.4)",
                 opacity: 1,
               },
+            },
+            "& .MuiInputBase-inputMultiline": {
+              overflow: "hidden !important",
+              resize: "none",
             },
           }}
         />
@@ -153,10 +163,17 @@ export default function NewsFormFields({
               lineHeight: 1.6,
               wordBreak: "break-word",
               overflowWrap: "break-word",
+              whiteSpace: "pre-wrap",
+              overflow: "hidden",
+              resize: "none",
               "&::placeholder": {
                 color: "rgba(255,255,255,0.4)",
                 opacity: 1,
               },
+            },
+            "& .MuiInputBase-inputMultiline": {
+              overflow: "hidden !important",
+              resize: "none",
             },
           }}
         />

@@ -492,6 +492,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             width: "100%",
             height: "100%",
             objectFit: "cover",
+            borderRadius: "50%",
           }}
         />
         
@@ -508,6 +509,8 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               alignItems: "center",
               justifyContent: "center",
               zIndex: 10,
+              borderRadius: "50%",
+              overflow: "hidden",
             }}
           >
             <Typography
@@ -538,6 +541,8 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               justifyContent: "center",
               zIndex: 10,
               gap: 2,
+              borderRadius: "50%",
+              overflow: "hidden",
             }}
           >
             <CircularProgress size={60} sx={{ color: "#fff" }} />

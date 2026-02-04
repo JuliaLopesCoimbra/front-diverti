@@ -60,14 +60,9 @@ body {
 * {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-}
-
-/* Garantir que imagens não ultrapassem a viewport */
-img,
-video,
-iframe {
-  max-width: 100%;
-  height: auto;
+  /* Garantir que elementos de texto quebrem corretamente */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Garantir que containers principais respeitem a viewport */
@@ -76,6 +71,7 @@ section,
 article {
   max-width: 100%;
   overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 /* Containers div devem respeitar, mas NÃO aplicar overflow-x: hidden em divs genéricos */
@@ -86,121 +82,12 @@ article > div:not([class*="Mui"]):not([class*="form"]):not([class*="Form"]) {
   overflow-x: hidden;
 }
 
-/* IMPORTANTE: Garantir que divs que contêm formulários NUNCA tenham overflow-x: hidden */
-div[class*="Mui"],
-div:has(.MuiTextField-root),
-div:has(.MuiFormControl-root),
-div:has(.MuiInputBase-root),
-div:has(input[type="time"]),
-div:has(input[type="date"]),
-div:has(input[type="datetime-local"]),
-div:has(.MuiInputLabel-root),
-div:has(form),
-div:has([class*="form"]) {
-  overflow-x: visible !important;
-  overflow: visible !important;
-}
-
-/* GARANTIR que qualquer div que contenha um TextField ou FormControl tenha overflow visível */
-/* Usando :has() para navegadores modernos */
-@supports selector(:has(*)) {
-  div:has(.MuiTextField-root),
-  div:has(.MuiFormControl-root),
-  div:has(.MuiInputBase-root),
-  div:has(input[type="time"]),
-  div:has(.MuiInputLabel-root) {
-    overflow-x: visible !important;
-    overflow: visible !important;
-  }
-}
-
-/* Fallback para navegadores sem suporte a :has() - garantir que containers MUI não cortem */
-.MuiBox-root,
-div[class*="MuiBox"],
-div[class*="MuiContainer"],
-div[class*="MuiGrid"] {
-  overflow-x: visible !important;
-}
-
-/* Garantir que containers de input não cortem labels */
-.MuiInputBase-root,
-.MuiTextField-root,
-.MuiFormControl-root,
-[class*="MuiInputBase"],
-[class*="MuiTextField"],
-[class*="MuiFormControl"] {
-  overflow: visible !important;
-  overflow-x: visible !important;
-}
-
-/* Garantir que Box que contém TextField também não corte - usando seletores mais compatíveis */
-.MuiTextField-root,
-.MuiInputBase-root,
-.MuiFormControl-root {
-  position: relative;
-}
-
-/* Garantir que containers flex que podem conter inputs não cortem */
-div[style*="display: flex"],
-div[style*="display:flex"] {
-  min-width: 0; /* Permite que flex items encolham se necessário */
-}
-
-/* Regra específica para garantir que labels de inputs de horário não sejam cortados */
-.MuiInputLabel-root,
-.MuiInputLabel-root *,
-label.MuiInputLabel-root,
-label[class*="MuiInputLabel"],
-span.MuiInputLabel-root {
-  max-width: none !important;
-  min-width: auto !important;
-  width: auto !important;
-  overflow: visible !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-  white-space: nowrap !important;
-  text-overflow: clip !important;
-  clip-path: none !important;
-  clip: auto !important;
-}
-
-/* Garantir que o container pai do label também não corte */
-.MuiInputBase-root,
-.MuiOutlinedInput-root {
-  overflow: visible !important;
-  overflow-x: visible !important;
-}
-
-/* Específico para inputs de tipo time */
-input[type="time"] {
-  max-width: 100% !important;
-}
-
-/* Garantir que Box containers não cortem labels quando contêm TextField */
-.MuiTextField-root,
-.MuiFormControl-root {
-  overflow: visible !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-}
-
 /* Garantir que elementos fixos não ultrapassem a viewport */
 [style*="position: fixed"],
 [style*="position:fixed"] {
   max-width: 100vw;
   left: 0;
   right: 0;
-}
-
-input, textarea, [contenteditable] {
-  -webkit-user-select: text;
-  user-select: text;
-  max-width: 100%;
-}
-
-nextjs-portal {
-  top: 0px !important;
-  left: 0px !important;
 }
 
 /* Garantir que elementos fixed não sejam afetados durante scroll */
@@ -232,91 +119,4 @@ html {
 [style*="position: fixed"][style*="right"],
 [style*="position:fixed"][style*="right"] {
   right: max(0px, min(16px, calc(100vw - 100%))) !important;
-}
-
-/* Prevenir que tabelas e elementos com largura fixa causem overflow */
-table {
-  width: 100%;
-  max-width: 100%;
-  table-layout: auto;
-  word-wrap: break-word;
-}
-
-/* Garantir que textos longos quebrem, mas não labels */
-p, span:not(label span), h1, h2, h3, h4, h5, h6 {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-/* Labels e elementos de formulário não devem ter max-width restritivo */
-label,
-[class*="MuiInputLabel"],
-[class*="MuiFormLabel"],
-.MuiInputLabel-root,
-.MuiFormLabel-root,
-.MuiInputLabel-root *,
-.MuiFormLabel-root *,
-.MuiInputBase-root *,
-.MuiTextField-root * {
-  max-width: none !important;
-  overflow: visible !important;
-  white-space: nowrap;
-}
-
-/* Garantir que o container do label não seja cortado */
-.MuiInputBase-root,
-.MuiTextField-root,
-.MuiFormControl-root,
-.MuiOutlinedInput-root {
-  overflow: visible !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-}
-
-/* Garantir que todos os elementos dentro de um TextField tenham overflow visível */
-.MuiTextField-root *,
-.MuiFormControl-root *,
-.MuiInputBase-root * {
-  overflow-x: visible !important;
-}
-
-/* Específico para inputs de tipo time e seus containers */
-input[type="time"],
-input[type="time"] ~ *,
-.MuiTextField-root input[type="time"] {
-  max-width: 100% !important;
-}
-
-/* Garantir que Box com display flex que contém TextFields não corte */
-div[style*="display: flex"],
-div[style*="display:flex"] {
-  min-width: 0; /* Permite que flex items encolham se necessário */
-}
-
-/* Se um div flex contém um TextField, garantir overflow visível */
-@supports selector(:has(*)) {
-  div[style*="display: flex"]:has(.MuiTextField-root),
-  div[style*="display:flex"]:has(.MuiTextField-root),
-  div[style*="display: flex"]:has(.MuiFormControl-root),
-  div[style*="display:flex"]:has(.MuiFormControl-root) {
-    overflow-x: visible !important;
-    overflow: visible !important;
-  }
-}
-
-/* Fallback para navegadores que não suportam :has() - aplicar em todos os containers de formulário */
-.MuiTextField-root,
-.MuiFormControl-root,
-.MuiInputBase-root {
-  overflow: visible !important;
-  overflow-x: visible !important;
-  overflow-y: visible !important;
-}
-
-/* Garantir que o elemento pai direto de um TextField também tenha overflow visível */
-.MuiTextField-root,
-.MuiFormControl-root {
-  position: relative;
-  z-index: 1;
 }

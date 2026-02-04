@@ -8,7 +8,6 @@ import {
   ListItemButton,
   IconButton,
   Divider,
-  Avatar,
   Box,
   Typography,
   Collapse,
@@ -297,9 +296,7 @@ export default function HamburgerMenu({
                     }}
                   >
                     {/* IMAGEM */}
-                    <Avatar
-                      src={event.banner_image}
-                      variant="rounded"
+                    <Box
                       sx={{
                         width: "100%",
                         height: 110,
@@ -307,8 +304,23 @@ export default function HamburgerMenu({
                         backgroundColor: "#222",
                         opacity: isInactive ? 0.4 : 1,
                         transition: "opacity 0.3s",
+                        overflow: "hidden",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
-                    />
+                    >
+                      <Box
+                        component="img"
+                        src={event.banner_image}
+                        alt={event.title}
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                        }}
+                      />
+                    </Box>
                     {/* MENU ADMIN (3 PONTINHOS) */}
                     {isAdmin && (
                       <IconButton

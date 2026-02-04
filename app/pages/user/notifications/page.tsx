@@ -8,7 +8,6 @@ import {
   Container,
   Paper,
   Checkbox,
-  FormControlLabel,
   Button,
   CircularProgress,
   IconButton,
@@ -132,6 +131,12 @@ const NotificationsPage: React.FC = () => {
         router.push(`/pages/news/${notification.related_news_id}`);
       }
     } else if (notification.related_event_id) {
+      // Se for notificação de line up, navega diretamente para a página de lineup
+      if (notification.type === 'lineup_updated') {
+        router.push(`/pages/events/${notification.related_event_id}/lineup`);
+        return;
+      }
+      
       // Verifica se o evento está disponível antes de navegar
       try {
         const { getEventById } = await import("@/app/services/events/eventAppService");
@@ -273,32 +278,35 @@ const NotificationsPage: React.FC = () => {
         backgroundRepeat: "no-repeat",
       }}
     >
-      <Container maxWidth="md" sx={{ paddingTop: 2, paddingBottom: 4 }}>
-        {/* Header com botão voltar */}
-        <Box sx={{ display: "flex", alignItems: "center", mb: 2, pl: 1 }}>
-          <IconButton
-            onClick={() => router.back()}
-            sx={{
-              color: "white",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
-              },
-            }}
-          >
-            <ArrowBackIosIcon />
-          </IconButton>
-        </Box>
-
+      <Container maxWidth="md" sx={{ paddingTop: { xs: 1, sm: 2 }, paddingBottom: 4, width: "100%", maxWidth: "100%", px: { xs: 1, sm: 2 } }}>
         <Paper
           sx={{
-            padding: 4,
+            padding: { xs: 2, sm: 4 },
+            paddingTop: { xs: 1, sm: 2 },
             backgroundColor: "rgba(0, 0, 0, 0.3)",
             backdropFilter: "blur(20px)",
             borderRadius: "24px",
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
+           
+            width: "100%",
+            maxWidth: "100%",
+            overflow: "hidden",
           }}
         >
+          {/* Header com botão voltar */}
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <IconButton
+              onClick={() => router.back()}
+              sx={{
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                },
+              }}
+            >
+              <ArrowBackIosIcon />
+            </IconButton>
+          </Box>
           <Box
             sx={{
               display: "flex",
@@ -319,6 +327,10 @@ const NotificationsPage: React.FC = () => {
               sx={{
                 color: "#fff",
                 fontWeight: 700,
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+                textAlign: "center",
+                px: 2,
               }}
             >
               Notificações
@@ -330,13 +342,18 @@ const NotificationsPage: React.FC = () => {
           <Tabs
             value={tabValue}
             onChange={(_, newValue) => setTabValue(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
               mb: 3,
+              width: "100%",
               "& .MuiTab-root": {
                 color: "rgba(255, 255, 255, 0.7)",
                 "&.Mui-selected": {
                   color: "#ffcc01",
                 },
+                minWidth: { xs: "auto", sm: 160 },
+                fontSize: { xs: "0.875rem", sm: "1rem" },
               },
               "& .MuiTabs-indicator": {
                 backgroundColor: "#ffcc01",
@@ -345,9 +362,9 @@ const NotificationsPage: React.FC = () => {
           >
             <Tab
               label={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <NotificationsIcon />
-                  <span>Notificações</span>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "nowrap" }}>
+                  <NotificationsIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
+                  <span style={{ whiteSpace: "nowrap" }}>Notificações</span>
                   {unreadCount > 0 && (
                     <Chip
                       label={unreadCount}
@@ -359,6 +376,7 @@ const NotificationsPage: React.FC = () => {
                         height: 20,
                         minWidth: 20,
                         fontSize: "0.7rem",
+                        flexShrink: 0,
                       }}
                     />
                   )}
@@ -367,9 +385,9 @@ const NotificationsPage: React.FC = () => {
             />
             <Tab
               label={
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <SettingsIcon />
-                  <span>Preferências</span>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "nowrap" }}>
+                  <SettingsIcon sx={{ fontSize: { xs: 18, sm: 24 } }} />
+                  <span style={{ whiteSpace: "nowrap" }}>Preferências</span>
                 </Box>
               }
             />
@@ -426,6 +444,9 @@ const NotificationsPage: React.FC = () => {
                     sx={{
                       color: "rgba(255, 255, 255, 0.7)",
                       textAlign: "center",
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      px: 2,
                     }}
                   >
                     Ainda não há notificações.
@@ -447,13 +468,15 @@ const NotificationsPage: React.FC = () => {
                           onClick={() => handleNotificationClick(notification)}
                           sx={{
                             py: 1.5,
-                            px: 2,
+                            px: { xs: 1, sm: 2 },
+                            width: "100%",
+                            overflow: "hidden",
                             "&:hover": {
                               backgroundColor: "rgba(255, 255, 255, 0.05)",
                             },
                           }}
                         >
-                          <Box sx={{ width: "100%", display: "flex", gap: 1.5 }}>
+                          <Box sx={{ width: "100%", display: "flex", gap: 1.5, minWidth: 0 }}>
                             {/* Ícone do tipo de notificação */}
                             <Box
                               sx={{
@@ -486,13 +509,14 @@ const NotificationsPage: React.FC = () => {
                               </Avatar>
                             )}
 
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
                               <Box
                                 sx={{
                                   display: "flex",
                                   justifyContent: "space-between",
                                   alignItems: "flex-start",
                                   mb: 0.5,
+                                  gap: 1,
                                 }}
                               >
                                 <Typography
@@ -501,6 +525,10 @@ const NotificationsPage: React.FC = () => {
                                     color: "white",
                                     fontWeight: notification.is_read ? 400 : 700,
                                     fontSize: "0.9rem",
+                                    wordBreak: "break-word",
+                                    overflowWrap: "break-word",
+                                    flex: 1,
+                                    minWidth: 0,
                                   }}
                                 >
                                   {notification.title}
@@ -512,8 +540,8 @@ const NotificationsPage: React.FC = () => {
                                       height: 8,
                                       borderRadius: "50%",
                                       backgroundColor: "#ffcc01",
-                                      ml: 1,
                                       flexShrink: 0,
+                                      mt: 0.5,
                                     }}
                                   />
                                 )}
@@ -524,6 +552,9 @@ const NotificationsPage: React.FC = () => {
                                   color: "rgba(255, 255, 255, 0.7)",
                                   fontSize: "0.85rem",
                                   mb: 0.5,
+                                  wordBreak: "break-word",
+                                  overflowWrap: "break-word",
+                                  overflow: "hidden",
                                 }}
                               >
                                 {notification.message}
@@ -533,6 +564,8 @@ const NotificationsPage: React.FC = () => {
                                 sx={{
                                   color: "rgba(255, 255, 255, 0.5)",
                                   fontSize: "0.75rem",
+                                  wordBreak: "break-word",
+                                  overflowWrap: "break-word",
                                 }}
                               >
                                 {formatDate(notification.created_at)}
@@ -557,6 +590,9 @@ const NotificationsPage: React.FC = () => {
                   color: "rgba(255, 255, 255, 0.7)",
                   textAlign: "center",
                   mb: 3,
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  px: 2,
                 }}
               >
                 Escolha quais tipos de notificações você deseja receber
@@ -568,190 +604,228 @@ const NotificationsPage: React.FC = () => {
               flexDirection: "column",
               gap: 3,
               marginBottom: 4,
+              width: "100%",
+              overflow: "hidden",
             }}
           >
             <Paper
               sx={{
-                padding: 3,
+                padding: { xs: 2, sm: 3 },
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 borderRadius: 2,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
+                width: "100%",
+                overflow: "hidden",
               }}
             >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={localPreferences.lineup_updated}
-                    onChange={() => handleToggle("lineup_updated")}
-                    sx={{
+              <Box sx={{ display: "flex", width: "100%", gap: 1 }}>
+                <Checkbox
+                  checked={localPreferences.lineup_updated}
+                  onChange={() => handleToggle("lineup_updated")}
+                  sx={{
+                    color: "#ffcc01",
+                    "&.Mui-checked": {
                       color: "#ffcc01",
-                      "&.Mui-checked": {
-                        color: "#ffcc01",
-                      },
+                    },
+                    flexShrink: 0,
+                    alignSelf: "flex-start",
+                    mt: 0.5,
+                  }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden", width: "100%" }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      mb: 0.5,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
                     }}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        mb: 0.5,
-                      }}
-                    >
-                      Atualização de Line Up
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Receba notificações quando o line up de um evento for atualizado
-                    </Typography>
-                  </Box>
-                }
-              />
+                  >
+                    Atualização de Line Up
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Receba notificações quando o line up de um evento for atualizado
+                  </Typography>
+                </Box>
+              </Box>
             </Paper>
 
             <Paper
               sx={{
-                padding: 3,
+                padding: { xs: 2, sm: 3 },
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 borderRadius: 2,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
+                width: "100%",
+                overflow: "hidden",
               }}
             >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={localPreferences.news_feed}
-                    onChange={() => handleToggle("news_feed")}
-                    sx={{
+              <Box sx={{ display: "flex", width: "100%", gap: 1 }}>
+                <Checkbox
+                  checked={localPreferences.news_feed}
+                  onChange={() => handleToggle("news_feed")}
+                  sx={{
+                    color: "#ffcc01",
+                    "&.Mui-checked": {
                       color: "#ffcc01",
-                      "&.Mui-checked": {
-                        color: "#ffcc01",
-                      },
+                    },
+                    flexShrink: 0,
+                    alignSelf: "flex-start",
+                    mt: 0.5,
+                  }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden", width: "100%" }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      mb: 0.5,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
                     }}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        mb: 0.5,
-                      }}
-                    >
-                      Feed de Notícias
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Receba notificações quando novos posts forem publicados
-                    </Typography>
-                  </Box>
-                }
-              />
+                  >
+                    Feed de Notícias
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Receba notificações quando novos posts forem publicados
+                  </Typography>
+                </Box>
+              </Box>
             </Paper>
 
             <Paper
               sx={{
-                padding: 3,
+                padding: { xs: 2, sm: 3 },
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 borderRadius: 2,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
+                width: "100%",
+                overflow: "hidden",
               }}
             >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={localPreferences.interactions}
-                    onChange={() => handleToggle("interactions")}
-                    sx={{
+              <Box sx={{ display: "flex", width: "100%", gap: 1 }}>
+                <Checkbox
+                  checked={localPreferences.interactions}
+                  onChange={() => handleToggle("interactions")}
+                  sx={{
+                    color: "#ffcc01",
+                    "&.Mui-checked": {
                       color: "#ffcc01",
-                      "&.Mui-checked": {
-                        color: "#ffcc01",
-                      },
+                    },
+                    flexShrink: 0,
+                    alignSelf: "flex-start",
+                    mt: 0.5,
+                  }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden", width: "100%" }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      mb: 0.5,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
                     }}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        mb: 0.5,
-                      }}
-                    >
-                      Interações
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Receba notificações quando alguém curtir ou comentar seu comentário
-                    </Typography>
-                  </Box>
-                }
-              />
+                  >
+                    Interações
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Receba notificações quando alguém curtir ou comentar seu comentário
+                  </Typography>
+                </Box>
+              </Box>
             </Paper>
 
             <Paper
               sx={{
-                padding: 3,
+                padding: { xs: 2, sm: 3 },
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 borderRadius: 2,
                 border: "1px solid rgba(255, 255, 255, 0.1)",
+                width: "100%",
+                overflow: "hidden",
               }}
             >
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={localPreferences.new_events}
-                    onChange={() => handleToggle("new_events")}
-                    sx={{
+              <Box sx={{ display: "flex", width: "100%", gap: 1 }}>
+                <Checkbox
+                  checked={localPreferences.new_events}
+                  onChange={() => handleToggle("new_events")}
+                  sx={{
+                    color: "#ffcc01",
+                    "&.Mui-checked": {
                       color: "#ffcc01",
-                      "&.Mui-checked": {
-                        color: "#ffcc01",
-                      },
+                    },
+                    flexShrink: 0,
+                    alignSelf: "flex-start",
+                    mt: 0.5,
+                  }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0, overflow: "hidden", width: "100%" }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontWeight: 600,
+                      fontSize: { xs: "1rem", sm: "1.1rem" },
+                      mb: 0.5,
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
                     }}
-                  />
-                }
-                label={
-                  <Box>
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 600,
-                        fontSize: "1.1rem",
-                        mb: 0.5,
-                      }}
-                    >
-                      Novos Eventos
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "rgba(255, 255, 255, 0.7)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      Receba notificações quando novos eventos forem criados
-                    </Typography>
-                  </Box>
-                }
-              />
+                  >
+                    Novos Eventos
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      fontSize: { xs: "0.85rem", sm: "0.9rem" },
+                      wordBreak: "break-word",
+                      overflowWrap: "break-word",
+                      width: "100%",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    Receba notificações quando novos eventos forem criados
+                  </Typography>
+                </Box>
+              </Box>
             </Paper>
           </Box>
 

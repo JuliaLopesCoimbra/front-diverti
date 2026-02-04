@@ -234,10 +234,9 @@ export default function HomeHeader({
         router.push(`/pages/news/${notification.related_news_id}`);
       }
     } else if (notification.related_event_id) {
-      // Navega para a página interna do usuário (home) na aba eventos
-      // Se for notificação de line up, adiciona parâmetro para scroll
+      // Se for notificação de line up, navega diretamente para a página de lineup
       if (notification.type === 'lineup_updated') {
-        router.push(`/pages/user/home?eventId=${notification.related_event_id}&tab=eventos&scrollToLineup=true`);
+        router.push(`/pages/events/${notification.related_event_id}/lineup`);
       } else {
         router.push(`/pages/user/home?eventId=${notification.related_event_id}&tab=eventos`);
       }

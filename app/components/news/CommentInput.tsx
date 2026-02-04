@@ -35,13 +35,14 @@ export default function CommentInput({
   };
 
   return (
-    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end" }}>
+    <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-end" }}>
       <Avatar
         src={userPhoto || undefined}
-        sx={{ width: 36, height: 36 }}
+        sx={{ width: 32, height: 32 }}
       >
         {userName?.[0]?.toUpperCase() || userEmail?.[0]?.toUpperCase() || "U"}
       </Avatar>
+      <Box sx={{ flex: 1 }}>
       <TextField
         fullWidth
         placeholder={placeholder}
@@ -54,6 +55,7 @@ export default function CommentInput({
         }}
         onKeyPress={handleKeyPress}
         multiline
+        minRows={1}
         maxRows={4}
         disabled={disabled || submitting}
         inputProps={{
@@ -86,13 +88,21 @@ export default function CommentInput({
             color: "#fff",
             wordBreak: "break-word",
             overflowWrap: "break-word",
+            whiteSpace: "pre-wrap",
+            overflow: "hidden",
+            resize: "none",
             "&::placeholder": {
               color: "rgba(255,255,255,0.5)",
               opacity: 1,
             },
           },
+          "& .MuiInputBase-inputMultiline": {
+            overflow: "hidden !important",
+            resize: "none",
+          },
         }}
       />
+      </Box>
       <IconButton
         onClick={onSubmit}
         disabled={!value.trim() || submitting || disabled}
@@ -111,7 +121,3 @@ export default function CommentInput({
     </Box>
   );
 }
-
-
-
-

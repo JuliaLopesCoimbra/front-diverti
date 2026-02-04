@@ -18,6 +18,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogActions,
+  Avatar,
 } from "@mui/material";
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
@@ -680,36 +681,16 @@ export default function EventDetailsPage() {
         {/* Banner */}
         {event.banner_image && (
           <Box sx={{ mb: 3, display: "flex", justifyContent: "center" }}>
-            <Box
+            <Avatar
+              src={event.banner_image}
+              alt={event.title}
               sx={{
                 width: 200,
                 height: 200,
-              
-                border: "1px solid rgba(255, 201, 31, 0.3)",
-                overflow: "hidden",
-                position: "relative",
+                border: "3px solid rgba(255, 201, 31, 0.3)",
                 flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
               }}
-            >
-              <Box
-                component="img"
-                src={event.banner_image}
-                alt={event.title}
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  minWidth: "100%",
-                  minHeight: "100%",
-                  objectFit: "cover",
-                  objectPosition: "center",
-                  display: "block",
-                  borderRadius: "50%",
-                }}
-              />
-            </Box>
+            />
           </Box>
         )}
 
@@ -858,7 +839,7 @@ export default function EventDetailsPage() {
 
           {/* CONFIGURAÇÃO DE APROVAÇÃO DE POSTS */}
           {isAdmin && (
-            <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+            <Box sx={{ mt: 3, pt: 3, borderTop: "1px solid rgba(255,255,255,0.1)", maxWidth: "100%", overflow: "hidden" }}>
               <FormControlLabel
                 control={
                   <Checkbox
@@ -874,10 +855,26 @@ export default function EventDetailsPage() {
                   />
                 }
                 label={
-                  <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "0.9375rem" }}>
+                  <Typography sx={{ 
+                    color: "rgba(255,255,255,0.9)", 
+                    fontSize: "0.9375rem",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    maxWidth: "100%",
+                    whiteSpace: "normal",
+                  }}>
                     Tirar aprovação de segunda etapa de aprovação de posts desse evento
                   </Typography>
                 }
+                sx={{
+                  maxWidth: "100%",
+                  width: "100%",
+                  alignItems: "flex-start",
+                  "& .MuiFormControlLabel-label": {
+                    flex: 1,
+                    maxWidth: "calc(100% - 42px)",
+                  },
+                }}
               />
               {pendingCount !== null && pendingCount > 0 && (
                 <Typography

@@ -126,3 +126,8 @@ export const deleteLineupItem = async (lineupItemId: number): Promise<void> => {
   await api.delete(`/admin/lineup-items/${lineupItemId}`);
 };
 
+// Função para notificar todos sobre atualização do lineup
+export const notifyLineupUpdated = async (eventId: number): Promise<void> => {
+  await api.post(`/admin/events/${eventId}/notify-lineup-updated`);
+};
+

@@ -269,11 +269,22 @@ function CompleteProfileContent() {
               />
             }
             label={
-              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: "rgba(255, 255, 255, 0.9)", 
+                  fontSize: "0.875rem",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
+                  maxWidth: "100%",
+                  lineHeight: 1.4,
+                }}
+              >
                 Aceito os termos de proteção de dados pessoais (LGPD)
               </Typography>
             }
-            sx={{ mb: 3 }}
+            sx={{ mb: 3, width: "100%", maxWidth: "100%" }}
           />
 
           <Button

@@ -374,7 +374,11 @@ export default function EditEventForm({
           fontWeight={700} 
           sx={{ 
             color: "#fff", 
-            fontSize: { xs: "1.2rem", md: "1.5rem", lg: "1.8rem" } 
+            fontSize: { xs: "1.2rem", md: "1.5rem", lg: "1.8rem" },
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            maxWidth: "100%",
+            whiteSpace: "normal",
           }}
         >
           Editar Evento
@@ -387,13 +391,14 @@ export default function EditEventForm({
         onSubmit={handleSubmit}
         sx={{
           flex: 1,
-          p: 3,
+          p: { xs: 2, sm: 3 },
           maxWidth: 700,
           width: "100%",
           mx: "auto",
           display: "flex",
           flexDirection: "column",
           gap: 2,
+          boxSizing: "border-box",
         }}
       >
         <Paper
@@ -407,6 +412,8 @@ export default function EditEventForm({
             flexDirection: "column",
             gap: 2.5,
             border: "1px solid rgba(255, 255, 255, 0.1)",
+            maxWidth: "100%",
+            overflow: "hidden",
           }}
         >
           <TextField
@@ -532,6 +539,13 @@ export default function EditEventForm({
               "& .MuiInputBase-input": {
                 color: "#fff",
                 fontSize: "1rem",
+                "&::-webkit-calendar-picker-indicator": {
+                  filter: "invert(1)",
+                  cursor: "pointer",
+                },
+                "&::-webkit-datetime-edit-fields-wrapper": {
+                  color: "#fff",
+                },
               },
               "& .MuiInputLabel-root": {
                 color: "rgba(255,255,255,0.6)",
@@ -570,6 +584,13 @@ export default function EditEventForm({
               "& .MuiInputBase-input": {
                 color: "#fff",
                 fontSize: "1rem",
+                "&::-webkit-calendar-picker-indicator": {
+                  filter: "invert(1)",
+                  cursor: "pointer",
+                },
+                "&::-webkit-datetime-edit-fields-wrapper": {
+                  color: "#fff",
+                },
               },
               "& .MuiInputLabel-root": {
                 color: "rgba(255,255,255,0.6)",
@@ -615,6 +636,10 @@ export default function EditEventForm({
               },
               "& .MuiFormHelperText-root": {
                 color: "rgba(255,255,255,0.5)",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+                maxWidth: "100%",
+                whiteSpace: "normal",
               },
             }}
           />
@@ -644,6 +669,10 @@ export default function EditEventForm({
                 "& .MuiInputBase-input": {
                   color: "#fff",
                   fontSize: "1rem",
+                  "&::-webkit-calendar-picker-indicator": {
+                    filter: "invert(1)",
+                    cursor: "pointer",
+                  },
                 },
                 "& .MuiInputLabel-root": {
                   color: "rgba(255,255,255,0.6)",
@@ -677,6 +706,10 @@ export default function EditEventForm({
                 "& .MuiInputBase-input": {
                   color: "#fff",
                   fontSize: "1rem",
+                  "&::-webkit-calendar-picker-indicator": {
+                    filter: "invert(1)",
+                    cursor: "pointer",
+                  },
                 },
                 "& .MuiInputLabel-root": {
                   color: "rgba(255,255,255,0.6)",
@@ -713,6 +746,10 @@ export default function EditEventForm({
                 "& .MuiInputBase-input": {
                   color: "#fff",
                   fontSize: "1rem",
+                  "&::-webkit-calendar-picker-indicator": {
+                    filter: "invert(1)",
+                    cursor: "pointer",
+                  },
                 },
                 "& .MuiInputLabel-root": {
                   color: "rgba(255,255,255,0.6)",
@@ -746,6 +783,10 @@ export default function EditEventForm({
                 "& .MuiInputBase-input": {
                   color: "#fff",
                   fontSize: "1rem",
+                  "&::-webkit-calendar-picker-indicator": {
+                    filter: "invert(1)",
+                    cursor: "pointer",
+                  },
                 },
                 "& .MuiInputLabel-root": {
                   color: "rgba(255,255,255,0.6)",
@@ -758,7 +799,15 @@ export default function EditEventForm({
           </Box>
 
           <Box>
-            <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
+            <Typography variant="body2" sx={{ 
+              mb: 1.5, 
+              color: "rgba(255,255,255,0.6)", 
+              fontSize: "0.875rem",
+              wordBreak: "break-word",
+              overflowWrap: "break-word",
+              maxWidth: "100%",
+              whiteSpace: "normal",
+            }}>
               Banner do Evento
             </Typography>
             <input
@@ -807,7 +856,15 @@ export default function EditEventForm({
           </Box>
 
           <Box>
-            <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.6)", fontSize: "0.875rem" }}>
+            <Typography variant="body2" sx={{ 
+              mb: 1.5, 
+              color: "rgba(255,255,255,0.6)", 
+              fontSize: "0.875rem",
+              wordBreak: "break-word",
+              overflowWrap: "break-word",
+              maxWidth: "100%",
+              whiteSpace: "normal",
+            }}>
               Mapa do Evento (máximo 5 imagens)
             </Typography>
             <input
@@ -831,6 +888,9 @@ export default function EditEventForm({
                   py: 1.5,
                   textTransform: "none",
                   borderRadius: "14px",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
                   "&:hover": {
                     borderColor: "#ffc91f",
                     backgroundColor: "rgba(255,201,31,0.1)",
@@ -863,7 +923,11 @@ export default function EditEventForm({
                   style={{ 
                     color: "rgba(255,255,255,0.7)", 
                     fontSize: "0.875rem",
-                    cursor: "pointer"
+                    cursor: "pointer",
+                    wordBreak: "break-word",
+                    overflowWrap: "break-word",
+                    maxWidth: "100%",
+                    whiteSpace: "normal",
                   }}
                 >
                   Substituir todas as imagens existentes
@@ -874,7 +938,15 @@ export default function EditEventForm({
             {/* Exibe imagens existentes e novas em carrossel */}
             {(existingMapImages.length > 0 || mapImagePreviews.length > 0) && (
               <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1.5, color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>
+                <Typography variant="body2" sx={{ 
+                  mb: 1.5, 
+                  color: "rgba(255,255,255,0.7)", 
+                  fontSize: "0.9rem",
+                  wordBreak: "break-word",
+                  overflowWrap: "break-word",
+                  maxWidth: "100%",
+                  whiteSpace: "normal",
+                }}>
                   {existingMapImages.length + mapImages.length} imagem(ns) {existingMapImages.length > 0 ? "(existentes + novas)" : "(novas)"}
                 </Typography>
                 <ImageCarousel
@@ -922,6 +994,10 @@ export default function EditEventForm({
               },
               "& .MuiFormHelperText-root": {
                 color: "rgba(255,255,255,0.5)",
+                wordBreak: "break-word",
+                overflowWrap: "break-word",
+                maxWidth: "100%",
+                whiteSpace: "normal",
               },
             }}
           />

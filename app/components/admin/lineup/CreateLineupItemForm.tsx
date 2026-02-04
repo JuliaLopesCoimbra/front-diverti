@@ -17,11 +17,13 @@ import {
   createLineupItem,
   updateLineupItem,
   getLineupItem,
+  notifyLineupUpdated,
   CreateLineupItemData,
   UpdateLineupItemData,
 } from "@/app/services/lineup/lineupService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
+import NotifyLineupModal from "./NotifyLineupModal";
 
 interface CreateLineupItemFormProps {
   eventId: number;
@@ -44,6 +46,8 @@ export default function CreateLineupItemForm({
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
+  const [notifyModalOpen, setNotifyModalOpen] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const { showToast } = useToast();
   const router = useRouter();
   const isEditing = !!lineupItemId;
@@ -103,7 +107,15 @@ export default function CreateLineupItemForm({
       return;
     }
 
+    // Abre o modal de confirmação antes de salvar
+    setPendingSubmit(true);
+    setNotifyModalOpen(true);
+  };
+
+  const handleConfirmSubmit = async (shouldNotify: boolean) => {
+    setNotifyModalOpen(false);
     setLoading(true);
+    
     try {
       if (isEditing && lineupItemId) {
         const data: UpdateLineupItemData = {
@@ -130,6 +142,18 @@ export default function CreateLineupItemForm({
         showToast("Artista criado com sucesso!", "success");
       }
 
+      // Se o usuário marcou o checkbox, envia a notificação
+      if (shouldNotify) {
+        try {
+          await notifyLineupUpdated(eventId);
+          showToast("Notificações enviadas com sucesso!", "success");
+        } catch (notifyErr: any) {
+          console.error("Erro ao enviar notificações:", notifyErr);
+          // Não quebra o fluxo se a notificação falhar
+          showToast("Artista salvo, mas houve um erro ao enviar notificações", "warning");
+        }
+      }
+
       if (onSuccess) {
         onSuccess();
       } else {
@@ -141,6 +165,7 @@ export default function CreateLineupItemForm({
       showToast(errorMessage, "error");
     } finally {
       setLoading(false);
+      setPendingSubmit(false);
     }
   };
 
@@ -257,6 +282,12 @@ export default function CreateLineupItemForm({
                 "& .MuiOutlinedInput-root": {
                   backgroundColor: "rgba(255,255,255,0.05)",
                   color: "#fff",
+                  "& input": {
+                    "&::-webkit-calendar-picker-indicator": {
+                      filter: "invert(1)",
+                      cursor: "pointer",
+                    },
+                  },
                   "& fieldset": {
                     borderColor: "rgba(255,255,255,0.2)",
                   },
@@ -425,6 +456,17 @@ export default function CreateLineupItemForm({
           </Box>
         </Paper>
       </Box>
+
+      {/* Modal de Notificação */}
+      <NotifyLineupModal
+        open={notifyModalOpen}
+        onClose={() => {
+          setNotifyModalOpen(false);
+          setPendingSubmit(false);
+        }}
+        onConfirm={handleConfirmSubmit}
+        loading={loading}
+      />
     </Box>
   );
 }
