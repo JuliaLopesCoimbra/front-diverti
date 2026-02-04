@@ -58,12 +58,20 @@ function AgeVerificationContent() {
       const tempToken = params.get("temp_token");
       const formattedDate = birthDate.toISOString().split('T')[0];
 
-      await verifyAge(formattedDate, true, tempToken || undefined);
+      const result = await verifyAge(formattedDate, true, tempToken || undefined);
 
-      showToast("Idade verificada com sucesso! Você pode fazer login agora.", "success");
+      showToast("Idade verificada com sucesso!", "success");
       
       setTimeout(() => {
-        router.push("/pages/auth/login");
+        // Se precisa completar perfil, redireciona para complete-profile
+        if (result.requires_profile_completion && result.temp_token) {
+          router.push(
+            `/pages/auth/complete-profile?temp_token=${result.temp_token}&requires_profile_completion=true`
+          );
+        } else {
+          // Se não precisa completar perfil, redireciona para login
+          router.push("/pages/auth/login");
+        }
       }, 1500);
     } catch (err: any) {
       showToast(

@@ -13,7 +13,7 @@ import {
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { getLineupItemsByEvent, LineupItemResponse } from "@/app/services/lineup/lineupService";
-import { getEventById } from "@/app/services/events/eventAppService";
+import { getPublicEventById } from "@/app/services/events/eventAppService";
 
 export default function LineupPage() {
   const params = useParams();
@@ -29,9 +29,13 @@ export default function LineupPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
+        // Busca lineup e evento em paralelo, mas não falha se o evento não for encontrado
         const [items, eventData] = await Promise.all([
           getLineupItemsByEvent(eventId).catch(() => []), // Retorna lista vazia se der erro
-          getEventById(eventId).catch(() => null),
+          getPublicEventById(eventId).catch(() => {
+            // Silenciosamente ignora erro ao buscar evento (não é crítico para exibir o lineup)
+            return null;
+          }),
         ]);
         setLineupItems(items || []);
         setEvent(eventData);

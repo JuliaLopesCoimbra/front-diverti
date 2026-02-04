@@ -14,7 +14,8 @@ import { getEvents, EventResponse } from "../../services/events/eventAppService"
 import { formatEventDates } from "../../utils/eventDateFormatter";
 import { useAuth } from "../../context/AuthContext";
 import EventIndisponivelPublic from "@/app/components/event/EventIndisponivelPublic";
-import ImageCarousel from "@/app/components/news/ImageCarousel";
+import ZoomableImageCarousel from "@/app/components/common/ZoomableImageCarousel";
+import ZoomableImage from "@/app/components/common/ZoomableImage";
 
 export default function EventPage() {
   const router = useRouter();
@@ -619,22 +620,17 @@ export default function EventPage() {
                 </h3>
               </Box>
               {event.map_images && event.map_images.length > 0 ? (
-                <ImageCarousel
+                <ZoomableImageCarousel
                   images={event.map_images.map(img => img.image_url)}
-                  showRemoveButton={false}
-                  disabled={false}
+                  maxHeight={400}
+                  borderRadius={2}
                 />
               ) : event.image_map ? (
-                <Box
-                  component="img"
+                <ZoomableImage
                   src={event.image_map}
                   alt="Mapa do Evento"
-                  sx={{
-                    width: "100%",
-                    maxHeight: 400,
-                    objectFit: "contain",
-                    borderRadius: 2,
-                  }}
+                  maxHeight={400}
+                  borderRadius={2}
                 />
               ) : null}
             </Box>

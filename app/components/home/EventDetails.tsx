@@ -12,7 +12,8 @@ import MapIcon from "@mui/icons-material/Map";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import { formatEventDates } from "@/app/utils/eventDateFormatter";
-import ImageCarousel from "@/app/components/news/ImageCarousel";
+import ZoomableImageCarousel from "@/app/components/common/ZoomableImageCarousel";
+import ZoomableImage from "@/app/components/common/ZoomableImage";
 
 interface Props {
   event: EventResponse;
@@ -487,22 +488,17 @@ const formatTime = (timeStr: string | undefined): string => {
                   </h3>
                 </Box>
                 {event.map_images && event.map_images.length > 0 ? (
-                  <ImageCarousel
+                  <ZoomableImageCarousel
                     images={event.map_images.map(img => img.image_url)}
-                    showRemoveButton={false}
-                    disabled={false}
+                    maxHeight={400}
+                    borderRadius={2}
                   />
                 ) : event.image_map ? (
-                  <Box
-                    component="img"
+                  <ZoomableImage
                     src={event.image_map}
                     alt="Mapa do Evento"
-                    sx={{
-                      width: "100%",
-                      maxHeight: 400,
-                      objectFit: "contain",
-                      borderRadius: 2,
-                    }}
+                    maxHeight={400}
+                    borderRadius={2}
                   />
                 ) : null}
               </Box>

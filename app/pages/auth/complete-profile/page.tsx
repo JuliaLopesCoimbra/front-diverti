@@ -35,7 +35,6 @@ function CompleteProfileContent() {
   const [cpf, setCpf] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "prefer_not_to_say" | "">("");
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
-  const [ageTermsAccepted, setAgeTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const params = useSearchParams();
@@ -65,11 +64,6 @@ function CompleteProfileContent() {
       return;
     }
 
-    if (!ageTermsAccepted) {
-      showToast("Você deve aceitar os termos de maioridade para continuar", "error");
-      return;
-    }
-
     setLoading(true);
     try {
       const tempToken = params.get("temp_token");
@@ -85,7 +79,7 @@ function CompleteProfileContent() {
           cpf: cpfClean,
           gender: gender as "male" | "female" | "other" | "prefer_not_to_say",
           lgpd_accepted: lgpdAccepted,
-          age_terms_accepted: ageTermsAccepted,
+          age_terms_accepted: true, // Já foi verificado na tela de age-verification
         },
         {
           headers: {
@@ -279,27 +273,6 @@ function CompleteProfileContent() {
                 Aceito os termos de proteção de dados pessoais (LGPD)
               </Typography>
             }
-            sx={{ mb: 2 }}
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={ageTermsAccepted}
-                onChange={(e) => setAgeTermsAccepted(e.target.checked)}
-                sx={{
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-checked": {
-                    color: "#ffcc01",
-                  },
-                }}
-              />
-            }
-            label={
-              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
-                Confirmo que tenho 18 anos ou mais
-              </Typography>
-            }
             sx={{ mb: 3 }}
           />
 
@@ -307,7 +280,7 @@ function CompleteProfileContent() {
             fullWidth
             variant="contained"
             onClick={handleSubmit}
-            disabled={loading || !cpf || !gender || !lgpdAccepted || !ageTermsAccepted}
+            disabled={loading || !cpf || !gender || !lgpdAccepted}
             sx={{
               backgroundColor: "#ffcc01",
               color: "#000",

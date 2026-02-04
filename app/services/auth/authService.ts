@@ -290,7 +290,7 @@ export const verifyAge = async (
   birthDate: string,
   confirmed: boolean,
   token?: string
-): Promise<void> => {
+): Promise<{ requires_profile_completion?: boolean; temp_token?: string }> => {
   try {
     const headers: any = {
       "Content-Type": "application/json",
@@ -300,11 +300,20 @@ export const verifyAge = async (
       headers.Authorization = `Bearer ${token}`;
     }
     
-    await axios.post(
+    const response = await axios.post<{
+      message: string;
+      requires_profile_completion?: boolean;
+      temp_token?: string;
+    }>(
       `${API_URL}/auth/verify-age`,
       { confirmed, birth_date: birthDate },
       { headers }
     );
+    
+    return {
+      requires_profile_completion: response.data.requires_profile_completion,
+      temp_token: response.data.temp_token,
+    };
   } catch (error: any) {
     const message =
       error.response?.data?.detail ||

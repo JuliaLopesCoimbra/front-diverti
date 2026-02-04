@@ -10,10 +10,39 @@ interface AdPlacement {
   alt_text: string;
 }
 
-const FALLBACK_AD: AdPlacement = {
-  image_url: "/ads/coca.png",
-  redirect_url: "https://www.coca-cola.com/br/pt", // Link para onde o fallback deve levar
-  alt_text: "Oferta Exclusiva N1",
+// Lista de anúncios mockados disponíveis na pasta public/ads
+const MOCK_ADS: AdPlacement[] = [
+  {
+    image_url: "/ads/brahma.jpg",
+    redirect_url: "https://www.ambev.com.br/marcas/brahma",
+    alt_text: "Brahma - Oferta Exclusiva N1",
+  },
+  {
+    image_url: "/ads/coca.png",
+    redirect_url: "https://www.coca-cola.com/br/pt",
+    alt_text: "Coca-Cola - Oferta Exclusiva N1",
+  },
+  {
+    image_url: "/ads/maturatta.jpg",
+    redirect_url: "https://www.maturatta.com.br",
+    alt_text: "Maturatta - Oferta Exclusiva N1",
+  },
+  {
+    image_url: "/ads/pernod.jpg",
+    redirect_url: "https://www.pernod-ricard.com",
+    alt_text: "Pernod - Oferta Exclusiva N1",
+  },
+  {
+    image_url: "/ads/uol.jpg",
+    redirect_url: "https://www.uol.com.br",
+    alt_text: "UOL - Oferta Exclusiva N1",
+  },
+];
+
+// Função para selecionar um anúncio aleatório da lista mockada
+const getRandomMockAd = (): AdPlacement => {
+  const randomIndex = Math.floor(Math.random() * MOCK_ADS.length);
+  return MOCK_ADS[randomIndex];
 };
 
 export default function AdBanner() {
@@ -44,13 +73,13 @@ export default function AdBanner() {
           }
         } else {
           // Caso retorne "NO_ADS" ou placements vazio
-          console.log("AdButler retornou NO_ADS. Usando reserva.");
-          setAd(FALLBACK_AD);
+          console.log("AdButler retornou NO_ADS. Usando anúncio mockado.");
+          setAd(getRandomMockAd());
         }
       } catch (error) {
         // Caso ocorra erro de conexão, timeout ou AdBlock
-        console.warn("Erro de conexão com AdButler. Carregando anúncio reserva.");
-        setAd(FALLBACK_AD);
+        console.warn("Erro de conexão com AdButler. Carregando anúncio mockado.");
+        setAd(getRandomMockAd());
       } finally {
         setLoading(false);
       }
