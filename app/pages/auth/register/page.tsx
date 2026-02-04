@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Button,
   TextField,
@@ -8,6 +8,13 @@ import {
   InputAdornment,
   IconButton,
   Container,
+  Skeleton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 import { Visibility, VisibilityOff, ArrowBack, CheckCircle } from "@mui/icons-material";
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
@@ -19,19 +26,37 @@ import RegisterSuccess from "@/app/components/auth/RegisterSuccess";
 import { useRouter } from "next/navigation";
 import { validatePassword } from "@/app/utils/passwordValidator";
 
+// Função para formatar CPF
+const formatCPF = (value: string): string => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+  if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+  return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+};
+
 const RegisterForm: React.FC = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [cpf, setCpf] = useState("");
+  const [gender, setGender] = useState<"male" | "female" | "other" | "prefer_not_to_say" | "">("");
+  const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  const [ageTermsAccepted, setAgeTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [registered, setRegistered] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   const { showToast } = useToast();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const passwordsMatch = password === confirmPassword;
 
@@ -52,6 +77,26 @@ const RegisterForm: React.FC = () => {
       return;
     }
 
+    if (!cpf || cpf.replace(/\D/g, '').length !== 11) {
+      showToast("Por favor, informe um CPF válido", "error");
+      return;
+    }
+
+    if (!gender) {
+      showToast("Por favor, informe seu sexo", "error");
+      return;
+    }
+
+    if (!lgpdAccepted) {
+      showToast("Você deve aceitar os termos LGPD para continuar", "error");
+      return;
+    }
+
+    if (!ageTermsAccepted) {
+      showToast("Você deve aceitar os termos de maioridade para continuar", "error");
+      return;
+    }
+
     if (!passwordsMatch) {
       showToast("As senhas não conferem", "error");
       return;
@@ -66,12 +111,17 @@ const RegisterForm: React.FC = () => {
     setLoading(true);
     try {
       const formattedDate = birthDate.toISOString().split('T')[0];
+      const cpfClean = cpf.replace(/\D/g, ''); // Remove formatação do CPF
       
       await registerUser({ 
         name, 
         email, 
         password,
-        birth_date: formattedDate 
+        birth_date: formattedDate,
+        cpf: cpfClean,
+        gender: gender as "male" | "female" | "other" | "prefer_not_to_say",
+        lgpd_accepted: lgpdAccepted,
+        age_terms_accepted: ageTermsAccepted
       });
 
       showToast(
@@ -102,6 +152,108 @@ const RegisterForm: React.FC = () => {
 
   if (registered) {
     return <RegisterSuccess email={email} />;
+  }
+
+  // Skeleton enquanto o componente está montando
+  if (!mounted) {
+    return (
+      <Box
+        suppressHydrationWarning
+        sx={{
+          minHeight: "100vh",
+          backgroundImage: "url(/background/dashboard.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Header Skeleton */}
+        <Box
+          sx={{
+            width: "100%",
+            padding: "20px 24px",
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            backgroundColor: "rgba(0, 0, 0, 0.2)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <Skeleton
+            variant="circular"
+            width={40}
+            height={40}
+            sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+          />
+          <Skeleton
+            variant="text"
+            width={150}
+            height={32}
+            sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+          />
+        </Box>
+
+        {/* Form Container Skeleton */}
+        <Container
+          maxWidth="sm"
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "40px 20px",
+          }}
+        >
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 450,
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
+              backdropFilter: "blur(20px)",
+              borderRadius: "24px",
+              padding: "40px 32px",
+              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <Skeleton
+              variant="text"
+              width="80%"
+              height={24}
+              sx={{ mb: 4, bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            />
+
+            {/* Input Skeletons */}
+            {[1, 2, 3, 4, 5].map((index) => (
+              <Skeleton
+                key={index}
+                variant="rectangular"
+                height={56}
+                sx={{
+                  mt: index === 1 ? 0 : 3,
+                  borderRadius: "14px",
+                  bgcolor: "rgba(255, 255, 255, 0.1)",
+                }}
+              />
+            ))}
+
+            {/* Button Skeleton */}
+            <Skeleton
+              variant="rectangular"
+              height={48}
+              sx={{
+                mt: 4,
+                mb: 2,
+                borderRadius: "14px",
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+              }}
+            />
+          </Box>
+        </Container>
+      </Box>
+    );
   }
 
   return (
@@ -243,10 +395,15 @@ const RegisterForm: React.FC = () => {
 
           <TextField
             fullWidth
-            label="E-mail"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            label="CPF"
+            value={cpf}
+            onChange={(e) => {
+              const formatted = formatCPF(e.target.value);
+              if (formatted.replace(/\D/g, '').length <= 11) {
+                setCpf(formatted);
+              }
+            }}
+            placeholder="000.000.000-00"
             InputLabelProps={{
               shrink: true,
               sx: {
@@ -302,32 +459,45 @@ const RegisterForm: React.FC = () => {
             slotProps={{
               textField: {
                 fullWidth: true,
+                variant: "outlined",
+                InputLabelProps: {
+                  shrink: true,
+                  sx: {
+                    color: "#fff",
+                    fontSize: 13,
+                    transform: "translate(14px, -9px) scale(1)",
+                    "&.Mui-focused": { color: "#fff" },
+                  },
+                },
                 sx: {
                   mt: 3,
                   "& .MuiOutlinedInput-root": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    color: "#fff !important",
+                    backgroundColor: "rgba(255, 255, 255, 0.1) !important",
+                    color: "#fff",
                     borderRadius: "14px",
-                    "& input": {
-                      color: "#fff !important",
-                      WebkitTextFillColor: "#fff !important",
-                      "&::placeholder": {
-                        color: "rgba(255, 255, 255, 0.5) !important",
-                        opacity: 1,
-                      },
-                    },
-                    "& .MuiInputBase-input": {
-                      color: "#fff !important",
-                      WebkitTextFillColor: "#fff !important",
-                    },
+                    transition: "all 0.3s ease",
                     "& fieldset": {
                       borderColor: "rgba(255, 255, 255, 0.3) !important",
+                      borderWidth: "1.5px",
                     },
                     "&:hover fieldset": {
                       borderColor: "rgba(255, 255, 255, 0.5) !important",
                     },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#fff !important",
+                    "&.Mui-focused": {
+                      backgroundColor: "rgba(255, 255, 255, 0.15) !important",
+                      "& fieldset": {
+                        borderColor: "#fff !important",
+                        borderWidth: "2px",
+                      },
+                    },
+                    "& .MuiInputAdornment-root .MuiIconButton-root": {
+                      color: "rgba(255, 255, 255, 0.7) !important",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.1) !important",
+                      },
+                    },
+                    "& input": {
+                      color: "#fff !important",
                     },
                     "& input:-webkit-autofill": {
                       WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important",
@@ -344,23 +514,58 @@ const RegisterForm: React.FC = () => {
                     },
                   },
                 },
-                InputLabelProps: {
-                  shrink: true,
-                  sx: { 
-                    color: "#fff",
-                    fontSize: 13,
-                    transform: "translate(14px, -9px) scale(1)",
-                    "&.Mui-focused": { color: "#fff" },
+              },
+            }}
+          />
+
+          <TextField
+            fullWidth
+            label="E-mail"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            InputLabelProps={{
+              shrink: true,
+              sx: {
+                color: "#fff",
+                fontSize: 13,
+                transform: "translate(14px, -9px) scale(1)",
+                "&.Mui-focused": { color: "#fff" },
+              },
+            }}
+            sx={{
+              mt: 3,
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                color: "#fff",
+                borderRadius: "14px",
+                transition: "all 0.3s ease",
+                "& fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  borderWidth: "1.5px",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.5)",
+                },
+                "&.Mui-focused": {
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  "& fieldset": {
+                    borderColor: "#fff",
+                    borderWidth: "2px",
                   },
                 },
-                InputProps: {
-                  sx: {
-                    color: "#fff !important",
-                    "& input": {
-                      color: "#fff !important",
-                      WebkitTextFillColor: "#fff !important",
-                    },
-                  },
+                "& input:-webkit-autofill": {
+                  WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.1) inset",
+                  WebkitTextFillColor: "#fff",
+                  transition: "background-color 9999s ease-in-out 0s",
+                },
+                "& input:-webkit-autofill:hover": {
+                  WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.15) inset",
+                  WebkitTextFillColor: "#fff",
+                },
+                "& input:-webkit-autofill:focus": {
+                  WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.15) inset",
+                  WebkitTextFillColor: "#fff",
                 },
               },
             }}
@@ -511,6 +716,125 @@ const RegisterForm: React.FC = () => {
             }}
           />
 
+          <FormControl
+            fullWidth
+            sx={{
+              mt: 3,
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                color: "#fff",
+                borderRadius: "14px",
+                "& fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                  borderWidth: "1.5px",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.5)",
+                },
+                "&.Mui-focused": {
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  "& fieldset": {
+                    borderColor: "#fff",
+                    borderWidth: "2px",
+                  },
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "#fff",
+                fontSize: 13,
+                transform: "translate(14px, -9px) scale(1)",
+                "&.Mui-focused": { color: "#fff" },
+              },
+              "& .MuiSelect-icon": {
+                color: "rgba(255, 255, 255, 0.7)",
+              },
+            }}
+          >
+            <InputLabel>Sexo</InputLabel>
+            <Select
+              value={gender}
+              onChange={(e) => setGender(e.target.value as typeof gender)}
+              label="Sexo"
+              sx={{
+                color: "#fff",
+                "& .MuiSelect-select": {
+                  color: "#fff",
+                },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    backgroundColor: "rgba(0, 0, 0, 0.9)",
+                    backdropFilter: "blur(10px)",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "14px",
+                    mt: 1,
+                    "& .MuiMenuItem-root": {
+                      color: "#fff",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 204, 1, 0.2)",
+                      },
+                      "&.Mui-selected": {
+                        backgroundColor: "rgba(255, 204, 1, 0.3)",
+                        color: "#ffcc01",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 204, 1, 0.4)",
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              <MenuItem value="male">Masculino</MenuItem>
+              <MenuItem value="female">Feminino</MenuItem>
+              <MenuItem value="other">Outro</MenuItem>
+              <MenuItem value="prefer_not_to_say">Prefiro não informar</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={lgpdAccepted}
+                onChange={(e) => setLgpdAccepted(e.target.checked)}
+                sx={{
+                  color: "rgba(255, 255, 255, 0.7)",
+                  "&.Mui-checked": {
+                    color: "#ffcc01",
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
+                Aceito os termos de proteção de dados pessoais (LGPD)
+              </Typography>
+            }
+            sx={{ mt: 3 }}
+          />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={ageTermsAccepted}
+                onChange={(e) => setAgeTermsAccepted(e.target.checked)}
+                sx={{
+                  color: "rgba(255, 255, 255, 0.7)",
+                  "&.Mui-checked": {
+                    color: "#ffcc01",
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
+                Confirmo que tenho 18 anos ou mais
+              </Typography>
+            }
+            sx={{ mt: 1 }}
+          />
+
           <Button
             fullWidth
             variant="contained"
@@ -536,7 +860,7 @@ const RegisterForm: React.FC = () => {
               },
               transition: "all 0.3s ease",
             }}
-            disabled={loading || !birthDate}
+            disabled={loading || !birthDate || !cpf || !gender || !lgpdAccepted || !ageTermsAccepted}
             onClick={handleRegister}
           >
             {loading ? "Criando conta..." : "Cadastrar"}

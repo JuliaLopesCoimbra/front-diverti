@@ -40,7 +40,7 @@ export interface CreateEventData {
   ends_at?: string;
   event_dates?: string; // Formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21"
   banner_image?: File;
-  image_map?: File;
+  map_images?: File[]; // Múltiplas imagens do mapa (máximo 5)
   line_up?: string;
   spotify_playlist_url?: string;
   van_arrival_time_start?: string; // Horário de início da ida (formato: HH:mm)

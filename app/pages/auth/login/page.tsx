@@ -10,6 +10,7 @@ import {
   Checkbox,
   InputAdornment,
   IconButton,
+  Skeleton,
 } from "@mui/material";
 import {
   Google,
@@ -38,6 +39,7 @@ const LoginForm: React.FC = () => {
   const [keepMeLoggedIn, setKeepMeLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
 
   const { login } = useAuth();
 
@@ -48,6 +50,15 @@ const LoginForm: React.FC = () => {
 
   const { showToast } = useToast();
   const router = useRouter();
+
+  // Simula o carregamento inicial da página
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 500); // 500ms de delay para mostrar o skeleton
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Efeito para o cooldown
   useEffect(() => {
@@ -94,6 +105,14 @@ const LoginForm: React.FC = () => {
       setShowForgotPassword(true);
 
       if (err instanceof Error) {
+        // Verificar se precisa completar perfil
+        if (err.message === "PROFILE_COMPLETION_REQUIRED" && (err as any).tempToken) {
+          const tempToken = (err as any).tempToken;
+          // Redirecionar para página de completar perfil
+          router.push(`/pages/auth/complete-profile?temp_token=${tempToken}&requires_profile_completion=true`);
+          return;
+        }
+        
         // Verificar se precisa verificar idade
         if (err.message === "AGE_VERIFICATION_REQUIRED" && (err as any).tempToken) {
           const tempToken = (err as any).tempToken;
@@ -158,6 +177,164 @@ const LoginForm: React.FC = () => {
       handleLogin();
     }
   };
+
+  // Skeleton component
+  if (isInitialLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          minHeight: "100vh",
+          backgroundImage: "url(/background/dashboard.png)",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          padding: { xs: "20px", md: "40px" },
+        }}
+      >
+        <Box
+          sx={{
+            padding: { xs: "30px", md: "40px" },
+            color: "white",
+            width: "100%",
+            maxWidth: { xs: "100%", md: "450px" },
+            textAlign: "left",
+            backgroundColor: "rgba(255, 255, 255, 0.08)",
+            backdropFilter: "blur(20px)",
+            borderRadius: { xs: "16px", md: "24px" },
+            border: "1px solid rgba(255, 255, 255, 0.15)",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
+          }}
+        >
+          {/* Título Skeleton */}
+          <Skeleton
+            variant="text"
+            width="40%"
+            height={40}
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              marginBottom: { xs: "16px", md: "20px" },
+              marginX: "auto",
+            }}
+          />
+          
+          {/* Subtítulo Skeleton */}
+          <Skeleton
+            variant="text"
+            width="80%"
+            height={20}
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              marginBottom: { xs: "24px", md: "28px" },
+              marginX: "auto",
+            }}
+          />
+
+          {/* Campo Email Skeleton */}
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height={56}
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              borderRadius: "12px",
+              marginBottom: 2,
+            }}
+          />
+
+          {/* Campo Senha Skeleton */}
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height={56}
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              borderRadius: "12px",
+              marginBottom: { xs: 2, md: 3 },
+            }}
+          />
+
+          {/* Botão Skeleton */}
+          <Skeleton
+            variant="rectangular"
+            width="100%"
+            height={48}
+            sx={{
+              bgcolor: "rgba(255, 204, 1, 0.2)",
+              borderRadius: "12px",
+              marginBottom: 2,
+            }}
+          />
+
+          {/* Divisor Skeleton */}
+          <Box sx={{ display: "flex", alignItems: "center", marginY: 2 }}>
+            <Skeleton
+              variant="text"
+              width="30%"
+              height={1}
+              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            />
+            <Skeleton
+              variant="text"
+              width="40%"
+              height={20}
+              sx={{
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+                marginX: 2,
+              }}
+            />
+            <Skeleton
+              variant="text"
+              width="30%"
+              height={1}
+              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
+            />
+          </Box>
+
+          {/* Botões Social Skeleton */}
+          <Box
+            sx={{
+              display: "flex",
+              gap: { xs: 1.5, md: 2 },
+              marginBottom: 2,
+            }}
+          >
+            <Skeleton
+              variant="rectangular"
+              width="50%"
+              height={44}
+              sx={{
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "12px",
+              }}
+            />
+            <Skeleton
+              variant="rectangular"
+              width="50%"
+              height={44}
+              sx={{
+                bgcolor: "rgba(255, 255, 255, 0.1)",
+                borderRadius: "12px",
+              }}
+            />
+          </Box>
+
+          {/* Link Cadastro Skeleton */}
+          <Skeleton
+            variant="text"
+            width="60%"
+            height={20}
+            sx={{
+              bgcolor: "rgba(255, 255, 255, 0.1)",
+              marginX: "auto",
+              marginTop: { xs: "20px", md: "24px" },
+            }}
+          />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box

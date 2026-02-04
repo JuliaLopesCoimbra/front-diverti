@@ -22,6 +22,10 @@ interface RegisterData {
   email: string;
   password: string;
   birth_date: string;
+  cpf: string;
+  gender: "male" | "female" | "other" | "prefer_not_to_say";
+  lgpd_accepted: boolean;
+  age_terms_accepted: boolean;
 }
 export interface MeResponse {
   id: number;
@@ -51,22 +55,30 @@ export const loginUser = async (data: LoginData): Promise<LoginResponse> => {
       message?: string;
     };
 
-    // Verificar se precisa verificar idade - verificar primeiro antes de processar outros erros
+    // Verificar se precisa verificar idade ou completar perfil - verificar primeiro antes de processar outros erros
     const detail = err.response?.data?.detail;
     if (detail) {
       // Se detail é string, tentar parsear como JSON
       if (typeof detail === 'string') {
         try {
           const parsedDetail = JSON.parse(detail);
+          
+          // Verificar se precisa completar perfil
+          if (parsedDetail.requires_profile_completion && parsedDetail.temp_token) {
+            const specialError: any = new Error("PROFILE_COMPLETION_REQUIRED");
+            specialError.tempToken = parsedDetail.temp_token;
+            throw specialError;
+          }
+          
+          // Verificar se precisa verificar idade
           if (parsedDetail.requires_age_verification && parsedDetail.temp_token) {
-            // Criar um erro especial que será tratado no frontend
             const specialError: any = new Error("AGE_VERIFICATION_REQUIRED");
             specialError.tempToken = parsedDetail.temp_token;
-            throw specialError; // Lança o erro especial que será capturado no componente
+            throw specialError;
           }
         } catch (parseError: any) {
           // Se for o erro especial que criamos, relançar
-          if (parseError.message === "AGE_VERIFICATION_REQUIRED") {
+          if (parseError.message === "PROFILE_COMPLETION_REQUIRED" || parseError.message === "AGE_VERIFICATION_REQUIRED") {
             throw parseError;
           }
           // Se não for JSON válido ou não for o erro especial, continua
