@@ -227,48 +227,11 @@ export default function HomeHeader({
 
     // Navega imediatamente sem esperar nada
     if (notification.related_news_id) {
-      // Verifica se o post existe antes de navegar (para notificações de new_post e post_approved)
-      if (notification.type === 'new_post' || notification.type === 'post_approved') {
-        // Tenta verificar se o post existe antes de navegar
-        // Se falhar, mostra mensagem de erro
-        fetch(`/api/news/${notification.related_news_id}/exists`, { method: 'HEAD' })
-          .then((response) => {
-            if (!response.ok) {
-              showToast("Este post não está mais disponível", "error");
-              // Remove a notificação da lista local
-              setNotifications((prev) => {
-                const filtered = prev.filter((n) => n.id !== notification.id);
-                if (!notification.is_read) {
-                  setUnreadCount((count) => Math.max(0, count - 1));
-                }
-                setTotalNotifications((total) => Math.max(0, total - 1));
-                return filtered;
-              });
-              return;
-            }
-            // Se o post existe, navega normalmente
-            if (notification.related_comment_id) {
-              router.push(`/pages/news/${notification.related_news_id}?commentId=${notification.related_comment_id}`);
-            } else {
-              router.push(`/pages/news/${notification.related_news_id}`);
-            }
-          })
-          .catch(() => {
-            // Se falhar a verificação, tenta navegar mesmo assim
-            // A página de detalhes vai tratar o erro
-            if (notification.related_comment_id) {
-              router.push(`/pages/news/${notification.related_news_id}?commentId=${notification.related_comment_id}`);
-            } else {
-              router.push(`/pages/news/${notification.related_news_id}`);
-            }
-          });
+      // Navega diretamente para o post - a página de detalhes tratará se o post não existir
+      if (notification.related_comment_id) {
+        router.push(`/pages/news/${notification.related_news_id}?commentId=${notification.related_comment_id}`);
       } else {
-        // Para outros tipos de notificação (comment_like, comment_reply, post_comment), navega normalmente
-        if (notification.related_comment_id) {
-          router.push(`/pages/news/${notification.related_news_id}?commentId=${notification.related_comment_id}`);
-        } else {
-          router.push(`/pages/news/${notification.related_news_id}`);
-        }
+        router.push(`/pages/news/${notification.related_news_id}`);
       }
     } else if (notification.related_event_id) {
       // Navega para a página interna do usuário (home) na aba eventos

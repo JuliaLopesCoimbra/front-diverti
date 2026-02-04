@@ -45,7 +45,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${roboto.variable} ${inter.variable} antialiased`}
-        style={{ fontFamily: 'var(--font-roboto), Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+        style={{ fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
       >
         <EmotionCacheProvider>
           <ThemeProvider>

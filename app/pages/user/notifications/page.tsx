@@ -124,13 +124,12 @@ const NotificationsPage: React.FC = () => {
 
     // Navegar para o post se houver related_news_id (prioridade para notificações de post)
     if (notification.related_news_id) {
-      // Para notificações de post aprovado/rejeitado/desativado, navega direto para o post
-      if (notification.type === "post_approved_admin" || 
-          notification.type === "post_rejected" || 
-          notification.type === "post_deactivated") {
-        router.push(`/pages/news/${notification.related_news_id}`);
+      // Navega diretamente para a página de detalhes do post
+      // A página de detalhes tratará se o post não existir
+      if (notification.related_comment_id) {
+        router.push(`/pages/news/${notification.related_news_id}?commentId=${notification.related_comment_id}`);
       } else {
-        router.push(`/pages/user/home?post=${notification.related_news_id}`);
+        router.push(`/pages/news/${notification.related_news_id}`);
       }
     } else if (notification.related_event_id) {
       // Verifica se o evento está disponível antes de navegar

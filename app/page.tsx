@@ -220,13 +220,18 @@ export default function HomePage() {
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              sm: "repeat(auto-fit, minmax(320px, 1fr))",
-              md: "repeat(auto-fit, minmax(380px, 1fr))",
+              sm: events.length === 1 
+                ? "1fr" 
+                : "repeat(auto-fit, minmax(320px, 1fr))",
+              md: events.length === 1 
+                ? "1fr" 
+                : "repeat(auto-fit, minmax(380px, 1fr))",
             },
             gap: { xs: 6, md: 12 },
             width: "100%",
             maxWidth: { xs: "100%", md: 1200 },
             justifyContent: "center",
+            justifyItems: events.length === 1 ? "center" : "stretch",
           }}
         >
           {events.map((event) => (
@@ -238,7 +243,11 @@ export default function HomePage() {
                 alignItems: "center",
                 padding: { xs: 2, md: 2.5 },
                 width: "100%",
-                maxWidth: { xs: "100%", md: 450 },
+                maxWidth: { 
+                  xs: "100%", 
+                  md: events.length === 1 ? 450 : 450 
+                },
+                margin: events.length === 1 ? { xs: "0 auto", md: "0 auto" } : "0",
                 cursor: "pointer",
                 transition: "all 0.3s ease",
                 borderRadius: 2,

@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 const theme = createTheme({
   typography: {
-    fontFamily: 'var(--font-roboto), Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h1: {
       fontSize: "2rem",
       fontWeight: 600,
