@@ -51,11 +51,13 @@ export default function NewsActions({
       sx={{
         position: "fixed",
         top: 16,
-        right: 16,
+        right: { xs: 8, sm: 16 }, // Menor margem em telas pequenas
         zIndex: 1000,
         display: "flex",
         gap: 1,
         alignItems: "center",
+        maxWidth: "calc(100vw - 16px)", // Garantir que não ultrapasse
+        flexWrap: "wrap", // Permitir quebra em telas muito pequenas
       }}
     >
       {isAuthor && (isAdmin || canColunistaEditOrDelete) && (

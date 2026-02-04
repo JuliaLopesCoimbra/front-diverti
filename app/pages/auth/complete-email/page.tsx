@@ -59,7 +59,10 @@ function CompleteEmailContent() {
         token_type?: string;
         requires_age_verification?: boolean;
         requires_profile_completion?: boolean;
+        requires_email_verification?: boolean;
         temp_token?: string;
+        email?: string;
+        message?: string;
       }>(
         `${API_URL}/auth/complete-email`,
         {
@@ -71,6 +74,19 @@ function CompleteEmailContent() {
           },
         }
       );
+
+      // Se precisa verificar email, redirecionar para página de aguardando verificação
+      if (response.data.requires_email_verification) {
+        const emailParam = response.data.email || email;
+        const params = new URLSearchParams({
+          email: emailParam,
+          temp_token: response.data.temp_token || ""
+        });
+        setTimeout(() => {
+          router.push(`/pages/auth/awaiting-email-verification?${params.toString()}`);
+        }, 100);
+        return;
+      }
 
       // Verificar se precisa completar outras etapas
       if (response.data.requires_age_verification && response.data.temp_token) {

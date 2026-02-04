@@ -14,6 +14,10 @@ function VerifyEmailContent() {
   const { showToast } = useToast();
 
   const [status, setStatus] = useState<Status>("loading");
+  const [nextStep, setNextStep] = useState<{
+    type: "age_verification" | "profile_completion" | "login";
+    tempToken?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -23,9 +27,26 @@ function VerifyEmailContent() {
 
     const verify = async () => {
       try {
-        await verifyEmail(token);
+        const result = await verifyEmail(token);
         setStatus("success");
         showToast("E-mail confirmado com sucesso!", "success");
+        
+        // Verificar próximas etapas
+        if (result.needs_age_verification && result.temp_token) {
+          setNextStep({
+            type: "age_verification",
+            tempToken: result.temp_token
+          });
+        } else if (result.needs_profile_completion && result.temp_token) {
+          setNextStep({
+            type: "profile_completion",
+            tempToken: result.temp_token
+          });
+        } else {
+          setNextStep({
+            type: "login"
+          });
+        }
       } catch {
         setStatus("error");
         showToast("Token inválido ou expirado", "error");
@@ -33,7 +54,7 @@ function VerifyEmailContent() {
     };
 
     verify();
-  }, [token]);
+  }, [token, showToast]);
 
   return (
     <Box
@@ -93,9 +114,21 @@ function VerifyEmailContent() {
                   backgroundColor: "#e6b800",
                 },
               }}
-              onClick={() => router.push("/pages/auth/login")}
+              onClick={() => {
+                if (nextStep?.type === "age_verification" && nextStep.tempToken) {
+                  router.push(`/pages/auth/age-verification?temp_token=${nextStep.tempToken}&requires_age_verification=true`);
+                } else if (nextStep?.type === "profile_completion" && nextStep.tempToken) {
+                  router.push(`/pages/auth/complete-profile?temp_token=${nextStep.tempToken}&requires_profile_completion=true`);
+                } else {
+                  router.push("/pages/auth/login");
+                }
+              }}
             >
-              Ir para o login
+              {nextStep?.type === "age_verification" 
+                ? "Verificar Idade" 
+                : nextStep?.type === "profile_completion"
+                ? "Completar Perfil"
+                : "Ir para o login"}
             </Button>
           </>
         )}
