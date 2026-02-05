@@ -10,6 +10,8 @@ import EmailIcon from "@mui/icons-material/Email";
 import PersonIcon from "@mui/icons-material/Person";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import CakeIcon from "@mui/icons-material/Cake";
+import WcIcon from "@mui/icons-material/Wc";
 import { getProfile, updateProfilePhoto, ProfileResponse } from "@/app/services/profile/profileService";
 import { useToast } from "@/app/context/ToastContext";
 
@@ -108,6 +110,17 @@ export default function ProfilePage() {
       month: "long",
       year: "numeric",
     });
+  };
+
+  const formatGender = (gender: string | null) => {
+    if (!gender) return "Não informado";
+    const genderMap: Record<string, string> = {
+      male: "Masculino",
+      female: "Feminino",
+      other: "Outro",
+      prefer_not_to_say: "Prefiro não informar",
+    };
+    return genderMap[gender] || gender;
   };
 
   if (loading) {
@@ -320,6 +333,22 @@ export default function ProfilePage() {
               <VerifiedUserIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
               <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
                 {profile.is_email_verified ? "Email verificado" : "Email não verificado"}
+              </Typography>
+            </Box>
+
+            {/* Data de Nascimento */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <CakeIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                {profile.birth_date ? formatDate(profile.birth_date) : "Não informado"}
+              </Typography>
+            </Box>
+
+            {/* Sexo */}
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 2 }, mb: { xs: 2, md: 3 } }}>
+              <WcIcon sx={{ fontSize: { xs: 20, md: 28 }, color: "yellow" }} />
+              <Typography sx={{ margin: 0, fontSize: { xs: 15, md: 22 }, fontWeight: { md: 500 } }}>
+                {formatGender(profile.gender)}
               </Typography>
             </Box>
 

@@ -14,6 +14,8 @@ import EventDetails from "@/app/components/home/EventDetails";
 import { useAuth } from "@/app/context/AuthContext";
 import PhotoAI from "@/app/components/home/PhotoAI";
 import Enredo from "@/app/components/home/Enredo";
+import EventMap from "@/app/components/home/EventMap";
+import LineUp from "@/app/components/home/LineUp";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
 import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
@@ -27,7 +29,7 @@ const HomeContent: React.FC = () => {
   // Inicializa sempre "home" para evitar hydration mismatch (server vs client).
   // A aba é sincronizada da URL/sessionStorage no useEffect.
   const [activeTab, setActiveTab] = useState<
-    "home" | "eventos" | "foto" | "enredo"
+    "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo"
   >("home");
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
@@ -60,8 +62,8 @@ const HomeContent: React.FC = () => {
     const urlEventId = urlParams.get("eventId") || urlParams.get("event"); // Suporta ambos "eventId" e "event"
 
     // Define aba: URL tem prioridade, senão sessionStorage, senão "home"
-    type Tab = "home" | "eventos" | "foto" | "enredo";
-    const validTabs: Tab[] = ["home", "eventos", "foto", "enredo"];
+    type Tab = "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo";
+    const validTabs: Tab[] = ["home", "eventos", "mapa", "lineup", "foto", "enredo"];
     const targetTab: Tab =
       urlTab && validTabs.includes(urlTab as Tab)
         ? (urlTab as Tab)
@@ -321,8 +323,8 @@ const HomeContent: React.FC = () => {
               localStorage.setItem(STORAGE_KEY, urlEvent.id.toString());
               // Se houver tab na URL, atualiza a aba
               const urlTab = urlParams.get("tab");
-              if (urlTab === "home" || urlTab === "eventos" || urlTab === "foto" || urlTab === "enredo") {
-                setActiveTab(urlTab);
+              if (urlTab === "home" || urlTab === "eventos" || urlTab === "mapa" || urlTab === "lineup" || urlTab === "foto" || urlTab === "enredo") {
+                setActiveTab(urlTab as Tab);
               }
               
               // Limpa o parâmetro event/eventId da URL após processar para permitir troca manual
@@ -558,6 +560,14 @@ const HomeContent: React.FC = () => {
           </>
         )}
         {activeTab === "eventos" && currentEvent && <EventDetails event={currentEvent} />}
+
+        {activeTab === "mapa" && currentEvent && (
+          <EventMap event={currentEvent} />
+        )}
+
+        {activeTab === "lineup" && currentEvent && (
+          <LineUp eventId={currentEvent.id} />
+        )}
 
         {activeTab === "foto" && currentEvent && (
           <PhotoAI eventId={currentEvent.id} />

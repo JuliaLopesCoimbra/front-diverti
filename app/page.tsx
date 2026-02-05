@@ -1,6 +1,7 @@
 // /components/auth/LoginForm.tsx
 "use client";
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Button,
   TextField,
@@ -365,17 +366,32 @@ const LoginForm: React.FC = () => {
           },
         }}
       >
-        <Typography
-          variant="h4"
+        <Box
           sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             marginBottom: { xs: "16px", md: "20px" },
-            fontWeight: 700,
-            fontSize: { xs: "24px", md: "28px" },
-            textAlign: "center",
           }}
         >
-          Login
-        </Typography>
+          <Image
+            src="/logo/logo-n1.png"
+            alt="Camarote N1"
+            width={80}
+            height={80}
+            style={{ marginBottom: "16px" }}
+          />
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              fontSize: { xs: "24px", md: "28px" },
+              textAlign: "center",
+            }}
+          >
+            Login
+          </Typography>
+        </Box>
         <Typography
           variant="body2"
           sx={{

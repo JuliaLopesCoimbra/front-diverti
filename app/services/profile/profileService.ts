@@ -11,6 +11,8 @@ export interface ProfileResponse {
   created_at: string;
   updated_at: string | null;
   last_login: string | null;
+  birth_date: string | null;
+  gender: string | null;
 }
 
 export const getProfile = async (): Promise<ProfileResponse> => {

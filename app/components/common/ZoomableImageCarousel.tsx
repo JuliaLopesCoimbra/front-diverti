@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Box, IconButton } from "@mui/material";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import React, { useState, useRef } from "react";
+import { Box } from "@mui/material";
 import ZoomableImage from "./ZoomableImage";
 
 interface ZoomableImageCarouselProps {
@@ -18,17 +16,37 @@ export default function ZoomableImageCarousel({
   borderRadius = 2,
 }: ZoomableImageCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   if (!images || images.length === 0) {
     return null;
   }
 
-  const handlePrevious = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null;
+    touchStartX.current = e.targetTouches[0].clientX;
   };
 
-  const handleNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe && images.length > 1) {
+      setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    }
+    if (isRightSwipe && images.length > 1) {
+      setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    }
   };
 
   return (
@@ -40,6 +58,9 @@ export default function ZoomableImageCarousel({
         overflow: "hidden",
         backgroundColor: "rgba(0, 0, 0, 0.3)",
       }}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
     >
       {/* Imagem atual com zoom */}
       <ZoomableImage
@@ -48,48 +69,6 @@ export default function ZoomableImageCarousel({
         maxHeight={maxHeight}
         borderRadius={0}
       />
-
-      {/* Botões de navegação */}
-      {images.length > 1 && (
-        <>
-          <IconButton
-            onClick={handlePrevious}
-            sx={{
-              position: "absolute",
-              left: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              color: "#fff",
-              "&:hover": {
-                backgroundColor: "rgba(0, 0, 0, 0.8)",
-              },
-              zIndex: 10,
-            }}
-            size="small"
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-          <IconButton
-            onClick={handleNext}
-            sx={{
-              position: "absolute",
-              right: 8,
-              top: "50%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              color: "#fff",
-              "&:hover": {
-                backgroundColor: "rgba(0, 0, 0, 0.8)",
-              },
-              zIndex: 10,
-            }}
-            size="small"
-          >
-            <ChevronRightIcon />
-          </IconButton>
-        </>
-      )}
 
       {/* Indicadores de página */}
       {images.length > 1 && (

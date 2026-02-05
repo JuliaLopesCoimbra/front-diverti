@@ -5,18 +5,15 @@ import Image from "next/image";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { Button, Box, Skeleton } from "@mui/material";
 import EventIcon from "@mui/icons-material/Event";
+import FestivalIcon from "@mui/icons-material/Festival";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import MapIcon from "@mui/icons-material/Map";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import { getEvents, EventResponse } from "../../services/events/eventAppService";
 import { formatEventDates } from "../../utils/eventDateFormatter";
 import { useAuth } from "../../context/AuthContext";
 import EventIndisponivelPublic from "@/app/components/event/EventIndisponivelPublic";
-import ZoomableImageCarousel from "@/app/components/common/ZoomableImageCarousel";
-import ZoomableImage from "@/app/components/common/ZoomableImage";
 
 export default function EventPage() {
   const router = useRouter();
@@ -523,6 +520,12 @@ export default function EventPage() {
               gap: 1.5,
             }}
           >
+             <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 2 }}>
+                <FestivalIcon style={{ color: "yellow" }} />
+                <h3 style={{ margin: 0, color: "white", fontSize: 20, fontWeight: 600 }}>
+                  Informações do Evento
+                </h3>
+              </Box>
             {/* DIAS DO EVENTO */}
             {event.event_dates && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -606,14 +609,13 @@ export default function EventPage() {
                 width: "100%",
                 padding: "20px",
                 marginTop: 2,
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-                borderRadius: 2,
+               
                 border: "1px solid rgba(255, 255, 255, 0.1)",
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 2 }}>
                 <MeetingRoomIcon style={{ color: "yellow" }} />
-                <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
+                <h3 style={{ margin: 0, color: "white", fontSize: 20, fontWeight: 600 }}>
                   Meeting Point
                 </h3>
               </Box>
@@ -627,7 +629,7 @@ export default function EventPage() {
 
               {event.meeting_point_schedule && event.meeting_point_schedule.length > 0 && (
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, alignItems: "flex-start" }}>
-                  <p style={{ margin: 0, color: "white", fontSize: 15, fontWeight: 600, marginBottom: 8, textAlign: "left" }}>
+                  <p style={{ margin: 0, color: "white", fontSize: 15, fontWeight: 600, textAlign: "left" }}>
                     Dias de Funcionamento:
                   </p>
                   {event.meeting_point_schedule.map((schedule, index) => (
@@ -637,7 +639,7 @@ export default function EventPage() {
                         padding: "12px",
                         backgroundColor: "rgba(0, 0, 0, 0.2)",
                         borderRadius: 1,
-                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                        // border: "1px solid rgba(255, 255, 255, 0.1)",
                       }}
                     >
                       <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 1 }}>
@@ -659,39 +661,7 @@ export default function EventPage() {
             </Box>
           )}
 
-          {/* MAPA DO EVENTO */}
-          {(event.map_images && event.map_images.length > 0) || event.image_map ? (
-            <Box
-              sx={{
-                maxWidth: 700,
-                width: "100%",
-                padding: "20px",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
-                <MapIcon style={{ color: "yellow" }} />
-                <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
-                  Mapa do Evento
-                </h3>
-              </Box>
-              {event.map_images && event.map_images.length > 0 ? (
-                <ZoomableImageCarousel
-                  images={event.map_images.map(img => img.image_url)}
-                  maxHeight={400}
-                  borderRadius={2}
-                />
-              ) : event.image_map ? (
-                <ZoomableImage
-                  src={event.image_map}
-                  alt="Mapa do Evento"
-                  maxHeight={400}
-                  borderRadius={2}
-                />
-              ) : null}
-            </Box>
-          ) : null}
-
-          {/* BOTÃO VER LINE UP */}
+          {/* BOTÃO COMPRAR INGRESSOS */}
           <Box
             sx={{
               maxWidth: 700,
@@ -702,8 +672,10 @@ export default function EventPage() {
             }}
           >
               <Button
-                onClick={() => router.push(`/pages/events/${event.id}/lineup`)}
-                startIcon={<MusicNoteIcon />}
+                component="a"
+                href="https://www.ticketmaster.com.br/event/camaroten1"
+                target="_blank"
+                rel="noopener noreferrer"
                 sx={{
                   backgroundColor: "#FFD600",
                   color: "#000",
@@ -718,7 +690,7 @@ export default function EventPage() {
                   },
                 }}
               >
-                Ver Line Up
+                Comprar ingressos
               </Button>
           </Box>
 

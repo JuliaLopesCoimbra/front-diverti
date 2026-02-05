@@ -446,73 +446,54 @@ const RegisterForm: React.FC = () => {
             }}
           />
 
-          <DatePicker
-            label="Data de Nascimento"
-            value={birthDate}
-            onChange={(newValue) => setBirthDate(newValue)}
-            maxDate={new Date()}
-            slotProps={{
-              textField: {
-                fullWidth: true,
-                variant: "outlined",
-                InputLabelProps: {
-                  shrink: true,
-                  sx: {
-                    color: "#fff",
-                    fontSize: 13,
-                    transform: "translate(14px, -9px) scale(1)",
-                    "&.Mui-focused": { color: "#fff" },
-                  },
-                },
-                sx: {
-                  mt: 3,
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "rgba(255, 255, 255, 0.1) !important",
-                    color: "#fff",
-                    borderRadius: "14px",
-                    transition: "all 0.3s ease",
-                    "& fieldset": {
-                      borderColor: "rgba(255, 255, 255, 0.3) !important",
-                      borderWidth: "1.5px",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "rgba(255, 255, 255, 0.5) !important",
-                    },
-                    "&.Mui-focused": {
-                      backgroundColor: "rgba(255, 255, 255, 0.15) !important",
-                      "& fieldset": {
-                        borderColor: "#fff !important",
-                        borderWidth: "2px",
-                      },
-                    },
-                    "& .MuiInputAdornment-root .MuiIconButton-root": {
-                      color: "rgba(255, 255, 255, 0.7) !important",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1) !important",
-                      },
-                    },
-                    "& input": {
-                      color: "#fff !important",
-                    },
-                    "& input:-webkit-autofill": {
-                      WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.1) inset !important",
-                      WebkitTextFillColor: "#fff !important",
-                      transition: "background-color 9999s ease-in-out 0s",
-                    },
-                    "& input:-webkit-autofill:hover": {
-                      WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.15) inset !important",
-                      WebkitTextFillColor: "#fff !important",
-                    },
-                    "& input:-webkit-autofill:focus": {
-                      WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.15) inset !important",
-                      WebkitTextFillColor: "#fff !important",
-                    },
-                  },
-                },
-              },
-            }}
-          />
-
+<TextField
+  fullWidth
+  label="Data de Nascimento"
+  type="date"
+  value={birthDate ? birthDate.toISOString().split('T')[0] : ""}
+  onChange={(e) => {
+    const date = e.target.value ? new Date(e.target.value) : null;
+    setBirthDate(date);
+  }}
+  InputLabelProps={{
+    shrink: true, // Mantém o label no topo para não sobrepor o seletor nativo
+    sx: {
+      color: "#fff",
+      fontSize: 13,
+      transform: "translate(14px, -9px) scale(1)",
+      "&.Mui-focused": { color: "#fff" },
+    },
+  }}
+  sx={{
+    mt: 3,
+    "& .MuiOutlinedInput-root": {
+      backgroundColor: "rgba(255, 255, 255, 0.1)",
+      color: "#fff",
+      borderRadius: "14px",
+      transition: "all 0.3s ease",
+      "& fieldset": {
+        borderColor: "rgba(255, 255, 255, 0.3)",
+        borderWidth: "1.5px",
+      },
+      "&:hover fieldset": {
+        borderColor: "rgba(255, 255, 255, 0.5)",
+      },
+      "&.Mui-focused": {
+        backgroundColor: "rgba(255, 255, 255, 0.15)",
+        "& fieldset": {
+          borderColor: "#fff",
+          borderWidth: "2px",
+        },
+      },
+      // Estiliza o ícone do calendário nativo do navegador para ficar branco/claro
+      "& input::-webkit-calendar-picker-indicator": {
+        filter: "invert(1)",
+        cursor: "pointer",
+        opacity: 0.7,
+      },
+    },
+  }}
+/>
           <TextField
             fullWidth
             label="E-mail"

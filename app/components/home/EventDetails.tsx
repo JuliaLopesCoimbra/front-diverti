@@ -8,13 +8,10 @@ import { useFeedCache } from "@/app/context/FeedCacheContext";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import EventIcon from "@mui/icons-material/Event";
-import MapIcon from "@mui/icons-material/Map";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import FestivalIcon from "@mui/icons-material/Festival";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import { formatEventDates } from "@/app/utils/eventDateFormatter";
-import ZoomableImageCarousel from "@/app/components/common/ZoomableImageCarousel";
-import ZoomableImage from "@/app/components/common/ZoomableImage";
 
 interface Props {
   event: EventResponse;
@@ -308,9 +305,7 @@ const formatTime = (timeStr: string | undefined): string => {
               }}
             >
               {/* LOGO + TEXTO */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <strong style={{ fontSize: 22, color: "white" }}>Informações do Evento</strong>
-              </div>
+             
             </div>
     
             <main
@@ -384,6 +379,7 @@ const formatTime = (timeStr: string | undefined): string => {
                 {event.description}
               </span>
             </p>
+
             <Box
               sx={{
                 maxWidth: 700,
@@ -396,6 +392,10 @@ const formatTime = (timeStr: string | undefined): string => {
                 gap: 1.5,
               }}
             >
+               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <FestivalIcon style={{ color: "yellow", fontSize: 28 }} />
+                <strong style={{ fontSize: 22, color: "white" }}>Informações do Evento</strong>
+              </div>
               {/* DIAS DO EVENTO */}
               {event.event_dates && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -479,7 +479,7 @@ const formatTime = (timeStr: string | undefined): string => {
                   width: "100%",
                   padding: "20px",
                   marginTop: 2,
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                 
                   borderRadius: 2,
                   border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
@@ -500,7 +500,7 @@ const formatTime = (timeStr: string | undefined): string => {
 
                 {event.meeting_point_schedule && event.meeting_point_schedule.length > 0 && (
                   <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, alignItems: "flex-start" }}>
-                    <Typography sx={{ color: "white", fontSize: 15, fontWeight: 600, mb: 1, textAlign: "left" }}>
+                    <Typography sx={{ color: "white", fontSize: 15, fontWeight: 600, textAlign: "left" }}>
                       Dias de Funcionamento:
                     </Typography>
                     {event.meeting_point_schedule.map((schedule, index) => (
@@ -508,9 +508,7 @@ const formatTime = (timeStr: string | undefined): string => {
                         key={index}
                         sx={{
                           padding: "12px",
-                          backgroundColor: "rgba(0, 0, 0, 0.2)",
-                          borderRadius: 1,
-                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                        
                         }}
                       >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -532,39 +530,7 @@ const formatTime = (timeStr: string | undefined): string => {
               </Box>
             )}
 
-            {/* MAPA DO EVENTO */}
-            {(event.map_images && event.map_images.length > 0) || event.image_map ? (
-              <Box
-                sx={{
-                  maxWidth: 700,
-                  width: "100%",
-                  padding: "20px",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
-                  <MapIcon style={{ color: "yellow" }} />
-                  <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
-                    Mapa do Evento
-                  </h3>
-                </Box>
-                {event.map_images && event.map_images.length > 0 ? (
-                  <ZoomableImageCarousel
-                    images={event.map_images.map(img => img.image_url)}
-                    maxHeight={400}
-                    borderRadius={2}
-                  />
-                ) : event.image_map ? (
-                  <ZoomableImage
-                    src={event.image_map}
-                    alt="Mapa do Evento"
-                    maxHeight={400}
-                    borderRadius={2}
-                  />
-                ) : null}
-              </Box>
-            ) : null}
-
-            {/* BOTÃO VER LINE UP */}
+            {/* BOTÃO COMPRAR INGRESSOS */}
             <Box
               sx={{
                 maxWidth: 700,
@@ -575,8 +541,10 @@ const formatTime = (timeStr: string | undefined): string => {
               }}
             >
               <Button
-                onClick={() => router.push(`/pages/events/${event.id}/lineup`)}
-                startIcon={<MusicNoteIcon />}
+                component="a"
+                href="https://www.ticketmaster.com.br/event/camaroten1"
+                target="_blank"
+                rel="noopener noreferrer"
                 sx={{
                   backgroundColor: "#FFD600",
                   color: "#000",
@@ -591,7 +559,7 @@ const formatTime = (timeStr: string | undefined): string => {
                   },
                 }}
               >
-                Ver Line Up
+                Comprar ingressos
               </Button>
             </Box>
           
