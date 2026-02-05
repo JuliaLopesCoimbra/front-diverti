@@ -37,7 +37,7 @@ export default function NewsImageCarousel({
       sx={{
         position: "relative",
         width: "100%",
-        borderRadius: 2,
+        borderRadius: { xs: 0, sm: 2 },
         overflow: "hidden",
         backgroundColor: "rgba(0, 0, 0, 0.3)",
         mb: 2,
@@ -48,8 +48,11 @@ export default function NewsImageCarousel({
         sx={{
           position: "relative",
           width: "100%",
-          paddingTop: "56.25%", // 16:9 aspect ratio
           overflow: "hidden",
+          // No celular: altura automática baseada na imagem
+          // No PC: aspect ratio 16:9 fixo
+          paddingTop: { xs: 0, md: "56.25%" },
+          height: { xs: "auto", md: 0 },
         }}
       >
         <Box
@@ -57,12 +60,16 @@ export default function NewsImageCarousel({
           src={sortedImages[currentIndex]?.image_url}
           alt={`${alt} - Imagem ${currentIndex + 1}`}
           sx={{
-            position: "absolute",
-            top: 0,
-            left: 0,
+            // No celular: posição relativa, altura automática, preenche toda largura
+            // No PC: posição absoluta, preenche o container
+            position: { xs: "relative", md: "absolute" },
+            top: { xs: "auto", md: 0 },
+            left: { xs: "auto", md: 0 },
             width: "100%",
-            height: "100%",
-            objectFit: "cover",
+            height: { xs: "auto", md: "100%" },
+            maxHeight: { xs: "none", md: "100%" },
+            objectFit: { xs: "contain", md: "cover" },
+            display: "block",
           }}
         />
 

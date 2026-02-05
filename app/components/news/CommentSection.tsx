@@ -96,6 +96,7 @@ export default function CommentSection({
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
   const [likesModalOpen, setLikesModalOpen] = useState(false);
   const [selectedCommentId, setSelectedCommentId] = useState<number | null>(null);
+  const [focusedReplyInput, setFocusedReplyInput] = useState<number | null>(null);
 
   const handleUserClick = (userId: number) => {
     setSelectedUserId(userId);
@@ -326,100 +327,121 @@ export default function CommentSection({
                 
                 {/* Campo de resposta */}
                 {replyingTo === comment.id && isAuthenticated && (
-                  <Box sx={{ display: "flex", gap: 1, alignItems: "flex-end", mt: 1, ml: 4 }}>
+                  <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start", mt: 1, ml: 4 }}>
                     <Avatar
                       src={currentUser?.profile_photo || undefined}
-                      sx={{ width: 28, height: 28 }}
+                      sx={{ width: 28, height: 28, mt: 0.5 }}
                     >
                       {currentUser?.name?.[0]?.toUpperCase() || currentUser?.email?.[0]?.toUpperCase() || "U"}
                     </Avatar>
-                    <TextField
-                      fullWidth
-                      placeholder="Escreva uma resposta..."
-                      value={replyTexts[comment.id] || ""}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        if (newValue.length <= 500) {
-                          onReplyTextChange(comment.id, newValue);
-                        }
-                      }}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          onReplySubmit(comment.id);
-                        }
-                      }}
-                      multiline
-                      minRows={1}
-                      maxRows={3}
-                      disabled={submittingReply[comment.id]}
-                      size="small"
-                      inputProps={{
-                        maxLength: 500,
-                      }}
-                      helperText={`${(replyTexts[comment.id] || "").length}/500 caracteres`}
-                      FormHelperTextProps={{
-                        sx: {
-                          color: "rgba(255,255,255,0.5)",
-                          fontSize: "0.7rem",
-                          mt: 0.5,
-                        },
-                      }}
-                      sx={{
-                        "& .MuiOutlinedInput-root": {
-                          backgroundColor: "rgba(255,255,255,0.05)",
-                          color: "#fff",
-                          borderRadius: 2,
-                          "& fieldset": {
-                            borderColor: "rgba(255,255,255,0.1)",
-                          },
-                          "&:hover fieldset": {
-                            borderColor: "rgba(255,255,255,0.2)",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "#ffc91f",
-                          },
-                        },
-                        "& .MuiInputBase-input": {
-                          color: "#fff",
-                          fontSize: "13px",
-                          wordBreak: "break-word",
-                          overflowWrap: "break-word",
-                          whiteSpace: "pre-wrap",
-                          overflow: "hidden",
-                          resize: "none",
-                          "&::placeholder": {
+                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+                      <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                        <TextField
+                          fullWidth
+                          placeholder="Escreva uma resposta..."
+                          value={replyTexts[comment.id] || ""}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            if (newValue.length <= 500) {
+                              onReplyTextChange(comment.id, newValue);
+                            }
+                          }}
+                          onFocus={() => setFocusedReplyInput(comment.id)}
+                          onBlur={() => setFocusedReplyInput(null)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              onReplySubmit(comment.id);
+                            }
+                          }}
+                          multiline
+                          minRows={1}
+                          maxRows={3}
+                          disabled={submittingReply[comment.id]}
+                          size="small"
+                          inputProps={{
+                            maxLength: 500,
+                          }}
+                          helperText={`${(replyTexts[comment.id] || "").length}/500 caracteres`}
+                          FormHelperTextProps={{
+                            sx: {
+                              color: "rgba(255,255,255,0.5)",
+                              fontSize: "0.7rem",
+                              mt: 0.5,
+                              margin: 0,
+                            },
+                          }}
+                          sx={{
+                            flex: 1,
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "rgba(255,255,255,0.05)",
+                              color: "#fff",
+                              borderRadius: 2,
+                              "& fieldset": {
+                                borderColor: "rgba(255,255,255,0.1)",
+                              },
+                              "&:hover fieldset": {
+                                borderColor: "rgba(255,255,255,0.2)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "#ffc91f",
+                              },
+                            },
+                            "& .MuiInputBase-input": {
+                              color: "#fff",
+                              fontSize: "13px",
+                              wordBreak: "break-word",
+                              overflowWrap: "break-word",
+                              whiteSpace: "pre-wrap",
+                              overflow: "hidden",
+                              resize: "none",
+                              "&::placeholder": {
+                                color: "rgba(255,255,255,0.5)",
+                                opacity: 1,
+                              },
+                            },
+                            "& .MuiInputBase-inputMultiline": {
+                              overflow: "hidden !important",
+                              resize: "none",
+                            },
+                          }}
+                        />
+                        <IconButton
+                          onClick={() => onReplySubmit(comment.id)}
+                          disabled={!replyTexts[comment.id]?.trim() || submittingReply[comment.id]}
+                          sx={{
+                            color: focusedReplyInput === comment.id
+                              ? "#ffc91f"
+                              : "#fff !important",
+                            alignSelf: "flex-start",
+                            mt: "8px",
+                            opacity: !replyTexts[comment.id]?.trim() && focusedReplyInput !== comment.id ? 0.5 : 1,
+                            "&.Mui-disabled": {
+                              color: focusedReplyInput === comment.id
+                                ? "#ffc91f"
+                                : "#fff !important",
+                              opacity: !replyTexts[comment.id]?.trim() && focusedReplyInput !== comment.id ? 0.5 : 1,
+                            },
+                          }}
+                        >
+                          {submittingReply[comment.id] ? (
+                            <CircularProgress size={16} sx={{ color: focusedReplyInput === comment.id ? "#ffc91f" : "#fff" }} />
+                          ) : (
+                            <SendIcon fontSize="small" sx={{ color: focusedReplyInput === comment.id ? "#ffc91f" : "#fff" }} />
+                          )}
+                        </IconButton>
+                        <IconButton
+                          onClick={() => onCancelReply(comment.id)}
+                          sx={{ 
                             color: "rgba(255,255,255,0.5)",
-                            opacity: 1,
-                          },
-                        },
-                        "& .MuiInputBase-inputMultiline": {
-                          overflow: "hidden !important",
-                          resize: "none",
-                        },
-                      }}
-                    />
-                    <IconButton
-                      onClick={() => onReplySubmit(comment.id)}
-                      disabled={!replyTexts[comment.id]?.trim() || submittingReply[comment.id]}
-                      sx={{
-                        color: replyTexts[comment.id]?.trim()
-                          ? "#ffc91f"
-                          : "rgba(255,255,255,0.3)",
-                      }}
-                    >
-                      {submittingReply[comment.id] ? (
-                        <CircularProgress size={16} sx={{ color: "#ffc91f" }} />
-                      ) : (
-                        <SendIcon fontSize="small" />
-                      )}
-                    </IconButton>
-                    <IconButton
-                      onClick={() => onCancelReply(comment.id)}
-                      sx={{ color: "rgba(255,255,255,0.5)" }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
+                            alignSelf: "flex-start",
+                            mt: "8px",
+                          }}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Box>
+                    </Box>
                   </Box>
                 )}
 

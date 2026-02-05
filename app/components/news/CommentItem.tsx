@@ -12,7 +12,6 @@ import { CommentResponse } from "@/app/services/comments/commentService";
 import { formatDate } from "@/app/utils/dateUtils";
 import CommentInput from "./CommentInput";
 import UserProfileModal from "@/app/components/user/UserProfileModal";
-import UsersWhoLikedModal from "@/app/components/common/UsersWhoLikedModal";
 
 interface CommentItemProps {
   comment: CommentResponse;
@@ -62,26 +61,10 @@ export default function CommentItem({
   const canDelete = isAuthenticated && (isAdminMaster || isSubadmin || comment.user.id === currentUserId);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [likesModalOpen, setLikesModalOpen] = useState(false);
-  const [replyLikesModalOpen, setReplyLikesModalOpen] = useState(false);
-  const [selectedReplyId, setSelectedReplyId] = useState<number | null>(null);
 
   const handleUserClick = (userId: number) => {
     setSelectedUserId(userId);
     setProfileModalOpen(true);
-  };
-
-  const handleLikesClick = () => {
-    if (comment.likes.count > 0) {
-      setLikesModalOpen(true);
-    }
-  };
-
-  const handleReplyLikesClick = (replyId: number, likesCount: number) => {
-    if (likesCount > 0) {
-      setSelectedReplyId(replyId);
-      setReplyLikesModalOpen(true);
-    }
   };
 
   return (
@@ -129,12 +112,7 @@ export default function CommentItem({
             </Typography>
             <Typography
               fontSize={14}
-              sx={{ 
-                color: "rgba(255,255,255,0.9)",
-                wordBreak: "break-word",
-                overflowWrap: "break-word",
-                whiteSpace: "pre-wrap",
-              }}
+              sx={{ color: "rgba(255,255,255,0.9)" }}
             >
               {comment.content}
             </Typography>
@@ -163,17 +141,7 @@ export default function CommentItem({
               {comment.likes.count > 0 && (
                 <Typography
                   fontSize={11}
-                  onClick={handleLikesClick}
-                  sx={{
-                    color: "rgba(255,255,255,0.5)",
-                    mr: 1,
-                    cursor: "pointer",
-                    transition: "opacity 0.2s",
-                    "&:hover": {
-                      opacity: 0.8,
-                      textDecoration: "underline",
-                    },
-                  }}
+                  sx={{ color: "rgba(255,255,255,0.5)", mr: 1 }}
                 >
                   {comment.likes.count}
                 </Typography>
@@ -298,12 +266,7 @@ export default function CommentItem({
                             </Typography>
                             <Typography
                               fontSize={13}
-                              sx={{ 
-                                color: "rgba(255,255,255,0.9)",
-                                wordBreak: "break-word",
-                                overflowWrap: "break-word",
-                                whiteSpace: "pre-wrap",
-                              }}
+                              sx={{ color: "rgba(255,255,255,0.9)" }}
                             >
                               {reply.content}
                             </Typography>
@@ -329,16 +292,7 @@ export default function CommentItem({
                             {reply.likes.count > 0 && (
                               <Typography
                                 fontSize={10}
-                                onClick={() => handleReplyLikesClick(reply.id, reply.likes.count)}
-                                sx={{
-                                  color: "rgba(255,255,255,0.4)",
-                                  cursor: "pointer",
-                                  transition: "opacity 0.2s",
-                                  "&:hover": {
-                                    opacity: 0.8,
-                                    textDecoration: "underline",
-                                  },
-                                }}
+                                sx={{ color: "rgba(255,255,255,0.4)" }}
                               >
                                 {reply.likes.count}
                               </Typography>
@@ -420,29 +374,6 @@ export default function CommentItem({
             setSelectedUserId(null);
           }}
           userId={selectedUserId}
-        />
-      )}
-
-      {/* Modal de usuários que curtiram o comentário */}
-      <UsersWhoLikedModal
-        open={likesModalOpen}
-        onClose={() => setLikesModalOpen(false)}
-        type="comment"
-        id={comment.id}
-        likesCount={comment.likes.count}
-      />
-
-      {/* Modal de usuários que curtiram a resposta */}
-      {selectedReplyId && (
-        <UsersWhoLikedModal
-          open={replyLikesModalOpen}
-          onClose={() => {
-            setReplyLikesModalOpen(false);
-            setSelectedReplyId(null);
-          }}
-          type="comment"
-          id={selectedReplyId}
-          likesCount={replies.find(r => r.id === selectedReplyId)?.likes.count || 0}
         />
       )}
     </Box>

@@ -902,29 +902,27 @@ export default function NewsDetailPage() {
         flexDirection: "column",
       }}
     >
-      <Box className={shouldAnimate ? "slide-up-animation" : ""}>
-        <NewsActions
-          newsId={newsId}
-          eventId={eventId || news?.event_id || null}
-          isAuthor={isAuthor}
-          isAdmin={isAdmin}
-          isAdminMaster={isAdminMaster}
-          isSubadmin={isSubadmin}
-          isColunista={isColunista}
-          canDelete={Boolean(
-            (isAuthor && (isAdmin || (isColunista && news?.status !== "rejected"))) || 
-            ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
-            // Admin e subadmin podem excluir posts rejeitados
-            ((isAdminMaster || isSubadmin) && news?.status === "rejected")
-          )}
-          canDeactivate={Boolean((isAdminMaster || isSubadmin) && news?.status !== "rejected")}
-          onDelete={() => setDeleteModalOpen(true)}
-          onDeactivate={() => setDeactivateModalOpen(true)}
-          deleting={deleting}
-          deactivating={deactivating}
-          postStatus={news?.status}
-        />
-      </Box>
+      <NewsActions
+        newsId={newsId}
+        eventId={eventId || news?.event_id || null}
+        isAuthor={isAuthor}
+        isAdmin={isAdmin}
+        isAdminMaster={isAdminMaster}
+        isSubadmin={isSubadmin}
+        isColunista={isColunista}
+        canDelete={Boolean(
+          (isAuthor && (isAdmin || (isColunista && news?.status !== "rejected"))) || 
+          ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
+          // Admin e subadmin podem excluir posts rejeitados
+          ((isAdminMaster || isSubadmin) && news?.status === "rejected")
+        )}
+        canDeactivate={Boolean((isAdminMaster || isSubadmin) && news?.status !== "rejected")}
+        onDelete={() => setDeleteModalOpen(true)}
+        onDeactivate={() => setDeactivateModalOpen(true)}
+        deleting={deleting}
+        deactivating={deactivating}
+        postStatus={news?.status}
+      />
 
       <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
         <NewsDetailHeader
@@ -939,7 +937,7 @@ export default function NewsDetailPage() {
           <Box 
             className={shouldAnimate ? "slide-up-delay-2" : ""}
             sx={{ 
-              px: 2, 
+              px: { xs: 0, sm: 2 }, 
               maxWidth: { xs: "100%", sm: "600px", md: "700px" }, 
               margin: "0 auto", 
               width: "100%" 
