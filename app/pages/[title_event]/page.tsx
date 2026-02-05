@@ -10,6 +10,7 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import DirectionsBusIcon from "@mui/icons-material/DirectionsBus";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { getEvents, EventResponse } from "../../services/events/eventAppService";
 import { formatEventDates } from "../../utils/eventDateFormatter";
 import { useAuth } from "../../context/AuthContext";
@@ -599,6 +600,38 @@ export default function EventPage() {
                 <p style={{ margin: 0, fontSize: 15 }}>{event.location}</p>
               </Box>
             )}
+          </Box>
+
+          {/* VER LINE UP DO EVENTO */}
+          <Box
+            sx={{
+              maxWidth: 700,
+              width: "100%",
+              padding: "20px",
+              marginTop: 2,
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              onClick={() => router.push(`/pages/events/${event.id}/lineup`)}
+              startIcon={<MusicNoteIcon />}
+              sx={{
+                backgroundColor: "#FFD600",
+                color: "#000",
+                fontWeight: 700,
+                padding: "12px 32px",
+                borderRadius: "30px",
+                textTransform: "none",
+                fontSize: 16,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                "&:hover": {
+                  backgroundColor: "#FFC400",
+                },
+              }}
+            >
+              Ver Line Up Do evento
+            </Button>
           </Box>
 
           {/* MEETING POINT */}
