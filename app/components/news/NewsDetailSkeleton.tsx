@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Box, Skeleton, Divider } from "@mui/material";
+import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 export default function NewsDetailSkeleton() {
   return (
