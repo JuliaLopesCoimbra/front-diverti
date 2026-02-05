@@ -70,6 +70,11 @@ export default function LineupPage() {
     return timeString;
   };
 
+  // Formata YYYY-MM-DD como data local sem virada de dia por timezone
+  const formatDateOnly = (dateStr: string, options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric' }) => {
+    return new Date(dateStr + "T12:00:00").toLocaleDateString("pt-BR", options);
+  };
+
   // Agrupa itens por data e cria lista de datas únicas
   const { dates, filteredItems } = useMemo(() => {
     const datesSet = new Set<string>();
@@ -283,7 +288,7 @@ export default function LineupPage() {
                   {dates.map((date) => (
                     <Tab
                       key={date}
-                      label={new Date(date).toLocaleDateString('pt-BR', {
+                      label={formatDateOnly(date, {
                         day: '2-digit',
                         month: 'short',
                         year: 'numeric'
@@ -431,11 +436,7 @@ export default function LineupPage() {
               mb: 1,
             }}
           >
-            {new Date(item.event_date).toLocaleDateString('pt-BR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })}
+            {formatDateOnly(item.event_date)}
           </Typography>
         )}
       </Box>

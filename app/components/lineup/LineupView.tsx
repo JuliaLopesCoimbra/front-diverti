@@ -179,8 +179,8 @@ export default function LineupView({ eventId }: LineupViewProps) {
               <Tabs
                 value={selectedDate || dates[0] || false}
                 onChange={(_, newValue) => setSelectedDate(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
+                variant={dates.length <= 5 ? "fullWidth" : "scrollable"}
+                scrollButtons={dates.length > 5 ? "auto" : false}
                 sx={{
                   "& .MuiTab-root": {
                     color: "rgba(255,255,255,0.7)",
@@ -188,6 +188,8 @@ export default function LineupView({ eventId }: LineupViewProps) {
                     fontSize: { xs: "0.875rem", md: "1rem" },
                     fontWeight: 500,
                     minHeight: 48,
+                    flex: dates.length <= 5 ? "1 1 0" : undefined,
+                    minWidth: dates.length <= 5 ? 0 : undefined,
                     "&.Mui-selected": {
                       color: "#ffc91f",
                       fontWeight: 600,

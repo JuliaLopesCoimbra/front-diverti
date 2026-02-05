@@ -27,12 +27,7 @@ export default function HomeTabs({ active, onChange }: Props) {
     { label: "Enredo", value: "enredo" },
   ];
 
-  // Calcula a largura do container para mostrar 3 botões completos + quase todo o 4º
-  // 3 botões + 2 gaps + quase todo o 4º botão (cerca de 80-90% visível)
-  // xs: 3*100 + 2*8 + 85 = 401px
-  // md: 3*120 + 2*12 + 105 = 489px
-  // lg: 3*140 + 2*16 + 125 = 577px
-  const containerWidth = { xs: "401px", md: "489px", lg: "577px" };
+  // Mesma largura e padding do conteúdo abaixo (ex.: lineup/datas) para alinhar início e fim
 
   // Arrastar com o mouse no desktop: scroll instantâneo + rAF para fluidez
   useEffect(() => {
@@ -113,13 +108,13 @@ export default function HomeTabs({ active, onChange }: Props) {
   }, []);
 
   return (
-    <Box 
-      sx={{ 
-        padding: { xs: 2, md: 3, lg: 4 },
-        display: "flex",
-        justifyContent: { xs: "flex-start", md: "center" },
-        maxWidth: { md: "1200px", lg: "1400px" },
-        margin: { md: "0 auto" },
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: 800,
+        mx: "auto",
+        px: { xs: 1, sm: 2 },
+        py: { xs: 2, md: 3 },
       }}
     >
       <Box
@@ -128,7 +123,7 @@ export default function HomeTabs({ active, onChange }: Props) {
         sx={{
           display: "flex",
           gap: { xs: 1, md: 1.5, lg: 2 },
-          width: containerWidth,
+          width: "100%",
           overflowX: "auto",
           overflowY: "hidden",
           scrollbarWidth: "none", // Firefox
