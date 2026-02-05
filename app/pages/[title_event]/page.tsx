@@ -24,6 +24,7 @@ export default function EventPage() {
   const title = params?.title_event as string; // Recebe o título da URL
   const [event, setEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const scrollExecutedRef = useRef(false);
 
   useEffect(() => {
@@ -198,6 +199,17 @@ export default function EventPage() {
     // Aguarda um pouco antes de tentar fazer scroll
     setTimeout(tryScrollToLineup, 300);
   }, [event, loading, searchParams]);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    if (!loading && event) {
+      setShouldAnimate(true);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, event]);
 
   if (loading) {
     return (
@@ -403,8 +415,9 @@ export default function EventPage() {
           flexDirection: "column",
         }}
       >
-        <div
-          style={{
+        <Box
+          className={shouldAnimate ? "slide-up-animation" : ""}
+          sx={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -434,7 +447,7 @@ export default function EventPage() {
           >
             Login
           </Button>
-        </div>
+        </Box>
 
         <main
           style={{
@@ -446,6 +459,7 @@ export default function EventPage() {
         >
           {event.banner_image && (
             <Box
+              className={shouldAnimate ? "slide-up-delay-1" : ""}
               component="img"
               src={event.banner_image}
               alt={event.title}
@@ -461,6 +475,7 @@ export default function EventPage() {
 
           {event.title && (
             <Box
+              className={shouldAnimate ? "slide-up-delay-1" : ""}
               sx={{
                 maxWidth: 700,
                 width: "100%",
@@ -487,6 +502,7 @@ export default function EventPage() {
           )}
 
           <p
+            className={shouldAnimate ? "slide-up-delay-2" : ""}
             style={{
               maxWidth: 700,
               marginTop: 2,
@@ -510,6 +526,7 @@ export default function EventPage() {
           </p>
 
           <Box
+            className={shouldAnimate ? "slide-up-delay-2" : ""}
             sx={{
               maxWidth: 700,
               width: "100%",
@@ -604,6 +621,7 @@ export default function EventPage() {
 
           {/* VER LINE UP DO EVENTO */}
           <Box
+            className={shouldAnimate ? "slide-up-delay-3" : ""}
             sx={{
               maxWidth: 700,
               width: "100%",
@@ -637,6 +655,7 @@ export default function EventPage() {
           {/* MEETING POINT */}
           {(event.meeting_point_location || (event.meeting_point_schedule && event.meeting_point_schedule.length > 0)) && (
             <Box
+              className={shouldAnimate ? "slide-up-delay-3" : ""}
               sx={{
                 maxWidth: 700,
                 width: "100%",
@@ -696,6 +715,7 @@ export default function EventPage() {
 
           {/* BOTÃO COMPRAR INGRESSOS */}
           <Box
+            className={shouldAnimate ? "slide-up-delay-3" : ""}
             sx={{
               maxWidth: 700,
               width: "100%",

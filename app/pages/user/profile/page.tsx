@@ -23,6 +23,7 @@ export default function ProfilePage() {
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,15 @@ export default function ProfilePage() {
 
     fetchProfile();
   }, [showToast]);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handlePhotoClick = () => {
     fileInputRef.current?.click();
@@ -176,28 +186,31 @@ export default function ProfilePage() {
           flexDirection: "column",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            padding: "16px",
-          }}
-        >
-          {/* SETA DE VOLTAR */}
-          <IconButton
-            onClick={() => router.back()}
-            sx={{
-              color: "white",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
-              },
+        <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              padding: "16px",
             }}
           >
-            <ArrowBackIosIcon />
-          </IconButton>
-        </div>
+            {/* SETA DE VOLTAR */}
+            <IconButton
+              onClick={() => router.back()}
+              sx={{
+                color: "white",
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                },
+              }}
+            >
+              <ArrowBackIosIcon />
+            </IconButton>
+          </div>
+        </Box>
 
         <main
+          className={shouldAnimate ? "slide-up-delay-1" : ""}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -302,6 +315,7 @@ export default function ProfilePage() {
 
           {/* Informações do Usuário */}
           <Box
+            className={shouldAnimate ? "slide-up-delay-2" : ""}
             sx={{
               width: "100%",
               maxWidth: { xs: "100%", md: "600px" },

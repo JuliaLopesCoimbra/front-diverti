@@ -36,6 +36,7 @@ const HomeContent: React.FC = () => {
   const [eventsLoaded, setEventsLoaded] = useState(false);
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const currentEventIdRef = useRef<number | null>(null);
   const isCheckingRef = useRef(false); // Previne múltiplas verificações simultâneas
   const scrollExecutedRef = useRef(false);
@@ -47,6 +48,16 @@ const HomeContent: React.FC = () => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(TAB_KEY, activeTab);
     }
+  }, [activeTab]);
+
+  // Controla animações quando a aba muda
+  useEffect(() => {
+    setShouldAnimate(true);
+    // Reset animação após um tempo para permitir nova animação na próxima mudança
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [activeTab]);
 
   // Monitora mudanças na URL e atualiza a aba e evento se necessário
@@ -532,49 +543,69 @@ const HomeContent: React.FC = () => {
         }}
       >
         {/* Header com nome, foto e data */}
-        <HomeHeader
-          event={currentEvent}
-          events={events}
-          currentEvent={currentEvent}
-          onSelectEvent={handleSelectEvent}
-          profile={profile}
-        />
+        <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+          <HomeHeader
+            event={currentEvent}
+            events={events}
+            currentEvent={currentEvent}
+            onSelectEvent={handleSelectEvent}
+            profile={profile}
+          />
+        </Box>
 
         {/* Tabs */}
-        <HomeTabs 
-          active={activeTab} 
-          onChange={(newTab) => {
-            setActiveTab(newTab);
-            // Atualiza a URL para refletir a aba selecionada, mas não força navegação
-            const url = new URL(window.location.href);
-            url.searchParams.set("tab", newTab);
-            window.history.replaceState({}, "", url.toString());
-          }} 
-        />
+        <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
+          <HomeTabs 
+            active={activeTab} 
+            onChange={(newTab) => {
+              setActiveTab(newTab);
+              // Atualiza a URL para refletir a aba selecionada, mas não força navegação
+              const url = new URL(window.location.href);
+              url.searchParams.set("tab", newTab);
+              window.history.replaceState({}, "", url.toString());
+            }} 
+          />
+        </Box>
 
         {/* Conteúdo baseado na aba selecionada */}
         {activeTab === "home" && currentEvent && (
           <>
-            <AdBanner />
-            <NewsFeed eventId={currentEvent.id} event={currentEvent} />
+            <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+              <AdBanner />
+            </Box>
+            <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+              <NewsFeed eventId={currentEvent.id} event={currentEvent} />
+            </Box>
           </>
         )}
-        {activeTab === "eventos" && currentEvent && <EventDetails event={currentEvent} />}
+        {activeTab === "eventos" && currentEvent && (
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <EventDetails event={currentEvent} />
+          </Box>
+        )}
 
         {activeTab === "mapa" && currentEvent && (
-          <EventMap event={currentEvent} />
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <EventMap event={currentEvent} />
+          </Box>
         )}
 
         {activeTab === "lineup" && currentEvent && (
-          <LineUp eventId={currentEvent.id} />
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <LineUp eventId={currentEvent.id} />
+          </Box>
         )}
 
         {activeTab === "foto" && currentEvent && (
-          <PhotoAI eventId={currentEvent.id} />
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <PhotoAI eventId={currentEvent.id} />
+          </Box>
         )}
 
         {activeTab === "enredo" && currentEvent && (
-          <Enredo eventId={currentEvent.id} spotifyPlaylistUrl={currentEvent.spotify_playlist_url} />
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <Enredo eventId={currentEvent.id} spotifyPlaylistUrl={currentEvent.spotify_playlist_url} />
+          </Box>
         )}
       </Box>
       <BottomNav />

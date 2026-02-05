@@ -51,6 +51,7 @@ const RegisterForm: React.FC = () => {
   const [registered, setRegistered] = useState(false);
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const router = useRouter();
 
   const { showToast } = useToast();
@@ -58,6 +59,17 @@ const RegisterForm: React.FC = () => {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    if (mounted) {
+      setShouldAnimate(true);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [mounted]);
 
   const passwordsMatch = password === confirmPassword;
 
@@ -267,6 +279,7 @@ const RegisterForm: React.FC = () => {
       >
       {/* Header */}
       <Box
+        className={shouldAnimate ? "slide-up-animation" : ""}
         sx={{
           width: "100%",
           padding: "20px 24px",
@@ -313,6 +326,7 @@ const RegisterForm: React.FC = () => {
         }}
       >
         <Box
+          className={shouldAnimate ? "slide-up-delay-1" : ""}
           sx={{
             width: "100%",
             maxWidth: 450,
@@ -326,6 +340,7 @@ const RegisterForm: React.FC = () => {
           }}
         >
           <Typography
+            className={shouldAnimate ? "slide-up-delay-2" : ""}
             variant="body1"
             sx={{
               mb: 4,
@@ -337,7 +352,8 @@ const RegisterForm: React.FC = () => {
             Preencha os dados abaixo para criar sua conta.
           </Typography>
 
-          <TextField
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
             fullWidth
             label="Nome"
             value={name}
@@ -387,10 +403,12 @@ const RegisterForm: React.FC = () => {
               },
             }}
           />
+          </Box>
 
-          <TextField
-            fullWidth
-            label="CPF"
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
+              fullWidth
+              label="CPF"
             value={cpf}
             onChange={(e) => {
               const formatted = formatCPF(e.target.value);
@@ -445,10 +463,12 @@ const RegisterForm: React.FC = () => {
               },
             }}
           />
+          </Box>
 
-<TextField
-  fullWidth
-  label="Data de Nascimento"
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
+              fullWidth
+              label="Data de Nascimento"
   type="date"
   value={birthDate ? birthDate.toISOString().split('T')[0] : ""}
   onChange={(e) => {
@@ -491,12 +511,15 @@ const RegisterForm: React.FC = () => {
         cursor: "pointer",
         opacity: 0.7,
       },
-    },
-  }}
-/>
-          <TextField
-            fullWidth
-            label="E-mail"
+      },
+    }}
+  />
+          </Box>
+
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
+              fullWidth
+              label="E-mail"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -546,10 +569,12 @@ const RegisterForm: React.FC = () => {
               },
             }}
           />
+          </Box>
 
-          <TextField
-            fullWidth
-            label="Senha"
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
+              fullWidth
+              label="Senha"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => {
@@ -633,10 +658,12 @@ const RegisterForm: React.FC = () => {
               },
             }}
           />
+          </Box>
 
-          <TextField
-            fullWidth
-            label="Confirmar senha"
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <TextField
+              fullWidth
+              label="Confirmar senha"
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
@@ -691,11 +718,13 @@ const RegisterForm: React.FC = () => {
               },
             }}
           />
+          </Box>
 
-          <FormControl
-            fullWidth
-            sx={{
-              mt: 3,
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <FormControl
+              fullWidth
+              sx={{
+                mt: 3,
               "& .MuiOutlinedInput-root": {
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
                 color: "#fff",
@@ -768,8 +797,10 @@ const RegisterForm: React.FC = () => {
               <MenuItem value="prefer_not_to_say">Prefiro não informar</MenuItem>
             </Select>
           </FormControl>
+          </Box>
 
-          <FormControlLabel
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <FormControlLabel
             control={
               <Checkbox
                 checked={lgpdAccepted}
@@ -789,8 +820,10 @@ const RegisterForm: React.FC = () => {
             }
             sx={{ mt: 3 }}
           />
+          </Box>
 
-          <FormControlLabel
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <FormControlLabel
             control={
               <Checkbox
                 checked={ageTermsAccepted}
@@ -810,8 +843,10 @@ const RegisterForm: React.FC = () => {
             }
             sx={{ mt: 1 }}
           />
+          </Box>
 
-          <Button
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <Button
             fullWidth
             variant="contained"
             sx={{
@@ -841,6 +876,7 @@ const RegisterForm: React.FC = () => {
           >
             {loading ? "Criando conta..." : "Cadastrar"}
           </Button>
+          </Box>
         </Box>
       </Container>
     </Box>

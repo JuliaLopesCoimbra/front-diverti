@@ -58,6 +58,7 @@ const NotificationsPage: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loadingNotifications, setLoadingNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const [localPreferences, setLocalPreferences] = useState({
     lineup_updated: true,
     news_feed: true,
@@ -91,6 +92,15 @@ const NotificationsPage: React.FC = () => {
     if (tabValue === 0) {
       fetchNotifications();
     }
+  }, [tabValue]);
+
+  // Controla animações quando a página carrega ou tab muda
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [tabValue]);
 
   const fetchNotifications = async () => {
@@ -273,6 +283,7 @@ const NotificationsPage: React.FC = () => {
     >
       <Container maxWidth="md" sx={{ paddingTop: { xs: 1, sm: 2 }, paddingBottom: 4, width: "100%", maxWidth: "100%", px: { xs: 1, sm: 2 } }}>
         <Paper
+          className={shouldAnimate ? "slide-up-animation" : ""}
           sx={{
             padding: { xs: 2, sm: 4 },
             paddingTop: { xs: 1, sm: 2 },
@@ -301,6 +312,7 @@ const NotificationsPage: React.FC = () => {
             </IconButton>
           </Box>
           <Box
+            className={shouldAnimate ? "slide-up-delay-1" : ""}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -332,7 +344,8 @@ const NotificationsPage: React.FC = () => {
 
           <Divider sx={{ borderColor: "rgba(255, 255, 255, 0.2)", mb: 3 }} />
 
-          <Tabs
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <Tabs
             value={tabValue}
             onChange={(_, newValue) => setTabValue(newValue)}
             variant="scrollable"
@@ -385,9 +398,10 @@ const NotificationsPage: React.FC = () => {
               }
             />
           </Tabs>
+          </Box>
 
           {tabValue === 0 ? (
-            <Box>
+            <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
               {unreadCount > 0 && (
                 <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
                   <Button
@@ -576,7 +590,7 @@ const NotificationsPage: React.FC = () => {
               )}
             </Box>
           ) : (
-            <Box>
+            <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
               <Typography
                 variant="body2"
                 sx={{

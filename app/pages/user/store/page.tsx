@@ -32,6 +32,7 @@ export default function StorePage() {
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   // Função para atualizar o evento atual baseado no localStorage
   const updateCurrentEventFromStorage = useCallback((eventsList: EventResponse[]) => {
@@ -194,6 +195,15 @@ export default function StorePage() {
     };
   }, [checkAndUpdateEvents]);
 
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   if (!authReady) {
     return (
       <Box
@@ -224,15 +234,18 @@ export default function StorePage() {
         }}
       >
         {/* Header */}
-        <HomeHeader
-          event={currentEvent}
-          events={events}
-          currentEvent={currentEvent}
-          onSelectEvent={handleSelectEvent}
-        />
+        <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+          <HomeHeader
+            event={currentEvent}
+            events={events}
+            currentEvent={currentEvent}
+            onSelectEvent={handleSelectEvent}
+          />
+        </Box>
 
         {/* Conteúdo */}
         <Box
+          className={shouldAnimate ? "slide-up-delay-1" : ""}
           sx={{
             p: { xs: 2, sm: 3 },
             maxWidth: 1000,
@@ -288,6 +301,7 @@ export default function StorePage() {
             </Box>
           ) : !currentEvent ? (
             <Paper
+              className={shouldAnimate ? "slide-up-delay-2" : ""}
               elevation={0}
               sx={{
                 backgroundColor: "rgba(0, 0, 0, 0.4)",
@@ -301,11 +315,12 @@ export default function StorePage() {
               </Typography>
             </Paper>
           ) : loadingProducts ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <Box className={shouldAnimate ? "slide-up-delay-2" : ""} sx={{ display: "flex", justifyContent: "center", py: 8 }}>
               <CircularProgress sx={{ color: "#ffc91f" }} />
             </Box>
           ) : products.length === 0 ? (
             <Paper
+              className={shouldAnimate ? "slide-up-delay-2" : ""}
               elevation={0}
               sx={{
                 backgroundColor: "rgba(0, 0, 0, 0.4)",
@@ -328,6 +343,7 @@ export default function StorePage() {
           ) : (
             <>
               <Box
+                className={shouldAnimate ? "slide-up-delay-2" : ""}
                 sx={{
                   mb: 4,
                   textAlign: "center",
@@ -358,6 +374,7 @@ export default function StorePage() {
               </Box>
 
               <Box
+                className={shouldAnimate ? "slide-up-delay-3" : ""}
                 sx={{
                   display: "grid",
                   gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" },

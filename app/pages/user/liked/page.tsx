@@ -47,6 +47,7 @@ export default function LikedPostsPage() {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
@@ -188,6 +189,15 @@ export default function LikedPostsPage() {
   // Marca como montado no cliente para evitar problemas de hidratação
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -596,12 +606,14 @@ export default function LikedPostsPage() {
       >
         {/* Header com nome, foto e data */}
         {currentEvent && (
-          <HomeHeader
-            event={currentEvent}
-            events={events}
-            currentEvent={currentEvent}
-            onSelectEvent={handleSelectEvent}
-          />
+          <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+            <HomeHeader
+              event={currentEvent}
+              events={events}
+              currentEvent={currentEvent}
+              onSelectEvent={handleSelectEvent}
+            />
+          </Box>
         )}
 
         {/* Container centralizado para desktop */}
@@ -622,6 +634,7 @@ export default function LikedPostsPage() {
           >
             {/* Título da página */}
             <Box
+              className={shouldAnimate ? "slide-up-delay-1" : ""}
               sx={{
                 paddingX: 3,
                 paddingY: 3,
@@ -682,6 +695,7 @@ export default function LikedPostsPage() {
               {/* SEM POSTS */}
               {!initialLoading && !isRevalidating && !loading && posts.length === 0 && (
                 <Box
+                  className={shouldAnimate ? "slide-up-delay-2" : ""}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -733,7 +747,7 @@ export default function LikedPostsPage() {
 
               {/* LISTA DE POSTS */}
               {!initialLoading && !isRevalidating && posts.length > 0 && !loading && (
-                <Box display="flex" flexDirection="column" gap={2}>
+                <Box display="flex" flexDirection="column" gap={2} className={shouldAnimate ? "slide-up-delay-2" : ""}>
                   {posts.map((item, index) => (
                     <Card
                       key={item.id}

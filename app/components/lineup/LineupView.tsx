@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
   CircularProgress,
   Paper,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import { getLineupItemsByEvent, LineupItemResponse } from "@/app/services/lineup/lineupService";
@@ -18,6 +20,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
   const [lineupItems, setLineupItems] = useState<LineupItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLineup = async () => {
@@ -51,6 +54,35 @@ export default function LineupView({ eventId }: LineupViewProps) {
     }
     return timeString;
   };
+
+  // Agrupa itens por data e cria lista de datas únicas
+  const { dates, filteredItems } = useMemo(() => {
+    const datesSet = new Set<string>();
+    lineupItems.forEach((item) => {
+      if (item.event_date) {
+        datesSet.add(item.event_date);
+      }
+    });
+    const datesArray = Array.from(datesSet).sort();
+    
+    // Filtra itens baseado na data selecionada
+    let filtered = lineupItems;
+    if (selectedDate) {
+      filtered = lineupItems.filter((item) => item.event_date === selectedDate);
+    } else if (datesArray.length > 0) {
+      // Se há datas mas nenhuma selecionada, mostra apenas itens sem data
+      filtered = lineupItems.filter((item) => !item.event_date);
+    }
+    
+    return { dates: datesArray, filteredItems: filtered };
+  }, [lineupItems, selectedDate]);
+
+  // Define a primeira data como selecionada por padrão se houver datas
+  useEffect(() => {
+    if (dates.length > 0 && selectedDate === null) {
+      setSelectedDate(dates[0]);
+    }
+  }, [dates]);
 
   if (loading) {
     return (
@@ -124,7 +156,76 @@ export default function LineupView({ eventId }: LineupViewProps) {
             px: { xs: 1, sm: 2 },
           }}
         >
-          {lineupItems.map((item) => (
+          {/* Tabs de Data */}
+          {dates.length > 0 && (
+            <Paper
+              elevation={0}
+              sx={{
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 2,
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+                overflow: "hidden",
+                width: "100%",
+              }}
+            >
+              <Tabs
+                value={selectedDate || dates[0] || false}
+                onChange={(_, newValue) => setSelectedDate(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  "& .MuiTab-root": {
+                    color: "rgba(255,255,255,0.7)",
+                    textTransform: "none",
+                    fontSize: { xs: "0.875rem", md: "1rem" },
+                    fontWeight: 500,
+                    minHeight: 48,
+                    "&.Mui-selected": {
+                      color: "#ffc91f",
+                      fontWeight: 600,
+                    },
+                  },
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: "#ffc91f",
+                    height: 3,
+                  },
+                }}
+              >
+                {dates.map((date) => (
+                  <Tab
+                    key={date}
+                    label={new Date(date).toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'short',
+                      year: 'numeric'
+                    })}
+                    value={date}
+                  />
+                ))}
+              </Tabs>
+            </Paper>
+          )}
+
+          {/* Lista de Itens Filtrados */}
+          {filteredItems.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 3,
+                p: 4,
+                textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <Typography sx={{ color: "rgba(255,255,255,0.7)" }}>
+                Nenhum artista cadastrado para esta data.
+              </Typography>
+            </Paper>
+          ) : (
+            filteredItems.map((item) => (
             <Paper
               key={item.id}
               elevation={0}
@@ -280,7 +381,8 @@ export default function LineupView({ eventId }: LineupViewProps) {
                 </Box>
               </Box>
             </Paper>
-          ))}
+            ))
+          )}
         </Box>
       )}
     </Box>

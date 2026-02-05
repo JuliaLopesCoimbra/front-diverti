@@ -49,6 +49,7 @@ const LoginForm: React.FC = () => {
   const [showResendEmail, setShowResendEmail] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   const { showToast } = useToast();
   const router = useRouter();
@@ -61,6 +62,17 @@ const LoginForm: React.FC = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    if (!isInitialLoading) {
+      setShouldAnimate(true);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialLoading]);
 
   // Efeito para o cooldown
   useEffect(() => {
@@ -348,6 +360,7 @@ const LoginForm: React.FC = () => {
       }}
     >
       <Box
+        className={shouldAnimate ? "slide-up-animation" : ""}
         sx={{
           padding: { xs: "30px", md: "40px" },
           color: "white",
@@ -367,6 +380,7 @@ const LoginForm: React.FC = () => {
         }}
       >
         <Box
+          className={shouldAnimate ? "slide-up-delay-1" : ""}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -393,6 +407,7 @@ const LoginForm: React.FC = () => {
           </Typography>
         </Box>
         <Typography
+          className={shouldAnimate ? "slide-up-delay-1" : ""}
           variant="body2"
           sx={{
             marginBottom: { xs: "24px", md: "28px" },
@@ -405,7 +420,8 @@ const LoginForm: React.FC = () => {
         </Typography>
 
         {/* Formulário de login */}
-        <TextField
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <TextField
           fullWidth
           label="Endereço de e-mail"
           variant="outlined"
@@ -539,6 +555,7 @@ const LoginForm: React.FC = () => {
             },
           }}
         />
+        </Box>
 
         {/* Checkbox para manter-me conectado */}
         {/* <FormControlLabel
@@ -566,7 +583,8 @@ const LoginForm: React.FC = () => {
           }}
         /> */}
 
-        <Button
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <Button
           fullWidth
           variant="contained"
           sx={{
@@ -596,9 +614,11 @@ const LoginForm: React.FC = () => {
         >
           {loading ? "Carregando..." : "Continuar"}
         </Button>
+        </Box>
 
         {/* Botão Continuar sem login */}
-        <Button
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <Button
           fullWidth
           variant="outlined"
           sx={{
@@ -623,9 +643,11 @@ const LoginForm: React.FC = () => {
         >
           Continuar sem login
         </Button>
+        </Box>
 
         {showResendEmail && (
           <Box
+            className={shouldAnimate ? "slide-up-delay-3" : ""}
             sx={{
               mt: 2,
               p: { xs: 2, md: 2.5 },
@@ -698,6 +720,7 @@ const LoginForm: React.FC = () => {
 
         {showForgotPassword && (
           <Typography
+            className={shouldAnimate ? "slide-up-delay-3" : ""}
             variant="body2"
             sx={{
               mt: 2,
@@ -718,6 +741,7 @@ const LoginForm: React.FC = () => {
           </Typography>
         )}
         <Typography
+          className={shouldAnimate ? "slide-up-delay-3" : ""}
           sx={{
             mt: { xs: 3, md: 3.5 },
             mb: 1.5,
@@ -745,6 +769,7 @@ const LoginForm: React.FC = () => {
           ou logue com
         </Typography>
         <Box
+          className={shouldAnimate ? "slide-up-delay-3" : ""}
           sx={{
             display: "flex",
             gap: { xs: 1.5, md: 2 },
@@ -823,6 +848,7 @@ const LoginForm: React.FC = () => {
         </Box>
 
         <Typography
+          className={shouldAnimate ? "slide-up-delay-3" : ""}
           variant="body2"
           sx={{
             marginTop: { xs: "20px", md: "24px" },

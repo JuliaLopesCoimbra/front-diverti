@@ -432,9 +432,14 @@ export default function CommentSection({
                       </Box>
                     ) : (
                       <>
-                        {(replies[comment.id] || []).map((reply) => (
+                        {(replies[comment.id] || [])
+                          .filter((reply, index, self) => 
+                            // Remove duplicatas baseado no ID
+                            index === self.findIndex((r) => r.id === reply.id)
+                          )
+                          .map((reply) => (
                           <ReplyItem
-                            key={reply.id}
+                            key={`${comment.id}-${reply.id}`}
                             reply={reply}
                             isAuthenticated={isAuthenticated}
                             isAdminMaster={isAdminMaster}

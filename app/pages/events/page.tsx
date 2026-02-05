@@ -10,6 +10,7 @@ import EventIndisponivelPublic from "@/app/components/event/EventIndisponivelPub
 export default function EventsPage() {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const router = useRouter();
 
   // Função para normalizar título para URL
@@ -39,6 +40,17 @@ export default function EventsPage() {
 
     fetchEvents();
   }, []);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    if (!loading) {
+      setShouldAnimate(true);
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
 
   if (loading) {
     return (
@@ -160,8 +172,9 @@ export default function EventsPage() {
 
   return (
     <div className="dashboard-page-background" style={{ minHeight: "100vh" }}>
-      <div
-        style={{
+      <Box
+        className={shouldAnimate ? "slide-up-animation" : ""}
+        sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -191,9 +204,10 @@ export default function EventsPage() {
         >
           Login
         </Button>
-      </div>
+      </Box>
 
       <main
+        className={shouldAnimate ? "slide-up-delay-1" : ""}
         style={{
           display: "flex",
           flexDirection: "column",
@@ -225,6 +239,7 @@ export default function EventsPage() {
           {events.map((event) => (
             <Box
               key={event.id}
+              className={shouldAnimate ? "slide-up-delay-2" : ""}
               sx={{
                 display: "flex",
                 flexDirection: "column",

@@ -88,6 +88,7 @@ export default function NewsDetailPage() {
   const [commentsOffset, setCommentsOffset] = useState(0);
   const [hasMoreComments, setHasMoreComments] = useState(false);
   const [loadingMoreComments, setLoadingMoreComments] = useState(false);
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   const COMMENTS_PER_PAGE = 20; // Carrega 20 comentários por vez
   const REPLIES_PER_PAGE = 5; // Carrega 5 respostas por vez
 
@@ -189,6 +190,15 @@ export default function NewsDetailPage() {
       loadNewsDetails();
     }
   }, [newsId, isAuthenticated, isAdmin]);
+
+  // Controla animações quando a página carrega
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [newsId]);
 
   // Hook para scroll automático para comentários
   useCommentScroll({
@@ -585,10 +595,16 @@ export default function NewsDetailPage() {
       const newReplies = await listReplies(newsId, commentId, REPLIES_PER_PAGE, currentOffset);
       
       if (newReplies.length > 0) {
-        setReplies((prev) => ({
-          ...prev,
-          [commentId]: [...(prev[commentId] || []), ...newReplies],
-        }));
+        setReplies((prev) => {
+          const existingReplies = prev[commentId] || [];
+          const existingIds = new Set(existingReplies.map(r => r.id));
+          // Filtra apenas replies que ainda não existem
+          const uniqueNewReplies = newReplies.filter(r => !existingIds.has(r.id));
+          return {
+            ...prev,
+            [commentId]: [...existingReplies, ...uniqueNewReplies],
+          };
+        });
         
         const newOffset = currentOffset + newReplies.length;
         setRepliesOffset((prev) => ({ ...prev, [commentId]: newOffset }));
@@ -615,11 +631,19 @@ export default function NewsDetailPage() {
     try {
       const newReply = await createReply(newsId, commentId, replyTexts[commentId].trim());
       
-      // Atualiza as respostas localmente
-      setReplies((prev) => ({
-        ...prev,
-        [commentId]: [...(prev[commentId] || []), newReply],
-      }));
+      // Atualiza as respostas localmente (evita duplicatas)
+      setReplies((prev) => {
+        const existingReplies = prev[commentId] || [];
+        // Verifica se a reply já existe antes de adicionar
+        const replyExists = existingReplies.some(r => r.id === newReply.id);
+        if (replyExists) {
+          return prev; // Não adiciona se já existe
+        }
+        return {
+          ...prev,
+          [commentId]: [...existingReplies, newReply],
+        };
+      });
 
       // Atualiza o contador de respostas no comentário principal
       setNews({
@@ -866,51 +890,62 @@ export default function NewsDetailPage() {
         flexDirection: "column",
       }}
     >
-      <NewsActions
-        newsId={newsId}
-        eventId={eventId || news?.event_id || null}
-        isAuthor={isAuthor}
-        isAdmin={isAdmin}
-        isAdminMaster={isAdminMaster}
-        isSubadmin={isSubadmin}
-        isColunista={isColunista}
-        canDelete={Boolean(
-          (isAuthor && (isAdmin || (isColunista && news?.status !== "rejected"))) || 
-          ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
-          // Admin e subadmin podem excluir posts rejeitados
-          ((isAdminMaster || isSubadmin) && news?.status === "rejected")
-        )}
-        canDeactivate={Boolean((isAdminMaster || isSubadmin) && news?.status !== "rejected")}
-        onDelete={() => setDeleteModalOpen(true)}
-        onDeactivate={() => setDeactivateModalOpen(true)}
-        deleting={deleting}
-        deactivating={deactivating}
-        postStatus={news?.status}
-      />
+      <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+        <NewsActions
+          newsId={newsId}
+          eventId={eventId || news?.event_id || null}
+          isAuthor={isAuthor}
+          isAdmin={isAdmin}
+          isAdminMaster={isAdminMaster}
+          isSubadmin={isSubadmin}
+          isColunista={isColunista}
+          canDelete={Boolean(
+            (isAuthor && (isAdmin || (isColunista && news?.status !== "rejected"))) || 
+            ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
+            // Admin e subadmin podem excluir posts rejeitados
+            ((isAdminMaster || isSubadmin) && news?.status === "rejected")
+          )}
+          canDeactivate={Boolean((isAdminMaster || isSubadmin) && news?.status !== "rejected")}
+          onDelete={() => setDeleteModalOpen(true)}
+          onDeactivate={() => setDeactivateModalOpen(true)}
+          deleting={deleting}
+          deactivating={deactivating}
+          postStatus={news?.status}
+        />
+      </Box>
 
-      <NewsDetailHeader
-        authorName={news.author?.name}
-        authorPhoto={news.author?.profile_photo}
-        createdAt={news.created_at}
-      />
+      <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
+        <NewsDetailHeader
+          authorName={news.author?.name}
+          authorPhoto={news.author?.profile_photo}
+          createdAt={news.created_at}
+        />
+      </Box>
 
       <Box sx={{ pb: 2, flex: 1, overflowY: "auto" }}>
         {news.images && news.images.length > 0 && (
-          <NewsImageCarousel images={news.images} alt={news.title} />
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <NewsImageCarousel images={news.images} alt={news.title} />
+          </Box>
         )}
 
-        <NewsContent title={news.title} content={news.content} />
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <NewsContent title={news.title} content={news.content} />
+        </Box>
 
         <Box sx={{ px: 2, maxWidth: { xs: "100%", sm: "600px", md: "700px" }, margin: "0 auto", width: "100%" }}>
-          <NewsLikeSection
-            likesCount={news.likes.count}
-            userLiked={news.likes.user_liked}
-            onLike={handleLike}
-            disabled={!isAuthenticated || liking || news.status === "pending" || news.status === "rejected"}
-            newsId={newsId}
-          />
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <NewsLikeSection
+              likesCount={news.likes.count}
+              userLiked={news.likes.user_liked}
+              onLike={handleLike}
+              disabled={!isAuthenticated || liking || news.status === "pending" || news.status === "rejected"}
+              newsId={newsId}
+            />
+          </Box>
 
-          <CommentSection
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <CommentSection
             news={news}
             isAuthenticated={isAuthenticated}
             isAdminMaster={isAdminMaster}
@@ -949,6 +984,7 @@ export default function NewsDetailPage() {
             onLoadMoreReplies={loadMoreReplies}
             onLoadMoreComments={loadMoreComments}
           />
+          </Box>
         </Box>
       </Box>
 

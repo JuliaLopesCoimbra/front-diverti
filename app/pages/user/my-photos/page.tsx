@@ -23,6 +23,7 @@ export default function MyPhotosPage() {
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>("menu");
+  const [shouldAnimate, setShouldAnimate] = useState(true);
   
   // Para usuários comuns, sempre mostrar fotos diretamente
   const isRegularUser = !isAdminMaster && !isSubadmin && !isColunista;
@@ -190,19 +191,37 @@ export default function MyPhotosPage() {
     setViewMode("menu");
   };
 
+  // Controla animações quando a página carrega ou viewMode muda
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [viewMode]);
+
   const renderContent = () => {
     if (isRegularUser) {
       // Usuários comuns veem apenas fotos compradas
-      return <MyPhotos />;
+      return (
+        <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
+          <MyPhotos />
+        </Box>
+      );
     }
 
     // Admin, subadmin e colunistas veem menu ou conteúdo específico
     switch (viewMode) {
       case "menu":
-        return <MenuOptions onSelectOption={handleSelectOption} />;
+        return (
+          <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
+            <MenuOptions onSelectOption={handleSelectOption} />
+          </Box>
+        );
       case "posts":
         return (
           <Box
+            className={shouldAnimate ? "slide-up-delay-1" : ""}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -237,6 +256,7 @@ export default function MyPhotosPage() {
       case "rejected":
         return (
           <Box
+            className={shouldAnimate ? "slide-up-delay-1" : ""}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -271,6 +291,7 @@ export default function MyPhotosPage() {
       case "photos":
         return (
           <Box
+            className={shouldAnimate ? "slide-up-delay-1" : ""}
             sx={{
               display: "flex",
               flexDirection: "column",
@@ -303,7 +324,11 @@ export default function MyPhotosPage() {
           </Box>
         );
       default:
-        return <MenuOptions onSelectOption={handleSelectOption} />;
+        return (
+          <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
+            <MenuOptions onSelectOption={handleSelectOption} />
+          </Box>
+        );
     }
   };
 
@@ -505,12 +530,14 @@ export default function MyPhotosPage() {
         }}
       >
         {/* Header com nome, foto e data */}
-        <HomeHeader
-          event={currentEvent}
-          events={events}
-          currentEvent={currentEvent}
-          onSelectEvent={handleSelectEvent}
-        />
+        <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+          <HomeHeader
+            event={currentEvent}
+            events={events}
+            currentEvent={currentEvent}
+            onSelectEvent={handleSelectEvent}
+          />
+        </Box>
 
         {/* Conteúdo baseado no tipo de usuário */}
         {renderContent()}

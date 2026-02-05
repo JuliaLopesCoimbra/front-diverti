@@ -33,6 +33,7 @@ export default function PermissionsPage() {
   const [tabValue, setTabValue] = useState(0);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   // Modais
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -73,6 +74,15 @@ export default function PermissionsPage() {
       return;
     }
   }, [isAdminMaster, isSubadmin, router]);
+
+  // Controla animações quando a página carrega ou tab muda
+  useEffect(() => {
+    setShouldAnimate(true);
+    const timer = setTimeout(() => {
+      setShouldAnimate(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [tabValue]);
 
   const handleInvite = async () => {
     if (!inviteName.trim() || !inviteEmail.trim()) {
@@ -173,10 +183,13 @@ export default function PermissionsPage() {
         position: "relative",
       }}
     >
-      <PermissionsHeader />
+      <Box className={shouldAnimate ? "slide-up-animation" : ""}>
+        <PermissionsHeader />
+      </Box>
 
       {/* Conteúdo Centralizado */}
       <Box
+        className={shouldAnimate ? "slide-up-delay-1" : ""}
         sx={{
           maxWidth: "1400px",
           margin: "0 auto",
@@ -184,17 +197,39 @@ export default function PermissionsPage() {
           py: { xs: 3, sm: 4, md: 5 },
         }}
       >
-        <PermissionsTabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} isAdminMaster={!!isAdminMaster} />
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <PermissionsTabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} isAdminMaster={!!isAdminMaster} />
+        </Box>
 
         {/* Barra de Pesquisa */}
-        <SearchBar value={searchTerm} onChange={setSearchTerm} />
+        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+          <SearchBar value={searchTerm} onChange={setSearchTerm} />
+        </Box>
 
         {/* Subadmins Tab - Apenas Master */}
         {isAdminMaster && (
-          <TabPanel value={tabValue} index={0}>
-            <SubadminsTab
+          <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+            <TabPanel value={tabValue} index={0}>
+              <SubadminsTab
+                onAddClick={() => {
+                  setInviteType("subadmin");
+                  setInviteModalOpen(true);
+                }}
+                onRevoke={handleRevoke}
+                onReactivate={handleReactivate}
+                refreshTrigger={refreshTrigger}
+                searchTerm={searchTerm}
+              />
+            </TabPanel>
+          </Box>
+        )}
+
+        {/* Colunistas Tab */}
+        <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+          <TabPanel value={tabValue} index={isAdminMaster ? 1 : 0}>
+            <ColunistasTab
               onAddClick={() => {
-                setInviteType("subadmin");
+                setInviteType("colunista");
                 setInviteModalOpen(true);
               }}
               onRevoke={handleRevoke}
@@ -203,26 +238,14 @@ export default function PermissionsPage() {
               searchTerm={searchTerm}
             />
           </TabPanel>
-        )}
-
-        {/* Colunistas Tab */}
-        <TabPanel value={tabValue} index={isAdminMaster ? 1 : 0}>
-          <ColunistasTab
-            onAddClick={() => {
-              setInviteType("colunista");
-              setInviteModalOpen(true);
-            }}
-            onRevoke={handleRevoke}
-            onReactivate={handleReactivate}
-            refreshTrigger={refreshTrigger}
-            searchTerm={searchTerm}
-          />
-        </TabPanel>
+        </Box>
 
         {/* Users Tab */}
-        <TabPanel value={tabValue} index={isAdminMaster ? 2 : 1}>
-          <UsersTab onRevoke={handleRevoke} onReactivate={handleReactivate} refreshTrigger={refreshTrigger} searchTerm={searchTerm} />
-        </TabPanel>
+        <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+          <TabPanel value={tabValue} index={isAdminMaster ? 2 : 1}>
+            <UsersTab onRevoke={handleRevoke} onReactivate={handleReactivate} refreshTrigger={refreshTrigger} searchTerm={searchTerm} />
+          </TabPanel>
+        </Box>
       </Box>
 
       {/* Modais */}
