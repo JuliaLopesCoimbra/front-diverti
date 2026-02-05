@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { verifyEmail } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
@@ -25,10 +25,11 @@ function VerifyEmailContent() {
     type: "age_verification" | "profile_completion" | "login";
     tempToken?: string;
   } | null>(null);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const hasVerifiedRef = useRef(false);
 
   useEffect(() => {
-    if (!token || isVerifying) {
+    // Evitar múltiplas execuções
+    if (!token || hasVerifiedRef.current) {
       if (!token) {
         setStatus("error");
       }
@@ -36,9 +37,9 @@ function VerifyEmailContent() {
     }
 
     const verify = async () => {
-      if (isVerifying) return; // Evitar múltiplas requisições
+      // Marcar como verificado antes de iniciar para evitar múltiplas requisições
+      hasVerifiedRef.current = true;
       
-      setIsVerifying(true);
       try {
         // Limpar e validar token
         const cleanToken = token?.trim() || "";
@@ -71,13 +72,14 @@ function VerifyEmailContent() {
       } catch {
         setStatus("error");
         showToast("Token inválido ou expirado", "error");
-      } finally {
-        setIsVerifying(false);
+        // Resetar o ref em caso de erro para permitir nova tentativa se necessário
+        hasVerifiedRef.current = false;
       }
     };
 
     verify();
-  }, [token, showToast, isVerifying]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   return (
     <Box

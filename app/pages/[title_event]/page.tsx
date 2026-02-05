@@ -633,8 +633,8 @@ export default function EventPage() {
               )}
 
               {event.meeting_point_schedule && event.meeting_point_schedule.length > 0 && (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-                  <p style={{ margin: 0, color: "white", fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, alignItems: "flex-start" }}>
+                  <p style={{ margin: 0, color: "white", fontSize: 15, fontWeight: 600, marginBottom: 8, textAlign: "left" }}>
                     Dias de Funcionamento:
                   </p>
                   {event.meeting_point_schedule.map((schedule, index) => (
