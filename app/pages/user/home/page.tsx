@@ -24,13 +24,13 @@ const STORAGE_KEY = "selectedEventId";
 const SCROLL_KEY = "homeScrollY";
 const TAB_KEY = "homeActiveTab";
 
+type Tab = "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo";
+
 const HomeContent: React.FC = () => {
   const searchParams = useSearchParams();
   // Inicializa sempre "home" para evitar hydration mismatch (server vs client).
   // A aba é sincronizada da URL/sessionStorage no useEffect.
-  const [activeTab, setActiveTab] = useState<
-    "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo"
-  >("home");
+  const [activeTab, setActiveTab] = useState<Tab>("home");
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -73,7 +73,6 @@ const HomeContent: React.FC = () => {
     const urlEventId = urlParams.get("eventId") || urlParams.get("event"); // Suporta ambos "eventId" e "event"
 
     // Define aba: URL tem prioridade, senão sessionStorage, senão "home"
-    type Tab = "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo";
     const validTabs: Tab[] = ["home", "eventos", "mapa", "lineup", "foto", "enredo"];
     const targetTab: Tab =
       urlTab && validTabs.includes(urlTab as Tab)

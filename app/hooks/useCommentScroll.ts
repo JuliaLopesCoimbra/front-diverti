@@ -16,7 +16,7 @@ interface UseCommentScrollProps {
   setRepliesOffset: React.Dispatch<React.SetStateAction<Record<number, number>>>;
   setHasMoreReplies: React.Dispatch<React.SetStateAction<Record<number, boolean>>>;
   REPLIES_PER_PAGE: number;
-  commentIdFromUrl?: string | null; // Força reexecução quando commentId mudar na URL
+  commentIdFromUrl: string | null;
 }
 
 export function useCommentScroll({
@@ -34,94 +34,6 @@ export function useCommentScroll({
   commentIdFromUrl,
 }: UseCommentScrollProps) {
   const scrollExecutedRef = useRef<number | null>(null);
-  const lastCommentIdRef = useRef<string | null>(null);
-
-  // Monitora mudanças no commentId da URL e reseta a referência quando mudar
-  useEffect(() => {
-    if (commentIdFromUrl !== lastCommentIdRef.current) {
-      lastCommentIdRef.current = commentIdFromUrl;
-      // Reseta a referência quando o commentId mudar para permitir nova tentativa de scroll
-      scrollExecutedRef.current = null;
-      // Se não há commentId na URL, limpa a referência
-      if (!commentIdFromUrl) {
-        scrollExecutedRef.current = null;
-      }
-    }
-  }, [commentIdFromUrl]);
-  
-  // Efeito adicional: quando news é atualizado e há commentId na URL, força uma nova tentativa
-  useEffect(() => {
-    if (!news || loading || !commentIdFromUrl) return;
-    
-    const targetCommentId = parseInt(commentIdFromUrl, 10);
-    if (isNaN(targetCommentId)) return;
-    
-    // Se já executou para este commentId, não executa novamente
-    if (scrollExecutedRef.current === targetCommentId) return;
-    
-    // Aguarda um pouco para garantir que o DOM foi atualizado
-    const timer = setTimeout(() => {
-      const element = document.getElementById(`comment-${targetCommentId}`);
-      if (element && scrollExecutedRef.current !== targetCommentId) {
-        // Se o elemento existe e ainda não executou, força o scroll
-        scrollExecutedRef.current = targetCommentId;
-        const highlightAndScroll = (el: HTMLElement) => {
-          let scrollContainer: HTMLElement | null = document.getElementById("news-content-scroll-container");
-          
-          if (!scrollContainer) {
-            scrollContainer = el.parentElement;
-            while (scrollContainer && scrollContainer !== document.body) {
-              const style = window.getComputedStyle(scrollContainer);
-              if (style.overflowY === "auto" || style.overflowY === "scroll" || style.maxHeight) {
-                break;
-              }
-              scrollContainer = scrollContainer.parentElement;
-            }
-          }
-          
-          if (!scrollContainer || scrollContainer === document.body) {
-            scrollContainer = null;
-          }
-          
-          if (scrollContainer) {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const elementRect = el.getBoundingClientRect();
-            const scrollTop = scrollContainer.scrollTop;
-            const relativeTop = elementRect.top - containerRect.top;
-            const targetScroll = scrollTop + relativeTop - 100;
-            const finalScroll = Math.max(0, Math.min(targetScroll, scrollContainer.scrollHeight - containerRect.height));
-            
-            scrollContainer.scrollTo({
-              top: finalScroll,
-              behavior: "smooth"
-            });
-          } else {
-            el.scrollIntoView({ 
-              behavior: "smooth", 
-              block: "center",
-              inline: "nearest"
-            });
-          }
-          
-          setTimeout(() => {
-            el.style.transition = "all 0.3s ease";
-            el.style.borderLeft = "3px solid rgba(255, 255, 255, 0.5)";
-            el.style.paddingLeft = "12px";
-            
-            setTimeout(() => {
-              el.style.transition = "all 0.5s ease";
-              el.style.borderLeft = "none";
-              el.style.paddingLeft = "0";
-            }, 3000);
-          }, 1000);
-        };
-        
-        highlightAndScroll(element);
-      }
-    }, 1500);
-    
-    return () => clearTimeout(timer);
-  }, [news, loading, commentIdFromUrl]);
 
   useEffect(() => {
     if (!news || loading) {
@@ -267,12 +179,8 @@ export function useCommentScroll({
           return;
         }
         
-        // Aumenta o número de tentativas e o intervalo para garantir que funcione mesmo com renderização lenta
-        if (attempts < 30) {
-          const delay = attempts < 10 ? 300 : attempts < 20 ? 500 : 800;
-          setTimeout(() => tryScrollToComment(attempts + 1), delay);
-        } else {
-          console.warn(`Não foi possível encontrar o comentário ${targetCommentId} após ${attempts} tentativas`);
+        if (attempts < 15) {
+          setTimeout(() => tryScrollToComment(attempts + 1), 300);
         }
       };
 
@@ -280,8 +188,7 @@ export function useCommentScroll({
         const isMainComment = news.comments.some((c: CommentResponse) => c.id === targetCommentId);
         
         if (isMainComment) {
-          // Aumenta o delay inicial para garantir que o DOM foi renderizado
-          setTimeout(() => tryScrollToComment(), 1200);
+          setTimeout(() => tryScrollToComment(), 800);
         } else {
           // É uma resposta - precisa encontrar o comentário pai e expandir
           let foundParent = false;
@@ -364,10 +271,9 @@ export function useCommentScroll({
         }
       };
       
-      // Aumenta o delay inicial para garantir que os dados foram carregados e o DOM foi atualizado
       const timer = setTimeout(() => {
         scrollToComment();
-      }, 800);
+      }, 500);
       
       return () => clearTimeout(timer);
     }
