@@ -13,23 +13,28 @@ interface AdPlacement {
 // Lista de anúncios mockados disponíveis na pasta public/ads
 const MOCK_ADS: AdPlacement[] = [
   {
-    image_url: "/ads/brahma.jpg",
+    image_url: "/ads/1.png",
     redirect_url: "https://www.ambev.com.br/marcas/brahma",
     alt_text: "Brahma - Oferta Exclusiva N1",
   },
   
   {
-    image_url: "/ads/maturatta.jpg",
+    image_url: "/ads/2.png",
     redirect_url: "https://www.maturatta.com.br",
     alt_text: "Maturatta - Oferta Exclusiva N1",
   },
   {
-    image_url: "/ads/pernod.jpg",
+    image_url: "/ads/3.png",
     redirect_url: "https://www.pernod-ricard.com",
     alt_text: "Pernod - Oferta Exclusiva N1",
   },
   {
-    image_url: "/ads/uol.jpg",
+    image_url: "/ads/4.png",
+    redirect_url: "https://www.uol.com.br",
+    alt_text: "UOL - Oferta Exclusiva N1",
+  },
+  {
+    image_url: "/ads/5.png",
     redirect_url: "https://www.uol.com.br",
     alt_text: "UOL - Oferta Exclusiva N1",
   },
@@ -113,10 +118,7 @@ export default function AdBanner() {
         width: { xs: "calc(100% - 32px)", md: "100%" },
         borderRadius: "16px",
         overflow: "hidden",
-        backgroundColor: "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(10px)",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+       
         position: "relative",
         cursor: "pointer",
         transition: "all 0.3s ease",
