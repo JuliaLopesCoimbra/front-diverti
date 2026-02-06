@@ -219,33 +219,62 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
     );
   };
 
+  const getCameraUnavailableMessage = () => {
+    const isSecure = typeof window !== "undefined" && window.location?.protocol === "https:";
+    if (!isSecure) {
+      return "A câmera só funciona em conexão segura (HTTPS). Acesse o app pelo link com cadeado ou use a mesma rede em modo seguro.";
+    }
+    return "Câmera não disponível neste navegador ou dispositivo. Tente abrir no Chrome ou Safari (não use navegador dentro de rede social ou app de mensagem).";
+  };
+
   const requestCamera = async () => {
     setIsRequestingCamera(true);
     setCameraError(null);
+
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      console.error("[PhotoAI/Camera] navigator.mediaDevices.getUserMedia não disponível", {
+        hasNavigator: typeof navigator !== "undefined",
+        hasMediaDevices: typeof navigator?.mediaDevices !== "undefined",
+        protocol: typeof window !== "undefined" ? window.location?.protocol : null,
+      });
+      const message = getCameraUnavailableMessage();
+      setCameraError(message);
+      showToast(message, "error");
+      setIsRequestingCamera(false);
+      return;
+    }
+
     try {
-      console.log("Solicitando permissão da câmera...");
+      console.log("[PhotoAI/Camera] Solicitando permissão da câmera...");
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
       });
-      console.log("Câmera permitida! Stream:", stream);
+      console.log("[PhotoAI/Camera] Câmera permitida. Stream:", stream.id);
       streamRef.current = stream;
       setStage("camera");
-      
-      // Pequeno delay para garantir que o DOM atualizou
+
       setTimeout(() => {
         if (videoRef.current) {
-          console.log("Atribuindo stream ao video element");
           videoRef.current.srcObject = stream;
           videoRef.current.play().catch((err) => {
-            console.error("Erro ao iniciar vídeo:", err);
+            console.error("[PhotoAI/Camera] Erro ao iniciar vídeo:", err);
             setCameraError("Não foi possível iniciar o vídeo da câmera.");
           });
         }
       }, 100);
-    } catch (err: any) {
-      console.error("Erro ao acessar câmera:", err);
-      const message =
-        `Não foi possível acessar a câmera: ${err?.message || "Verifique as permissões do dispositivo."}`;
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      console.error("[PhotoAI/Camera] Erro getUserMedia:", e?.name, e?.message, err);
+
+      const isMediaDevicesError =
+        e?.message?.includes("navigator.mediaDevices") ||
+        e?.message?.includes("getUserMedia") ||
+        e?.message?.includes("undefined is not an object");
+
+      const message = isMediaDevicesError
+        ? getCameraUnavailableMessage()
+        : `Não foi possível acessar a câmera. ${e?.message?.includes("Permission") ? "Permita o acesso à câmera nas configurações do navegador." : "Tente novamente ou use outro navegador (Chrome/Safari)."}`;
+
       setCameraError(message);
       showToast(message, "error");
     } finally {
