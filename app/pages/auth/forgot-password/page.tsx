@@ -53,21 +53,31 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await axios.post(`${API_URL}/auth/forgot-password`, { email });
+      const response = await axios.post(`${API_URL}/auth/forgot-password`, { email });
 
       showToast(
-        "Se o email existir, enviaremos um link para recuperação.",
+        response.data.message || "Email de recuperação enviado com sucesso! Verifique sua caixa de entrada.",
         "success"
       );
 
       startCooldown();
-    } catch {
-      showToast(
-        "Se o email existir, enviaremos um link para recuperação.",
-        "success"
-      );
-
-      startCooldown();
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        showToast(
+          "Email não encontrado. Verifique se o email está correto.",
+          "error"
+        );
+      } else if (error.response?.status === 429) {
+        showToast(
+          "Muitas tentativas. Tente novamente em 1 hora.",
+          "error"
+        );
+      } else {
+        showToast(
+          error.response?.data?.detail || "Erro ao enviar email. Tente novamente.",
+          "error"
+        );
+      }
     } finally {
       setLoading(false);
     }

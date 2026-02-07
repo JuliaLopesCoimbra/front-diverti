@@ -15,12 +15,16 @@ import {
   MenuItem,
   FormControlLabel,
   Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import { Visibility, VisibilityOff, ArrowBack, CheckCircle } from "@mui/icons-material";
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
-import { registerUser } from "@/app/services/auth/authService";
+import { registerUser, updateEmailByCpf } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
 import RegisterSuccess from "@/app/components/auth/RegisterSuccess";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
@@ -34,6 +38,78 @@ const formatCPF = (value: string): string => {
   if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
   if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
   return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+};
+
+// Função para validar nome completo (nome e sobrenome)
+const validateFullName = (name: string): boolean => {
+  if (!name || name.trim().length === 0) return false;
+  
+  // Remover espaços extras
+  const trimmedName = name.trim();
+  
+  // Verificar se tem pelo menos 3 caracteres
+  if (trimmedName.length < 3) return false;
+  
+  // Verificar se tem pelo menos nome e sobrenome (2 palavras)
+  const nameParts = trimmedName.split(/\s+/).filter(part => part.length > 0);
+  if (nameParts.length < 2) return false;
+  
+  // Verificar se cada parte tem pelo menos 2 caracteres
+  for (const part of nameParts) {
+    if (part.length < 2) return false;
+  }
+  
+  // Verificar se não contém caracteres inválidos (apenas letras, espaços, hífens e acentos)
+  const validNameRegex = /^[a-zA-ZÀ-ÿ\s'-]+$/;
+  if (!validNameRegex.test(trimmedName)) return false;
+  
+  // Verificar se não contém caracteres especiais como @, números, etc.
+  if (/[@#$%^&*()_+=\[\]{}|\\:";'<>?,.\/0-9]/.test(trimmedName)) return false;
+  
+  return true;
+};
+
+// Função para validar TLD do email
+const validateEmailTLD = (email: string): boolean => {
+  if (!email || !email.includes('@')) return false;
+  
+  const domain = email.split('@')[1];
+  if (!domain || !domain.includes('.')) return false;
+  
+  const parts = domain.split('.');
+  const tld = parts[parts.length - 1].toLowerCase();
+  
+  // Verificar se o TLD tem pelo menos 2 caracteres e contém apenas letras
+  if (tld.length < 2 || !/^[a-z]+$/.test(tld)) return false;
+  
+  // Lista de TLDs válidos comuns
+  const validTLDs = [
+    'com', 'org', 'net', 'edu', 'gov', 'mil', 'int', 'br', 'co', 'uk', 'us', 'ca', 'au', 'de', 'fr', 'it', 'es', 'pt',
+    'nl', 'be', 'ch', 'at', 'se', 'no', 'dk', 'fi', 'pl', 'cz', 'ie', 'gr', 'ru', 'jp', 'cn', 'in', 'kr', 'mx', 'ar',
+    'cl', 'pe', 've', 'ec', 'uy', 'py', 'bo', 'cr', 'pa', 'do', 'gt', 'hn', 'ni', 'sv', 'info', 'biz', 'name', 'pro',
+    'io', 'dev', 'tech', 'online', 'site', 'website', 'xyz', 'app', 'cloud', 'store', 'shop', 'blog', 'news', 'tv',
+    'me', 'cc', 'ws', 'mobi', 'asia', 'tel', 'jobs', 'travel', 'cat', 'eu', 'ac', 'ad', 'ae', 'af', 'ag', 'ai', 'al',
+    'am', 'ao', 'aq', 'as', 'aw', 'ax', 'az', 'ba', 'bb', 'bd', 'bf', 'bg', 'bh', 'bi', 'bj', 'bm', 'bn', 'bs', 'bt',
+    'bv', 'bw', 'by', 'bz', 'cd', 'cf', 'cg', 'ci', 'ck', 'cm', 'cu', 'cv', 'cw', 'cx', 'cy', 'dj', 'dm', 'dz', 'ee',
+    'eg', 'eh', 'er', 'et', 'fj', 'fk', 'fm', 'fo', 'ga', 'gb', 'gd', 'ge', 'gf', 'gg', 'gh', 'gi', 'gl', 'gm', 'gn',
+    'gp', 'gq', 'gs', 'gu', 'gw', 'gy', 'hk', 'hm', 'hr', 'ht', 'hu', 'id', 'il', 'im', 'iq', 'ir', 'is', 'je', 'jm',
+    'jo', 'ke', 'kg', 'kh', 'ki', 'km', 'kn', 'kp', 'kw', 'ky', 'kz', 'la', 'lb', 'lc', 'li', 'lk', 'lr', 'ls', 'lt',
+    'lu', 'lv', 'ly', 'ma', 'mc', 'md', 'mf', 'mg', 'mh', 'mk', 'ml', 'mm', 'mn', 'mo', 'mp', 'mq', 'mr', 'ms', 'mt',
+    'mu', 'mv', 'mw', 'my', 'mz', 'na', 'nc', 'ne', 'nf', 'ng', 'np', 'nr', 'nu', 'nz', 'om', 'pf', 'pg', 'ph', 'pk',
+    'pm', 'pn', 'pr', 'ps', 'pw', 'qa', 're', 'ro', 'rs', 'rw', 'sa', 'sb', 'sc', 'sd', 'sg', 'sh', 'si', 'sj', 'sk',
+    'sl', 'sm', 'sn', 'so', 'sr', 'ss', 'st', 'sx', 'sy', 'sz', 'tc', 'td', 'tf', 'tg', 'th', 'tj', 'tk', 'tl', 'tm',
+    'tn', 'to', 'tr', 'tt', 'tw', 'tz', 'ua', 'ug', 'um', 'uz', 'va', 'vc', 'vg', 'vi', 'vn', 'vu', 'wf', 'ye',
+    'yt', 'za', 'zm', 'zw'
+  ];
+  
+  // Verificar TLD de dois níveis (ex: com.br, co.uk)
+  if (parts.length >= 2) {
+    const twoLevelTLD = `${parts[parts.length - 2]}.${parts[parts.length - 1]}`.toLowerCase();
+    const twoLevelValidTLDs = ['com.br', 'com.mx', 'com.ar', 'com.co', 'org.br', 'net.br', 'gov.br', 'edu.br', 'co.uk', 'com.au'];
+    if (twoLevelValidTLDs.includes(twoLevelTLD)) return true;
+  }
+  
+  return validTLDs.includes(tld);
 };
 
 const RegisterForm: React.FC = () => {
@@ -52,6 +128,9 @@ const RegisterForm: React.FC = () => {
   const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
   const [mounted, setMounted] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(true);
+  const [showEmailUpdateModal, setShowEmailUpdateModal] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [updatingEmail, setUpdatingEmail] = useState(false);
   const router = useRouter();
 
   const { showToast } = useToast();
@@ -74,19 +153,55 @@ const RegisterForm: React.FC = () => {
   const passwordsMatch = password === confirmPassword;
 
   const handleRegister = async () => {
+    // Validar nome completo
+    if (!name || name.trim().length === 0) {
+      showToast("Por favor, informe seu nome completo", "error");
+      return;
+    }
+
+    if (!validateFullName(name)) {
+      showToast("Por favor, informe um nome completo válido (nome e sobrenome, sem caracteres especiais)", "error");
+      return;
+    }
+
     if (!birthDate) {
       showToast("Por favor, informe sua data de nascimento", "error");
       return;
     }
 
-    // Validar idade no frontend
+    // Validar se a data é válida
+    if (isNaN(birthDate.getTime())) {
+      showToast("Data de nascimento inválida. Por favor, informe uma data válida.", "error");
+      return;
+    }
+
+    // Validar se a data não é muito antiga (antes de 1900)
+    if (birthDate.getFullYear() < 1900) {
+      showToast("Data de nascimento inválida. Por favor, informe uma data válida.", "error");
+      return;
+    }
+
+    // Validar se a data não é no futuro
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (birthDate > today) {
+      showToast("Data de nascimento não pode ser no futuro.", "error");
+      return;
+    }
+
+    // Validar idade no frontend
     const age = today.getFullYear() - birthDate.getFullYear() - 
       (today.getMonth() < birthDate.getMonth() || 
        (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate()) ? 1 : 0);
     
     if (age < 18) {
       showToast("Você deve ter pelo menos 18 anos para se cadastrar", "error");
+      return;
+    }
+
+    // Validar idade máxima razoável (por exemplo, 150 anos)
+    if (age > 150) {
+      showToast("Data de nascimento inválida. Por favor, informe uma data válida.", "error");
       return;
     }
 
@@ -107,6 +222,17 @@ const RegisterForm: React.FC = () => {
 
     if (!ageTermsAccepted) {
       showToast("Você deve aceitar os termos de maioridade para continuar", "error");
+      return;
+    }
+
+    // Validar email e TLD
+    if (!email || !email.includes('@')) {
+      showToast("Por favor, informe um email válido", "error");
+      return;
+    }
+
+    if (!validateEmailTLD(email)) {
+      showToast("Email inválido. Por favor, informe um email com extensão válida (ex: .com, .br, .org)", "error");
       return;
     }
 
@@ -145,12 +271,48 @@ const RegisterForm: React.FC = () => {
       setRegistered(true); 
     } catch (err: unknown) {
       if (err instanceof Error) {
-        showToast(err.message, "error");
+        // Verificar se é o erro de email não verificado
+        if ((err as any).needsEmailUpdate) {
+          setNewEmail(email); // Preencher com o email que o usuário digitou
+          setShowEmailUpdateModal(true);
+        } else {
+          showToast(err.message, "error");
+        }
       } else {
         showToast("Erro ao realizar cadastro", "error");
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateEmail = async () => {
+    if (!newEmail || !newEmail.includes("@")) {
+      showToast("Por favor, informe um email válido", "error");
+      return;
+    }
+
+    setUpdatingEmail(true);
+    try {
+      const cpfClean = cpf.replace(/\D/g, ''); // Remove formatação do CPF
+      await updateEmailByCpf(cpfClean, newEmail);
+
+      showToast(
+        "Email atualizado! Verifique sua caixa de entrada para confirmar o novo email.",
+        "success"
+      );
+
+      setShowEmailUpdateModal(false);
+      setEmail(newEmail);
+      setRegistered(true);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        showToast(err.message, "error");
+      } else {
+        showToast("Erro ao atualizar email", "error");
+      }
+    } finally {
+      setUpdatingEmail(false);
     }
   };
 
@@ -472,8 +634,25 @@ const RegisterForm: React.FC = () => {
   type="date"
   value={birthDate ? birthDate.toISOString().split('T')[0] : ""}
   onChange={(e) => {
-    const date = e.target.value ? new Date(e.target.value) : null;
-    setBirthDate(date);
+    const dateValue = e.target.value;
+    if (dateValue) {
+      const date = new Date(dateValue);
+      // Apenas atualizar o estado se a data for válida, sem mostrar erro durante a digitação
+      if (!isNaN(date.getTime())) {
+        setBirthDate(date);
+      }
+    } else {
+      setBirthDate(null);
+    }
+  }}
+  inputProps={{
+    min: "1900-01-01",
+    max: (() => {
+      const today = new Date();
+      const maxDate = new Date(today);
+      maxDate.setFullYear(today.getFullYear() - 18);
+      return maxDate.toISOString().split('T')[0];
+    })(),
   }}
   InputLabelProps={{
     shrink: true, // Mantém o label no topo para não sobrepor o seletor nativo
@@ -879,6 +1058,97 @@ const RegisterForm: React.FC = () => {
           </Box>
         </Box>
       </Container>
+
+      {/* Modal para atualizar email */}
+      <Dialog
+        open={showEmailUpdateModal}
+        onClose={() => setShowEmailUpdateModal(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(0, 0, 0, 0.9)",
+            backdropFilter: "blur(20px)",
+            borderRadius: "24px",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            color: "#fff",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#fff", fontWeight: 600, fontSize: "1.5rem" }}>
+          Atualizar Email
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.7)", mb: 3 }}>
+            Este CPF já foi cadastrado, mas o email ainda não foi verificado. 
+            Por favor, informe o email correto para receber o código de verificação.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Email correto"
+            type="email"
+            value={newEmail}
+            onChange={(e) => setNewEmail(e.target.value)}
+            disabled={updatingEmail}
+            sx={{
+              mt: 2,
+              "& .MuiOutlinedInput-root": {
+                color: "#fff",
+                "& fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(255, 255, 255, 0.5)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#ffcc01",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(255, 255, 255, 0.7)",
+                "&.Mui-focused": {
+                  color: "#ffcc01",
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ padding: "16px 24px", gap: 2 }}>
+          <Button
+            onClick={() => setShowEmailUpdateModal(false)}
+            disabled={updatingEmail}
+            sx={{
+              color: "rgba(255, 255, 255, 0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleUpdateEmail}
+            disabled={updatingEmail || !newEmail}
+            variant="contained"
+            sx={{
+              backgroundColor: "#ffcc01",
+              color: "#000",
+              fontWeight: 600,
+              borderRadius: "14px",
+              textTransform: "none",
+              "&:hover": {
+                backgroundColor: "#e6b800",
+              },
+              "&:disabled": {
+                backgroundColor: "rgba(255, 204, 1, 0.5)",
+                color: "rgba(0, 0, 0, 0.5)",
+              },
+            }}
+          >
+            {updatingEmail ? "Atualizando..." : "Atualizar e Enviar Código"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
     </LocalizationProvider>
   );

@@ -186,9 +186,10 @@ export const initFacebookLogin = async (): Promise<string> => {
 // ---------------------------
 export const registerUser = async (
   data: RegisterData
-): Promise<void> => {
+): Promise<{ needsEmailUpdate?: boolean }> => {
   try {
     await axios.post(`${API_URL}/auth/register`, data);
+    return {};
   } catch (error: unknown) {
     const err = error as {
       response?: {
@@ -200,6 +201,15 @@ export const registerUser = async (
       };
       message?: string;
     };
+
+    // Tratar erro 428 - CPF existe mas email não verificado
+    if (err.response?.status === 428) {
+      const detailValue = err.response?.data?.detail;
+      const message = typeof detailValue === 'string' ? detailValue : "CPF já cadastrado. O email cadastrado ainda não foi verificado.";
+      const customError = new Error(message) as Error & { needsEmailUpdate?: boolean };
+      customError.needsEmailUpdate = true;
+      throw customError;
+    }
 
     // Extrair mensagem de erro
     let message = "Erro ao realizar cadastro";
@@ -243,6 +253,34 @@ export const registerUser = async (
           "Erro ao realizar cadastro";
       }
     }
+
+    throw new Error(message);
+  }
+};
+
+export const updateEmailByCpf = async (
+  cpf: string,
+  email: string
+): Promise<void> => {
+  try {
+    await axios.post(`${API_URL}/auth/update-email-by-cpf`, { cpf, email });
+  } catch (error: unknown) {
+    const err = error as {
+      response?: {
+        data?: {
+          detail?: string;
+          message?: string;
+        };
+        status?: number;
+      };
+      message?: string;
+    };
+
+    const message =
+      err.response?.data?.detail ||
+      err.response?.data?.message ||
+      err.message ||
+      "Erro ao atualizar email";
 
     throw new Error(message);
   }
