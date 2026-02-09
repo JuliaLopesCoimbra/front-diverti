@@ -20,6 +20,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import axios from "axios";
 import { getApiUrl } from "@/app/utils/apiUrlHelper";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
+import LgpdModal from "@/app/components/auth/RegisterForm/LgpdModal";
 
 const API_URL = getApiUrl();
 
@@ -36,7 +37,9 @@ function CompleteProfileContent() {
   const [cpf, setCpf] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "prefer_not_to_say" | "">("");
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
+  const [ageTermsAccepted, setAgeTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showLgpdModal, setShowLgpdModal] = useState(false);
   const router = useRouter();
   const params = useSearchParams();
   const { showToast } = useToast();
@@ -65,6 +68,11 @@ function CompleteProfileContent() {
       return;
     }
 
+    if (!ageTermsAccepted) {
+      showToast("Você deve aceitar os termos de maioridade para continuar", "error");
+      return;
+    }
+
     setLoading(true);
     try {
       const tempToken = params.get("temp_token");
@@ -80,7 +88,7 @@ function CompleteProfileContent() {
           cpf: cpfClean,
           gender: gender as "male" | "female" | "other" | "prefer_not_to_say",
           lgpd_accepted: lgpdAccepted,
-          age_terms_accepted: true, // Já foi verificado na tela de age-verification
+          age_terms_accepted: ageTermsAccepted,
         },
         {
           headers: {
@@ -284,14 +292,65 @@ function CompleteProfileContent() {
                 Aceito os termos de proteção de dados pessoais (LGPD)
               </Typography>
             }
-            sx={{ mb: 3, width: "100%", maxWidth: "100%" }}
+            sx={{ mb: 1, width: "100%", maxWidth: "100%" }}
           />
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={ageTermsAccepted}
+                onChange={(e) => setAgeTermsAccepted(e.target.checked)}
+                sx={{
+                  color: "rgba(255, 255, 255, 0.7)",
+                  "&.Mui-checked": {
+                    color: "#ffcc01",
+                  },
+                }}
+              />
+            }
+            label={
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  color: "rgba(255, 255, 255, 0.9)", 
+                  fontSize: "0.875rem",
+                  wordWrap: "break-word",
+                  overflowWrap: "break-word",
+                  whiteSpace: "normal",
+                  maxWidth: "100%",
+                  lineHeight: 1.4,
+                }}
+              >
+                Confirmo que tenho 18 anos ou mais
+              </Typography>
+            }
+            sx={{ mb: 1, width: "100%", maxWidth: "100%" }}
+          />
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
+            <Button
+              onClick={() => setShowLgpdModal(true)}
+              sx={{
+                textTransform: "none",
+                color: "#ffcc01",
+                fontSize: "0.7rem",
+                textDecoration: "underline",
+                padding: 0,
+                minWidth: "auto",
+                "&:hover": {
+                  textDecoration: "underline",
+                  backgroundColor: "transparent",
+                },
+              }}
+            >
+              Ler termos completos
+            </Button>
+          </Box>
 
           <Button
             fullWidth
             variant="contained"
             onClick={handleSubmit}
-            disabled={loading || !cpf || !gender || !lgpdAccepted}
+            disabled={loading || !cpf || !gender || !lgpdAccepted || !ageTermsAccepted}
             sx={{
               backgroundColor: "#ffcc01",
               color: "#000",
@@ -310,6 +369,11 @@ function CompleteProfileContent() {
           </Button>
         </Box>
       </Container>
+
+      <LgpdModal
+        open={showLgpdModal}
+        onClose={() => setShowLgpdModal(false)}
+      />
     </Box>
   );
 }
