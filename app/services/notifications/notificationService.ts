@@ -8,7 +8,7 @@ export interface RelatedUser {
 
 export interface Notification {
   id: number;
-  type: "comment_reply" | "comment_like" | "post_like" | "post_approved" | "post_approved_admin" | "post_rejected" | "post_deactivated" | "new_post" | "lineup_updated" | "post_comment" | "new_event";
+  type: "comment_reply" | "comment_like" | "post_like" | "post_approved" | "post_approved_admin" | "post_rejected" | "post_deactivated" | "new_post" | "lineup_updated" | "post_comment" | "new_event" | "admin_broadcast";
   title: string;
   message: string;
   related_user_id?: number;
@@ -53,5 +53,25 @@ export const markAsRead = async (notificationId: number): Promise<void> => {
 
 export const markAllAsRead = async (): Promise<void> => {
   await api.patch("/notifications/read-all");
+};
+
+export interface BroadcastNotificationRequest {
+  title: string;
+  message: string;
+}
+
+export interface BroadcastNotificationResponse {
+  message: string;
+  users_notified: number;
+}
+
+export const broadcastNotification = async (
+  data: BroadcastNotificationRequest
+): Promise<BroadcastNotificationResponse> => {
+  const response = await api.post<BroadcastNotificationResponse>(
+    "/notifications/broadcast",
+    data
+  );
+  return response.data;
 };
 

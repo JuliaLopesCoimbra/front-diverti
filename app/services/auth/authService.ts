@@ -11,6 +11,7 @@ const API_URL = getApiUrl();
 interface LoginData {
   email: string;
   password: string;
+  remember_me?: boolean;
 }
 interface RefreshResponse {
   access_token: string;

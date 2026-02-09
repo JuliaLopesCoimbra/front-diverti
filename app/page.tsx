@@ -33,6 +33,7 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 interface LoginData {
   email: string;
   password: string;
+  remember_me?: boolean;
 }
 
 const LoginForm: React.FC = () => {
@@ -97,7 +98,11 @@ const LoginForm: React.FC = () => {
     setShowResendEmail(false);
 
     try {
-      const loginData: LoginData = { email, password };
+      const loginData: LoginData = { 
+        email, 
+        password,
+        remember_me: keepMeLoggedIn
+      };
       const response = await loginUser(loginData);
 
       // sucesso → reseta tentativas
@@ -111,8 +116,13 @@ const LoginForm: React.FC = () => {
 
       localStorage.setItem("access_token", access_token);
 
-      // HttpOnly não funciona via JS, mas mantendo seu padrão atual
-      document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
+      // Se remember_me estiver marcado, cookie expira em 90 dias
+      // Caso contrário, cookie de sessão (expira quando fechar navegador)
+      const cookieOptions = keepMeLoggedIn
+        ? `refresh_token=${refresh_token}; path=/; secure; max-age=${90 * 24 * 60 * 60}` // 90 dias
+        : `refresh_token=${refresh_token}; path=/; secure`; // Sessão
+
+      document.cookie = cookieOptions;
 
       router.push("/pages/user/home");
     } catch (err: unknown) {
@@ -558,7 +568,7 @@ const LoginForm: React.FC = () => {
         </Box>
 
         {/* Checkbox para manter-me conectado */}
-        {/* <FormControlLabel
+        <FormControlLabel
           control={
             <Checkbox
               checked={keepMeLoggedIn}
@@ -581,7 +591,7 @@ const LoginForm: React.FC = () => {
               fontSize: 14, // opcional
             },
           }}
-        /> */}
+        />
 
         <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
           <Button

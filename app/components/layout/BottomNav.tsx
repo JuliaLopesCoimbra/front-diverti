@@ -3,7 +3,7 @@
 import { Box, IconButton } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import FavoriteIcon from "@mui/icons-material/Favorite";
-import StoreIcon from "@mui/icons-material/Store";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -22,7 +22,7 @@ export default function BottomNav() {
   const items = [
     { path: "/pages/user/home", icon: <HomeIcon /> },
     { path: "/pages/user/liked", icon: <FavoriteIcon /> },
-    { path: "/pages/user/store", icon: <StoreIcon /> },
+    { path: "/pages/user/store", icon: <ShoppingBagIcon /> },
     { path: "/pages/user/my-photos", icon: <PhotoLibraryIcon /> },
   ];
 

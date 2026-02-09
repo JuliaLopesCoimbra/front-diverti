@@ -31,6 +31,7 @@ import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { EventResponse } from "@/app/services/events/eventAppService";
@@ -463,6 +464,26 @@ export default function HamburgerMenu({
                    <ListItemText
                      primary="Permissões"
                      secondary="Gerenciar usuários e permissões"
+                     primaryTypographyProps={{ fontWeight: 600 }}
+                     secondaryTypographyProps={{
+                       sx: { color: "rgba(255,255,255,0.6)" },
+                     }}
+                   />
+                 </ListItemButton>
+               </ListItem>
+               <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
+               <ListItem disablePadding>
+                 <ListItemButton
+                   onClick={() => {
+                     router.push("/pages/admin/broadcast-notification");
+                     setOpen(false);
+                   }}
+                 >
+                   <CampaignIcon sx={{ mr: 2, color: "white" }} />
+
+                   <ListItemText
+                     primary="Enviar Notificação"
+                     secondary="Notificar todos os usuários"
                      primaryTypographyProps={{ fontWeight: 600 }}
                      secondaryTypographyProps={{
                        sx: { color: "rgba(255,255,255,0.6)" },

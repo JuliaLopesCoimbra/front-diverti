@@ -32,6 +32,16 @@ export const updateProfilePhoto = async (photo: File): Promise<ProfileResponse> 
   return response.data;
 };
 
+export interface UpdateProfileRequest {
+  birth_date?: string | null;
+  gender?: "male" | "female" | "other" | "prefer_not_to_say" | null;
+}
+
+export const updateProfile = async (data: UpdateProfileRequest): Promise<ProfileResponse> => {
+  const response = await api.put<ProfileResponse>("/user/profile", data);
+  return response.data;
+};
+
 /**
  * Buscar perfil de outro usuário por ID
  */
