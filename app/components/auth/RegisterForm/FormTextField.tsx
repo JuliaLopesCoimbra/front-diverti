@@ -1,8 +1,9 @@
 import React from "react";
-import { TextField, TextFieldProps, Box } from "@mui/material";
+import { TextField, TextFieldProps, Box, SxProps, Theme } from "@mui/material";
 
 interface FormTextFieldProps extends Omit<TextFieldProps, 'sx'> {
   shouldAnimate?: boolean;
+  sx?: SxProps<Theme>;
 }
 
 const FormTextField: React.FC<FormTextFieldProps> = ({ shouldAnimate = false, sx, ...props }) => {
