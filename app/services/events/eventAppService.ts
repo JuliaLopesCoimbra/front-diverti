@@ -21,6 +21,9 @@ export interface EventResponse {
   starts_at: string;
   ends_at: string;
   created_at: string;
+  created_by_id?: number;
+  updated_at?: string;
+  updated_by_id?: number;
   is_active: boolean;
   requires_post_approval: boolean;
   event_dates?: string; // Campo opcional para múltiplas datas (formato: "2024-01-09,2024-01-10,2024-01-20,2024-01-21" ou "09,10,20,21 de janeiro")

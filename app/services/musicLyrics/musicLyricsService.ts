@@ -9,6 +9,9 @@ export interface MusicLyricsResponse {
   event_id?: number; // Mantido para compatibilidade
   samba_school_id: number;
   created_at: string;
+  created_by_id?: number;
+  updated_at?: string;
+  updated_by_id?: number;
   deleted_at?: string;
   deleted_by_id?: number;
 }
