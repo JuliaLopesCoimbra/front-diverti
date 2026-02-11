@@ -570,7 +570,7 @@ const HomeContent: React.FC = () => {
         {activeTab === "home" && currentEvent && (
           <>
             <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-              <AdBanner />
+              <AdBanner isFirst={true} />
             </Box>
             <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
               <NewsFeed eventId={currentEvent.id} event={currentEvent} />

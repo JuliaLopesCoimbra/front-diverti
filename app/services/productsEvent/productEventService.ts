@@ -76,10 +76,15 @@ export const getProductEventById = async (
 };
 
 export const getProductsByEvent = async (
-  eventId: number
+  eventId: number,
+  limit: number = 4,
+  offset: number = 0
 ): Promise<ProductEventResponse[]> => {
   const response = await api.get<ProductEventResponse[]>(
-    `/admin/events/${eventId}/products-event`
+    `/admin/events/${eventId}/products-event`,
+    {
+      params: { limit, offset }
+    }
   );
   return response.data;
 };

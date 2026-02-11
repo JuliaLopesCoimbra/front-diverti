@@ -320,38 +320,7 @@ function CompleteProfileContent() {
             </Button>
           </Box>
 
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={ageTermsAccepted}
-                onChange={(e) => setAgeTermsAccepted(e.target.checked)}
-                sx={{
-                  color: "rgba(255, 255, 255, 0.7)",
-                  "&.Mui-checked": {
-                    color: "#ffcc01",
-                  },
-                }}
-              />
-            }
-            label={
-              <Typography 
-                variant="body2" 
-                sx={{ 
-                  color: "rgba(255, 255, 255, 0.9)", 
-                  fontSize: "0.875rem",
-                  wordWrap: "break-word",
-                  overflowWrap: "break-word",
-                  whiteSpace: "normal",
-                  maxWidth: "100%",
-                  lineHeight: 1.4,
-                }}
-              >
-                Confirmo que tenho 18 anos ou mais
-              </Typography>
-            }
-            sx={{ mb: 1, width: "100%", maxWidth: "100%" }}
-          />
-
+       
           <FormControlLabel
             control={
               <Checkbox
@@ -402,6 +371,7 @@ function CompleteProfileContent() {
               Ler mais
             </Button>
           </Box>
+       
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
             <Button

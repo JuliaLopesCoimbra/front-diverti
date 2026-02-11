@@ -553,29 +553,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
         </Box>
       </Box>
 
-      {/* Age Terms Checkbox */}
-      <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={ageTermsAccepted}
-              onChange={(e) => onAgeTermsAcceptedChange(e.target.checked)}
-              sx={{
-                color: "rgba(255, 255, 255, 0.7)",
-                "&.Mui-checked": {
-                  color: "#ffcc01",
-                },
-              }}
-            />
-          }
-          label={
-            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
-              Confirmo que tenho 18 anos ou mais
-            </Typography>
-          }
-          sx={{ mt: 1 }}
-        />
-      </Box>
+   
 
       {/* Marketing Email Checkbox */}
       <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
@@ -619,7 +597,29 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           </Button>
         </Box>
       </Box>
-
+   {/* Age Terms Checkbox */}
+   <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={ageTermsAccepted}
+              onChange={(e) => onAgeTermsAcceptedChange(e.target.checked)}
+              sx={{
+                color: "rgba(255, 255, 255, 0.7)",
+                "&.Mui-checked": {
+                  color: "#ffcc01",
+                },
+              }}
+            />
+          }
+          label={
+            <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.9)", fontSize: "0.875rem" }}>
+              Confirmo que tenho 18 anos ou mais
+            </Typography>
+          }
+          sx={{ mt: 1 }}
+        />
+      </Box>
       {/* Ler termos completos - após todos os checkboxes */}
       <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
         <Button

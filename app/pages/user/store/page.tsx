@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box,
@@ -9,6 +9,7 @@ import {
   Paper,
   Card,
   CardMedia,
+  CardContent,
   Skeleton,
   Chip,
 } from "@mui/material";
@@ -33,10 +34,14 @@ export default function StorePage() {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [products, setProducts] = useState<ProductEventResponse[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<ProductEventResponse[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [shouldAnimate, setShouldAnimate] = useState(true);
+  const observerTarget = useRef<HTMLDivElement>(null);
 
   // Função para atualizar o evento atual baseado no localStorage
   const updateCurrentEventFromStorage = useCallback((eventsList: EventResponse[]) => {
@@ -59,21 +64,43 @@ export default function StorePage() {
   }, []);
 
   // Função para carregar produtos do evento atual
-  const loadProducts = useCallback(async (eventId: number) => {
+  const loadProducts = useCallback(async (eventId: number, limit: number = 4, offset: number = 0, append: boolean = false) => {
     try {
-      setLoadingProducts(true);
-      const productsData = await getProductsByEvent(eventId);
+      if (!append) {
+        setLoadingProducts(true);
+      } else {
+        setLoadingMore(true);
+      }
+      
+      const productsData = await getProductsByEvent(eventId, limit, offset);
       // Filtra apenas produtos ativos
       const activeProducts = productsData.filter(p => p.status === "active");
-      setProducts(activeProducts);
+      
+      if (append) {
+        // Adiciona aos produtos existentes
+        setProducts(prev => [...prev, ...activeProducts]);
+        setDisplayedProducts(prev => [...prev, ...activeProducts]);
+      } else {
+        // Primeira carga: substitui tudo
+        setProducts(activeProducts);
+        setDisplayedProducts(activeProducts);
+      }
+      
+      // Se retornou menos produtos que o limit, significa que não há mais
+      setHasMore(activeProducts.length === limit);
     } catch (err: any) {
       console.error("Erro ao carregar produtos", err);
       if (err?.response?.status !== 404) {
         showToast("Erro ao carregar produtos", "error");
       }
-      setProducts([]);
+      if (!append) {
+        setProducts([]);
+        setDisplayedProducts([]);
+      }
+      setHasMore(false);
     } finally {
       setLoadingProducts(false);
+      setLoadingMore(false);
     }
   }, [showToast]);
 
@@ -146,12 +173,39 @@ export default function StorePage() {
   // Carrega produtos quando o evento atual muda
   useEffect(() => {
     if (currentEvent?.id) {
-      loadProducts(currentEvent.id);
+      loadProducts(currentEvent.id, 4, 0, false);
+      setHasMore(true);
     } else {
       setProducts([]);
+      setDisplayedProducts([]);
+      setHasMore(false);
       setLoadingProducts(false);
     }
   }, [currentEvent?.id, loadProducts]);
+
+  // Intersection Observer para carregar mais produtos do backend
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && !loadingProducts && hasMore && currentEvent?.id) {
+          const nextOffset = products.length;
+          loadProducts(currentEvent.id, 4, nextOffset, true);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentTarget = observerTarget.current;
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [loadingMore, loadingProducts, hasMore, products.length, currentEvent?.id, loadProducts]);
 
   // Escuta mudanças no localStorage (quando o evento é alterado em outra aba/componente)
   useEffect(() => {
@@ -490,7 +544,7 @@ export default function StorePage() {
                   gap: 2,
                 }}
               >
-                {products.map((product) => (
+                {displayedProducts.map((product) => (
                   <Card
                     key={product.id}
                     sx={{
@@ -571,9 +625,75 @@ export default function StorePage() {
                         </Typography>
                       </Box>
                     )}
+                    <CardContent
+                      sx={{
+                        flexGrow: 1,
+                        display: "flex",
+                        flexDirection: "column",
+                        p: { xs: 1.5, md: 2 },
+                        "&:last-child": {
+                          pb: { xs: 1.5, md: 2 },
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{
+                          color: "#fff",
+                          fontSize: { xs: "0.875rem", md: "1rem" },
+                          fontWeight: 600,
+                          mb: 0.5,
+                          lineHeight: 1.3,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                        }}
+                      >
+                        {product.name}
+                      </Typography>
+                      {product.description && (
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: { xs: "0.75rem", md: "0.875rem" },
+                            lineHeight: 1.4,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            mt: 0.5,
+                          }}
+                        >
+                          {product.description}
+                        </Typography>
+                      )}
+                    </CardContent>
                   </Card>
                 ))}
               </Box>
+
+              {/* Sentinel para detectar quando carregar mais */}
+              {hasMore && (
+                <Box
+                  ref={observerTarget}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    py: 3,
+                    width: "100%",
+                  }}
+                >
+                  {loadingMore && (
+                    <CircularProgress sx={{ color: "#ffc91f" }} size={24} />
+                  )}
+                </Box>
+              )}
             </>
           )}
         </Box>

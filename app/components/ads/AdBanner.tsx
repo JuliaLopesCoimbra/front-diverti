@@ -42,13 +42,29 @@ const getRandomMockAd = (): AdPlacement => {
   return MOCK_ADS[randomIndex];
 };
 
-export default function AdBanner() {
+// Função para obter o anúncio 3.png
+const getFirstAd = (): AdPlacement => {
+  return MOCK_ADS.find(ad => ad.image_url === "/ads/3.png") || MOCK_ADS[2];
+};
+
+interface AdBannerProps {
+  isFirst?: boolean; // Se true, sempre usa o 3.png
+}
+
+export default function AdBanner({ isFirst = false }: AdBannerProps = {}) {
   const [ad, setAd] = useState<AdPlacement | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchAd = async () => {
+      // Se for o primeiro banner, sempre usa o 3.png
+      if (isFirst) {
+        setAd(getFirstAd());
+        setLoading(false);
+        return;
+      }
+
       try {
         const random = Math.floor(Math.random() * 1000000);
         const res = await fetch(
@@ -83,7 +99,7 @@ export default function AdBanner() {
     };
 
     fetchAd();
-  }, []);
+  }, [isFirst]);
 
   if (loading) {
     return (
@@ -150,6 +166,7 @@ export default function AdBanner() {
               width: "100%",
               height: "100%",
               objectFit: "cover",
+              objectPosition: "center 47%",
               cursor: "pointer",
             }}
             
