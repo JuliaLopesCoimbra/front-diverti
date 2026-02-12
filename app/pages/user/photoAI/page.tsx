@@ -256,9 +256,10 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
       setTimeout(() => {
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          // play() pode rejeitar no primeiro momento (autoplay policy / vídeo ainda não pronto).
+          // Não mostrar erro aqui: o vídeo costuma iniciar no onLoadedMetadata ou sozinho.
           videoRef.current.play().catch((err) => {
-            console.error("[PhotoAI/Camera] Erro ao iniciar vídeo:", err);
-            setCameraError("Não foi possível iniciar o vídeo da câmera.");
+            console.warn("[PhotoAI/Camera] play() rejeitou (pode ser temporário):", err);
           });
         }
       }, 100);
@@ -509,10 +510,13 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
           autoPlay
           muted
           onLoadedMetadata={() => {
-            console.log("Metadata do vídeo carregado");
             if (videoRef.current) {
-              videoRef.current.play().catch((err) => console.error("Erro no play:", err));
+              videoRef.current.play().catch(() => {});
             }
+          }}
+          onPlaying={() => {
+            // Vídeo realmente iniciou; remove mensagem de erro se foi exibida por engano
+            setCameraError(null);
           }}
           style={{
             width: "100%",
