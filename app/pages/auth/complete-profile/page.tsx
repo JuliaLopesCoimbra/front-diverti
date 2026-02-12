@@ -39,7 +39,6 @@ function CompleteProfileContent() {
   const [cpf, setCpf] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "other" | "prefer_not_to_say" | "">("");
   const [lgpdAccepted, setLgpdAccepted] = useState(false);
-  const [ageTermsAccepted, setAgeTermsAccepted] = useState(false);
   const [marketingEmailAccepted, setMarketingEmailAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showLgpdModal, setShowLgpdModal] = useState(false);
