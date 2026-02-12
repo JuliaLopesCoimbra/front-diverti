@@ -857,7 +857,7 @@ const LoginForm: React.FC = () => {
           </Button>
         </Box>
 
-        {/* <Typography
+        <Typography
           className={shouldAnimate ? "slide-up-delay-3" : ""}
           variant="body2"
           sx={{
@@ -885,9 +885,9 @@ const LoginForm: React.FC = () => {
               e.currentTarget.style.textDecoration = "none";
             }}
           >
-            Cadastre-se aqui tirar
+            Cadastre-se aqui 
           </a>
-        </Typography> */}
+        </Typography>
       </Box>
     </Box>
   );
