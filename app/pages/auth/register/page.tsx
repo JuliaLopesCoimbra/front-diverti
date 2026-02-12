@@ -15,6 +15,7 @@ import RegisterSkeleton from "@/app/components/auth/RegisterForm/RegisterSkeleto
 import RegisterFormFields from "@/app/components/auth/RegisterForm/RegisterFormFields";
 import LgpdModal from "@/app/components/auth/RegisterForm/LgpdModal";
 import EmailUpdateModal from "@/app/components/auth/RegisterForm/EmailUpdateModal";
+import RegisterConfirmationModal from "@/app/components/auth/RegisterForm/RegisterConfirmationModal";
 
 const RegisterForm: React.FC = () => {
   const [name, setName] = useState("");
@@ -36,6 +37,7 @@ const RegisterForm: React.FC = () => {
   const [newEmail, setNewEmail] = useState("");
   const [updatingEmail, setUpdatingEmail] = useState(false);
   const [showLgpdModal, setShowLgpdModal] = useState(false);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
 
   const { showToast } = useToast();
 
@@ -149,9 +151,14 @@ const RegisterForm: React.FC = () => {
       return;
     }
 
+    // Se todas as validações passaram, abrir modal de confirmação
+    setShowConfirmationModal(true);
+  };
+
+  const handleConfirmRegister = async () => {
     setLoading(true);
     try {
-      const formattedDate = birthDate.toISOString().split('T')[0];
+      const formattedDate = birthDate!.toISOString().split('T')[0];
       const cpfClean = cpf.replace(/\D/g, ''); // Remove formatação do CPF
       
       await registerUser({ 
@@ -171,12 +178,14 @@ const RegisterForm: React.FC = () => {
         "success"
       );
 
+      setShowConfirmationModal(false);
       setRegistered(true); 
     } catch (err: unknown) {
       if (err instanceof Error) {
         // Verificar se é o erro de email não verificado
         if ((err as any).needsEmailUpdate) {
           setNewEmail(email); // Preencher com o email que o usuário digitou
+          setShowConfirmationModal(false);
           setShowEmailUpdateModal(true);
         } else {
           showToast(err.message, "error");
@@ -336,6 +345,15 @@ const RegisterForm: React.FC = () => {
         <LgpdModal
           open={showLgpdModal}
           onClose={() => setShowLgpdModal(false)}
+        />
+
+        <RegisterConfirmationModal
+          open={showConfirmationModal}
+          onClose={() => setShowConfirmationModal(false)}
+          onConfirm={handleConfirmRegister}
+          email={email}
+          cpf={cpf}
+          loading={loading}
         />
       </Box>
     </LocalizationProvider>

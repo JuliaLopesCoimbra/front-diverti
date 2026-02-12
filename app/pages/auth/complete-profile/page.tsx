@@ -73,11 +73,6 @@ function CompleteProfileContent() {
       return;
     }
 
-    if (!ageTermsAccepted) {
-      showToast("Você deve aceitar os termos de maioridade para continuar", "error");
-      return;
-    }
-
     setLoading(true);
     try {
       const tempToken = params.get("temp_token");
@@ -93,7 +88,7 @@ function CompleteProfileContent() {
           cpf: cpfClean,
           gender: gender as "male" | "female" | "other" | "prefer_not_to_say",
           lgpd_accepted: lgpdAccepted,
-          age_terms_accepted: ageTermsAccepted,
+          age_terms_accepted: true, // Já foi verificado na página de verificação de idade
           marketing_email_accepted: marketingEmailAccepted,
         },
         {
@@ -371,7 +366,6 @@ function CompleteProfileContent() {
               Ler mais
             </Button>
           </Box>
-       
 
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 3 }}>
             <Button
@@ -397,7 +391,7 @@ function CompleteProfileContent() {
             fullWidth
             variant="contained"
             onClick={handleSubmit}
-            disabled={loading || !cpf || !gender || !lgpdAccepted || !ageTermsAccepted}
+            disabled={loading || !cpf || !gender || !lgpdAccepted}
             sx={{
               backgroundColor: "#ffcc01",
               color: "#000",
