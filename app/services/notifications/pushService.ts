@@ -56,7 +56,7 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
 export const subscribeForPush = async (): Promise<boolean> => {
   const reg = await registerServiceWorker();
   // Espera o SW estar ativo (evita race ao inscrever)
-  await reg.waitUntil?.(reg.active ?? Promise.resolve());
+  await navigator.serviceWorker.ready;
 
   if (!("Notification" in window)) {
     throw new Error("Seu navegador não suporta notificações.");
@@ -74,7 +74,7 @@ export const subscribeForPush = async (): Promise<boolean> => {
 
   const subscription = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey,
+    applicationServerKey: applicationServerKey as BufferSource,
   });
 
   const payload: PushSubscriptionPayload = {
