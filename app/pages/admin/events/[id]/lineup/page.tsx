@@ -23,6 +23,11 @@ import {
   deleteLineupItem,
   LineupItemResponse,
 } from "@/app/services/lineup/lineupService";
+import {
+  getParadeLineupItemsByEventAdmin,
+  deleteParadeLineupItem,
+  ParadeLineupItemResponse,
+} from "@/app/services/paradeLineup/paradeLineupService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 import { getEventById } from "@/app/services/events/eventAppService";
 import DeleteLineupItemModal from "@/app/components/admin/lineup/DeleteLineupItemModal";
@@ -34,11 +39,13 @@ export default function LineupManagementPage() {
   const { isAdmin } = useAuth();
   const { showToast } = useToast();
 
+  const [lineupType, setLineupType] = useState<'shows' | 'parade'>('shows');
   const [lineupItems, setLineupItems] = useState<LineupItemResponse[]>([]);
+  const [paradeLineupItems, setParadeLineupItems] = useState<ParadeLineupItemResponse[]>([]);
   const [event, setEvent] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<LineupItemResponse | null>(null);
+  const [deletingItem, setDeletingItem] = useState<LineupItemResponse | ParadeLineupItemResponse | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -50,12 +57,21 @@ export default function LineupManagementPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [items, eventData] = await Promise.all([
-          getLineupItemsByEventAdmin(eventId),
-          getEventById(eventId),
-        ]);
-        setLineupItems(items);
-        setEvent(eventData);
+        if (lineupType === 'shows') {
+          const [items, eventData] = await Promise.all([
+            getLineupItemsByEventAdmin(eventId),
+            getEventById(eventId),
+          ]);
+          setLineupItems(items);
+          setEvent(eventData);
+        } else {
+          const [items, eventData] = await Promise.all([
+            getParadeLineupItemsByEventAdmin(eventId),
+            getEventById(eventId),
+          ]);
+          setParadeLineupItems(items);
+          setEvent(eventData);
+        }
       } catch (err: any) {
         console.error("Erro ao buscar dados:", err);
         showToast("Erro ao carregar lineup", "error");
@@ -67,10 +83,10 @@ export default function LineupManagementPage() {
     if (eventId) {
       fetchData();
     }
-  }, [eventId, isAdmin, router, showToast]);
+  }, [eventId, isAdmin, router, showToast, lineupType]);
 
 
-  const handleDeleteClick = (item: LineupItemResponse) => {
+  const handleDeleteClick = (item: LineupItemResponse | ParadeLineupItemResponse) => {
     setDeletingItem(item);
     setDeleteModalOpen(true);
   };
@@ -80,12 +96,19 @@ export default function LineupManagementPage() {
 
     setDeleting(true);
     try {
-      await deleteLineupItem(deletingItem.id);
-      showToast("Artista deletado com sucesso!", "success");
+      if (lineupType === 'shows') {
+        await deleteLineupItem((deletingItem as LineupItemResponse).id);
+        showToast("Artista deletado com sucesso!", "success");
+        const items = await getLineupItemsByEventAdmin(eventId);
+        setLineupItems(items);
+      } else {
+        await deleteParadeLineupItem((deletingItem as ParadeLineupItemResponse).id);
+        showToast("Escola de samba deletada com sucesso!", "success");
+        const items = await getParadeLineupItemsByEventAdmin(eventId);
+        setParadeLineupItems(items);
+      }
       setDeleteModalOpen(false);
       setDeletingItem(null);
-      const items = await getLineupItemsByEventAdmin(eventId);
-      setLineupItems(items);
     } catch (err: any) {
       console.error("Erro ao deletar item:", err);
       throw err; // O modal vai tratar o erro
@@ -159,6 +182,80 @@ export default function LineupManagementPage() {
 
       {/* Lista de Itens */}
       <Box sx={{ p: 3, position: "relative" }}>
+        {/* Botões de Alternância */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: { xs: 1, md: 1.5, lg: 2 },
+            mb: 3,
+            px: { xs: 1, sm: 2 },
+            width: "100%",
+          }}
+        >
+          <Button
+            onClick={() => setLineupType('shows')}
+            sx={{
+              borderRadius: "999px",
+              textTransform: "none",
+              fontWeight: 600,
+              lineHeight: 1.2,
+              px: { xs: 1.5, md: 2, lg: 2.5 },
+              minHeight: { xs: 40, md: 44, lg: 48 },
+              height: { xs: 40, md: 44, lg: 48 },
+              flex: 1,
+              maxWidth: { xs: 200, md: 250 },
+              fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+              // Ativo
+              backgroundColor: lineupType === 'shows' ? "#ffc91f" : "transparent",
+              color: lineupType === 'shows' ? "#000" : "#fff",
+              border: `1px solid ${
+                lineupType === 'shows' ? "#ffc91f" : "#fff"
+              }`,
+              "&:hover": {
+                backgroundColor: lineupType === 'shows'
+                  ? "#f5bf12"
+                  : "rgba(255,255,255,0.1)",
+                borderColor: lineupType === 'shows' ? "#f5bf12" : "#fff",
+                fontWeight: 900,
+              },
+            }}
+          >
+            Line Up de Shows
+          </Button>
+          <Button
+            onClick={() => setLineupType('parade')}
+            sx={{
+              borderRadius: "999px",
+              textTransform: "none",
+              fontWeight: 600,
+              lineHeight: 1.2,
+              px: { xs: 1.5, md: 2, lg: 2.5 },
+              minHeight: { xs: 40, md: 44, lg: 48 },
+              height: { xs: 40, md: 44, lg: 48 },
+              flex: 1,
+              maxWidth: { xs: 200, md: 250 },
+              fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+              // Ativo
+              backgroundColor: lineupType === 'parade' ? "#ffc91f" : "transparent",
+              color: lineupType === 'parade' ? "#000" : "#fff",
+              border: `1px solid ${
+                lineupType === 'parade' ? "#ffc91f" : "#fff"
+              }`,
+              "&:hover": {
+                backgroundColor: lineupType === 'parade'
+                  ? "#f5bf12"
+                  : "rgba(255,255,255,0.1)",
+                borderColor: lineupType === 'parade' ? "#f5bf12" : "#fff",
+                fontWeight: 900,
+              },
+            }}
+          >
+            Line Up de Desfile
+          </Button>
+        </Box>
+
         <Box
           sx={{
             display: "flex",
@@ -175,10 +272,16 @@ export default function LineupManagementPage() {
               fontWeight: 100,
             }}
           >
-            Artistas que farão parte do Line Up
+            {lineupType === 'shows' ? 'Artistas que farão parte do Line Up' : 'Escolas de Samba que farão parte do Line Up de Desfile'}
           </Typography>
           <IconButton
-            onClick={() => router.push(`/pages/admin/events/${eventId}/lineup/create`)}
+            onClick={() => {
+              if (lineupType === 'shows') {
+                router.push(`/pages/admin/events/${eventId}/lineup/create`);
+              } else {
+                router.push(`/pages/admin/events/${eventId}/parade-lineup/create`);
+              }
+            }}
             sx={{
               backgroundColor: "#ffc91f",
               color: "#000",
@@ -192,33 +295,33 @@ export default function LineupManagementPage() {
             <AddIcon />
           </IconButton>
         </Box>
-        {lineupItems.length === 0 ? (
-          <Paper
-            elevation={0}
-            sx={{
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-              backdropFilter: "blur(10px)",
-              borderRadius: 3,
-              p: 4,
-              textAlign: "center",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
-            <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
-              Nenhum artista cadastrado no lineup ainda.
-            </Typography>
-      
-          </Paper>
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2,
-            }}
-          >
-            {lineupItems.map((item) => (
+        {lineupType === 'shows' ? (
+          lineupItems.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 3,
+                p: 4,
+                textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+                Nenhum artista cadastrado no lineup ainda.
+              </Typography>
+            </Paper>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              {lineupItems.map((item) => (
               <Paper
                 key={item.id}
                 elevation={0}
@@ -336,8 +439,151 @@ export default function LineupManagementPage() {
                   </Typography>
                 </Box>
               </Paper>
-            ))}
-          </Box>
+              ))}
+            </Box>
+          )
+        ) : (
+          paradeLineupItems.length === 0 ? (
+            <Paper
+              elevation={0}
+              sx={{
+                backgroundColor: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 3,
+                p: 4,
+                textAlign: "center",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
+              }}
+            >
+              <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+                Nenhuma escola de samba cadastrada no lineup de desfile ainda.
+              </Typography>
+            </Paper>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
+            >
+              {paradeLineupItems.map((item) => (
+                <Paper
+                  key={item.id}
+                  elevation={0}
+                  sx={{
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: 3,
+                    p: 3,
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 3,
+                    position: "relative",
+                  }}
+                >
+                  <IconButton
+                    onClick={() => handleDeleteClick(item)}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                      color: "#ff3040",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 48, 64, 0.1)",
+                      },
+                    }}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                  <IconButton
+                    onClick={() => router.push(`/pages/admin/events/${eventId}/parade-lineup/${item.id}/edit`)}
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 48,
+                      color: "#ffc91f",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 201, 31, 0.1)",
+                      },
+                    }}
+                  >
+                    <EditIcon />
+                  </IconButton>
+
+                  {item.samba_school_image_url ? (
+                    <Avatar
+                      src={item.samba_school_image_url}
+                      alt={item.samba_school_name}
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        border: "3px solid rgba(255, 201, 31, 0.3)",
+                        flexShrink: 0,
+                      }}
+                    />
+                  ) : (
+                    <Avatar
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        backgroundColor: "rgba(255, 201, 31, 0.2)",
+                        border: "3px solid rgba(255, 201, 31, 0.3)",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <MusicNoteIcon sx={{ fontSize: "2.5rem" }} />
+                    </Avatar>
+                  )}
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                      flex: 1,
+                      pr: 8,
+                      minWidth: 0,
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        color: "#fff",
+                        fontSize: "1.25rem",
+                        fontWeight: 600,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {item.samba_school_name || 'Escola de Samba'}
+                    </Typography>
+
+                    <Typography
+                      sx={{
+                        color: "#ffc91f",
+                        fontSize: "1rem",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {formatTime(item.performance_time)}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        color: "rgba(255,255,255,0.5)",
+                      }}
+                    >
+                      Ordem: {item.display_order}
+                    </Typography>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          )
         )}
       </Box>
 
@@ -345,7 +591,7 @@ export default function LineupManagementPage() {
       {deletingItem && (
         <DeleteLineupItemModal
           open={deleteModalOpen}
-          artistName={deletingItem.artist_name}
+          artistName={lineupType === 'shows' ? (deletingItem as LineupItemResponse).artist_name : (deletingItem as ParadeLineupItemResponse).samba_school_name || 'Escola de Samba'}
           onClose={() => {
             setDeleteModalOpen(false);
             setDeletingItem(null);

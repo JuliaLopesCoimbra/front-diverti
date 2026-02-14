@@ -10,14 +10,18 @@ import {
   Tab,
 } from "@mui/material";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import { Button } from "@mui/material";
 import { getLineupItemsByEvent, LineupItemResponse } from "@/app/services/lineup/lineupService";
+import { getParadeLineupItemsByEvent, ParadeLineupItemResponse } from "@/app/services/paradeLineup/paradeLineupService";
 
 interface LineupViewProps {
   eventId: number;
 }
 
 export default function LineupView({ eventId }: LineupViewProps) {
+  const [lineupType, setLineupType] = useState<'shows' | 'parade'>('shows');
   const [lineupItems, setLineupItems] = useState<LineupItemResponse[]>([]);
+  const [paradeLineupItems, setParadeLineupItems] = useState<ParadeLineupItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -26,13 +30,22 @@ export default function LineupView({ eventId }: LineupViewProps) {
     const fetchLineup = async () => {
       try {
         setLoading(true);
-        const items = await getLineupItemsByEvent(eventId).catch(() => []); // Retorna lista vazia se der erro
-        setLineupItems(items || []);
+        if (lineupType === 'shows') {
+          const items = await getLineupItemsByEvent(eventId).catch(() => []); // Retorna lista vazia se der erro
+          setLineupItems(items || []);
+        } else {
+          const items = await getParadeLineupItemsByEvent(eventId).catch(() => []); // Retorna lista vazia se der erro
+          setParadeLineupItems(items || []);
+        }
         setError(null);
       } catch (err: any) {
         console.error("Erro ao buscar lineup:", err);
         if (err?.response?.status === 404) {
-          setLineupItems([]);
+          if (lineupType === 'shows') {
+            setLineupItems([]);
+          } else {
+            setParadeLineupItems([]);
+          }
           setError(null);
         } else {
           setError("Erro ao carregar programação");
@@ -45,7 +58,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
     if (eventId) {
       fetchLineup();
     }
-  }, [eventId]);
+  }, [eventId, lineupType]);
 
   const formatTime = (timeString: string): string => {
     const parts = timeString.split(":");
@@ -61,9 +74,10 @@ export default function LineupView({ eventId }: LineupViewProps) {
   };
 
   // Agrupa itens por data e cria lista de datas únicas
-  const { dates, filteredItems } = useMemo(() => {
+  const { dates, filteredItems, filteredParadeItems } = useMemo(() => {
+    const itemsToProcess = lineupType === 'shows' ? lineupItems : paradeLineupItems;
     const datesSet = new Set<string>();
-    lineupItems.forEach((item) => {
+    itemsToProcess.forEach((item) => {
       if (item.event_date) {
         datesSet.add(item.event_date);
       }
@@ -71,39 +85,54 @@ export default function LineupView({ eventId }: LineupViewProps) {
     const datesArray = Array.from(datesSet).sort();
     
     // Filtra itens baseado na data selecionada
-    let filtered = lineupItems;
-    if (selectedDate) {
-      filtered = lineupItems.filter((item) => item.event_date === selectedDate);
-    } else if (datesArray.length > 0) {
-      // Se há datas mas nenhuma selecionada, mostra apenas itens sem data
-      filtered = lineupItems.filter((item) => !item.event_date);
+    let filtered: LineupItemResponse[] = [];
+    let filteredParade: ParadeLineupItemResponse[] = [];
+    
+    if (lineupType === 'shows') {
+      if (selectedDate) {
+        filtered = lineupItems.filter((item) => item.event_date === selectedDate);
+      } else if (datesArray.length > 0) {
+        // Se há datas mas nenhuma selecionada, mostra apenas itens sem data
+        filtered = lineupItems.filter((item) => !item.event_date);
+      } else {
+        filtered = lineupItems;
+      }
+    } else {
+      if (selectedDate) {
+        filteredParade = paradeLineupItems.filter((item) => item.event_date === selectedDate);
+      } else if (datesArray.length > 0) {
+        // Se há datas mas nenhuma selecionada, mostra apenas itens sem data
+        filteredParade = paradeLineupItems.filter((item) => !item.event_date);
+      } else {
+        filteredParade = paradeLineupItems;
+      }
     }
     
-    return { dates: datesArray, filteredItems: filtered };
-  }, [lineupItems, selectedDate]);
+    return { dates: datesArray, filteredItems: filtered, filteredParadeItems: filteredParade };
+  }, [lineupItems, paradeLineupItems, selectedDate, lineupType]);
+
+  // Reset selectedDate quando mudar o tipo de lineup
+  useEffect(() => {
+    setSelectedDate(null);
+  }, [lineupType]);
 
   // Define a primeira data como selecionada por padrão se houver datas
   useEffect(() => {
-    if (dates.length > 0 && selectedDate === null) {
-      setSelectedDate(dates[0]);
+    if (dates.length > 0) {
+      // Se não há data selecionada ou a data selecionada não existe nas datas disponíveis
+      if (selectedDate === null || !dates.includes(selectedDate)) {
+        setSelectedDate(dates[0]);
+      }
+    } else {
+      // Se não há datas, limpa a seleção
+      setSelectedDate(null);
     }
-  }, [dates]);
+  }, [dates, selectedDate]);
 
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          backgroundColor: "#000",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress sx={{ color: "#ffc91f" }} />
-      </Box>
-    );
-  }
+  const currentItems = lineupType === 'shows' ? filteredItems : filteredParadeItems;
+  const isEmpty = lineupType === 'shows' 
+    ? lineupItems.length === 0 
+    : paradeLineupItems.length === 0;
 
   return (
     <Box
@@ -116,9 +145,96 @@ export default function LineupView({ eventId }: LineupViewProps) {
         maxWidth: 800,
         mx: "auto",
         width: "100%",
+        minHeight: loading ? "200px" : "auto",
       }}
     >
-      {error ? (
+      {/* Botões de Alternância */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: { xs: 1, md: 1.5, lg: 2 },
+          mb: 3,
+          px: { xs: 1, sm: 2 },
+          width: "100%",
+        }}
+      >
+        <Button
+          onClick={() => setLineupType('shows')}
+          sx={{
+            borderRadius: "999px",
+            textTransform: "none",
+            fontWeight: 600,
+            lineHeight: 1.2,
+            px: { xs: 1.5, md: 2, lg: 2.5 },
+            minHeight: { xs: 40, md: 44, lg: 48 },
+            height: { xs: 40, md: 44, lg: 48 },
+            flex: 1,
+            maxWidth: { xs: 200, md: 250 },
+            fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+            // Ativo
+            backgroundColor: lineupType === 'shows' ? "#ffc91f" : "transparent",
+            color: lineupType === 'shows' ? "#000" : "#fff",
+            border: `1px solid ${
+              lineupType === 'shows' ? "#ffc91f" : "#fff"
+            }`,
+            "&:hover": {
+              backgroundColor: lineupType === 'shows'
+                ? "#f5bf12"
+                : "rgba(255,255,255,0.1)",
+              borderColor: lineupType === 'shows' ? "#f5bf12" : "#fff",
+              fontWeight: 900,
+            },
+          }}
+        >
+          Line Up de Shows
+        </Button>
+        <Button
+          onClick={() => setLineupType('parade')}
+          sx={{
+            borderRadius: "999px",
+            textTransform: "none",
+            fontWeight: 600,
+            lineHeight: 1.2,
+            px: { xs: 1.5, md: 2, lg: 2.5 },
+            minHeight: { xs: 40, md: 44, lg: 48 },
+            height: { xs: 40, md: 44, lg: 48 },
+            flex: 1,
+            maxWidth: { xs: 200, md: 250 },
+            fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
+            // Ativo
+            backgroundColor: lineupType === 'parade' ? "#ffc91f" : "transparent",
+            color: lineupType === 'parade' ? "#000" : "#fff",
+            border: `1px solid ${
+              lineupType === 'parade' ? "#ffc91f" : "#fff"
+            }`,
+            "&:hover": {
+              backgroundColor: lineupType === 'parade'
+                ? "#f5bf12"
+                : "rgba(255,255,255,0.1)",
+              borderColor: lineupType === 'parade' ? "#f5bf12" : "#fff",
+              fontWeight: 900,
+            },
+          }}
+        >
+          Line Up de Desfile
+        </Button>
+      </Box>
+
+      {loading ? (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            py: 4,
+          }}
+        >
+          <CircularProgress sx={{ color: "#ffc91f" }} />
+        </Box>
+      ) : error ? (
         <Paper
           elevation={0}
           sx={{
@@ -135,7 +251,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
             {error}
           </Typography>
         </Paper>
-      ) : lineupItems.length === 0 ? (
+      ) : isEmpty ? (
         <Paper
           elevation={0}
           sx={{
@@ -150,9 +266,24 @@ export default function LineupView({ eventId }: LineupViewProps) {
         >
           <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
           <Typography sx={{ color: "rgba(255,255,255,0.7)" }}>
-            Nenhum artista cadastrado no lineup ainda.
+            {lineupType === 'shows' 
+              ? 'Nenhum artista cadastrado no lineup ainda.'
+              : 'Nenhuma escola de samba cadastrada no lineup de desfile ainda.'}
           </Typography>
         </Paper>
+      ) : loading ? (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            py: 4,
+            minHeight: "200px",
+          }}
+        >
+          <CircularProgress sx={{ color: "#ffc91f" }} />
+        </Box>
       ) : (
         <Box
           sx={{
@@ -161,6 +292,9 @@ export default function LineupView({ eventId }: LineupViewProps) {
             gap: { xs: 2, sm: 3 },
             width: "100%",
             px: { xs: 1, sm: 2 },
+            opacity: loading ? 0 : 1,
+            visibility: loading ? "hidden" : "visible",
+            transition: "opacity 0.2s ease, visibility 0.2s ease",
           }}
         >
           {/* Tabs de Data */}
@@ -177,7 +311,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
               }}
             >
               <Tabs
-                value={selectedDate || dates[0] || false}
+                value={selectedDate && dates.includes(selectedDate) ? selectedDate : (dates[0] || false)}
                 onChange={(_, newValue) => setSelectedDate(newValue)}
                 variant={dates.length <= 5 ? "fullWidth" : "scrollable"}
                 scrollButtons={dates.length > 5 ? "auto" : false}
@@ -217,7 +351,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
           )}
 
           {/* Lista de Itens Filtrados */}
-          {filteredItems.length === 0 ? (
+          {currentItems.length === 0 ? (
             <Paper
               elevation={0}
               sx={{
@@ -230,13 +364,19 @@ export default function LineupView({ eventId }: LineupViewProps) {
               }}
             >
               <Typography sx={{ color: "rgba(255,255,255,0.7)" }}>
-                Nenhum artista cadastrado para esta data.
+                {lineupType === 'shows' 
+                  ? 'Nenhum artista cadastrado para esta data.'
+                  : 'Nenhuma escola de samba cadastrada para esta data.'}
               </Typography>
             </Paper>
           ) : (
-            filteredItems.map((item) => (
+            (lineupType === 'shows' ? filteredItems : filteredParadeItems).map((item) => {
+              // Para lineup de shows
+              if (lineupType === 'shows') {
+                const showItem = item as LineupItemResponse;
+                return (
             <Paper
-              key={item.id}
+              key={showItem.id}
               elevation={0}
               sx={{
                 backgroundColor: "rgba(255,255,255,0.05)",
@@ -255,7 +395,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                 },
               }}
             >
-              {/* Container da Foto - compacto no mobile para caber na tela */}
+              {/* Container da Foto */}
               <Box
                 sx={{
                   width: { xs: 100, sm: 180, md: 200 },
@@ -273,11 +413,11 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   justifyContent: "center",
                 }}
               >
-                {item.artist_image_url ? (
+                {showItem.artist_image_url ? (
                   <Box
                     component="img"
-                    src={item.artist_image_url}
-                    alt={item.artist_name}
+                    src={showItem.artist_image_url}
+                    alt={showItem.artist_name}
                     sx={{
                       width: "100%",
                       height: "100% !important",
@@ -297,7 +437,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                 )}
               </Box>
 
-              {/* Informações - Alinhadas à direita da foto */}
+              {/* Informações */}
               <Box
                 sx={{
                   display: "flex",
@@ -319,10 +459,10 @@ export default function LineupView({ eventId }: LineupViewProps) {
                       mb: 0.5,
                     }}
                   >
-                    {item.artist_name}
+                    {showItem.artist_name}
                   </Typography>
 
-                  {item.stage && (
+                  {showItem.stage && (
                     <Typography
                       sx={{
                         color: "#ffc91f",
@@ -331,11 +471,11 @@ export default function LineupView({ eventId }: LineupViewProps) {
                         mb: 0.5,
                       }}
                     >
-                      {item.stage}
+                      {showItem.stage}
                     </Typography>
                   )}
 
-                  {item.event_date && (
+                  {showItem.event_date && (
                     <Typography
                       sx={{
                         color: "rgba(255,255,255,0.8)",
@@ -344,7 +484,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                         mb: 1,
                       }}
                     >
-                      {formatDateOnly(item.event_date)}
+                      {formatDateOnly(showItem.event_date)}
                     </Typography>
                   )}
                 </Box>
@@ -358,9 +498,9 @@ export default function LineupView({ eventId }: LineupViewProps) {
                       fontFamily: "monospace",
                     }}
                   >
-                    {formatTime(item.performance_time)}
+                    {formatTime(showItem.performance_time)}
                   </Typography>
-                  {item.performance_end_time && (
+                  {showItem.performance_end_time && (
                     <>
                       <Typography
                         sx={{
@@ -380,14 +520,160 @@ export default function LineupView({ eventId }: LineupViewProps) {
                           fontFamily: "monospace",
                         }}
                       >
-                        {formatTime(item.performance_end_time)}
+                        {formatTime(showItem.performance_end_time)}
                       </Typography>
                     </>
                   )}
                 </Box>
               </Box>
             </Paper>
-            ))
+              );
+            } else {
+              // Para lineup de desfile
+              const paradeItem = item as ParadeLineupItemResponse;
+              return (
+            <Paper
+              key={paradeItem.id}
+              elevation={0}
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.05)",
+                borderRadius: { xs: 2, sm: 3 },
+                display: "flex",
+                alignItems: "stretch",
+                gap: { xs: 1.5, md: 3 },
+                p: { xs: 1.5, sm: 0 },
+                border: "1px solid rgba(255,255,255,0.1)",
+                transition: "all 0.3s ease",
+                width: "100%",
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                  transform: "translateY(-4px)",
+                  boxShadow: "0 12px 24px rgba(0,0,0,0.4)",
+                },
+              }}
+            >
+              {/* Container da Foto */}
+              <Box
+                sx={{
+                  width: { xs: 100, sm: 180, md: 200 },
+                  minWidth: { xs: 100, sm: 180, md: 200 },
+                  maxWidth: { xs: 100, sm: 180, md: 200 },
+                  height: { xs: 100, sm: 180, md: 200 },
+                  flexShrink: 0,
+                  aspectRatio: "1 / 1",
+                  overflow: "hidden",
+                  borderRadius: 2,
+                  backgroundColor: "rgba(255, 201, 31, 0.1)",
+                  position: "relative",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {paradeItem.samba_school_image_url ? (
+                  <Box
+                    component="img"
+                    src={paradeItem.samba_school_image_url}
+                    alt={paradeItem.samba_school_name}
+                    sx={{
+                      width: "100%",
+                      height: "100% !important",
+                      maxHeight: "100% !important",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
+                  />
+                ) : (
+                  <MusicNoteIcon
+                    sx={{
+                      fontSize: { xs: "2rem", md: "3rem" },
+                      color: "rgba(255, 201, 31, 0.3)",
+                    }}
+                  />
+                )}
+              </Box>
+
+              {/* Informações */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  flex: 1,
+                  py: 0.5,
+                }}
+              >
+                <Box>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      pt: { xs: 0.5, sm: 2 },
+                      fontSize: { xs: "0.95rem", md: "1.4rem" },
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      lineHeight: 1.2,
+                      mb: 0.5,
+                    }}
+                  >
+                    {paradeItem.samba_school_name || 'Escola de Samba'}
+                  </Typography>
+
+                  {paradeItem.event_date && (
+                    <Typography
+                      sx={{
+                        color: "rgba(255,255,255,0.8)",
+                        fontSize: { xs: "0.85rem", md: "0.95rem" },
+                        fontWeight: 500,
+                        mb: 1,
+                      }}
+                    >
+                      {formatDateOnly(paradeItem.event_date)}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box sx={{ mt: { xs: 0.5, sm: 1 }, display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography
+                    sx={{
+                      color: "#fff",
+                      fontSize: { xs: "1.25rem", md: "1.9rem" },
+                      fontWeight: 700,
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    {formatTime(paradeItem.performance_time)}
+                  </Typography>
+                  {paradeItem.performance_end_time && (
+                    <>
+                      <Typography
+                        sx={{
+                          color: "rgba(255,255,255,0.7)",
+                          fontSize: { xs: "0.95rem", md: "1.3rem" },
+                          fontWeight: 500,
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        -
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: "rgba(255,255,255,0.7)",
+                          fontSize: { xs: "0.95rem", md: "1.3rem" },
+                          fontWeight: 500,
+                          fontFamily: "monospace",
+                        }}
+                      >
+                        {formatTime(paradeItem.performance_end_time)}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              </Box>
+            </Paper>
+              );
+            }
+            })
           )}
         </Box>
       )}
