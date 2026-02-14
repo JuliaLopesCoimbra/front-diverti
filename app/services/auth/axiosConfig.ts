@@ -50,16 +50,38 @@ const processQueue = (error: unknown, token: string | null = null) => {
 
 api.interceptors.request.use(
   (config) => {
+    // Log apenas para requisições de downloaded-photos
+    if (config.url?.includes("downloaded-photos")) {
+      console.log("🔍 [axios] Request interceptado (downloaded-photos):", {
+        url: config.url,
+        baseURL: config.baseURL,
+        method: config.method,
+        params: config.params
+      });
+    }
+    
     if (typeof window !== "undefined") {
       const accessToken = localStorage.getItem("access_token");
       if (accessToken) {
         config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${accessToken}`;
+        if (config.url?.includes("downloaded-photos")) {
+          console.log("🔍 [axios] Token adicionado");
+        }
+      } else {
+        if (config.url?.includes("downloaded-photos")) {
+          console.warn("⚠️ [axios] Sem token de acesso");
+        }
       }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    if (error.config?.url?.includes("downloaded-photos")) {
+      console.error("❌ [axios] Erro no interceptor de request:", error);
+    }
+    return Promise.reject(error);
+  }
 );
 
 /* ================================

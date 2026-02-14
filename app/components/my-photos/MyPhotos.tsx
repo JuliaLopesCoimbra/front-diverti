@@ -46,57 +46,117 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
   const { showToast } = useToast();
   const loaderRef = useRef<HTMLDivElement | null>(null);
 
+  // Log quando o componente renderiza
+  useEffect(() => {
+    console.log("🔍 [MyPhotos] Componente renderizado", {
+      loading,
+      loadingMore,
+      photosLength: photos.length,
+      offset,
+      hasMore,
+      initialized
+    });
+  }, [loading, loadingMore, photos.length, offset, hasMore, initialized]);
+
   const loadPhotos = async (reset = false) => {
-    if (loading || loadingMore) return;
+    console.log("🔍 [MyPhotos] loadPhotos CHAMADO", { 
+      reset, 
+      loading, 
+      loadingMore, 
+      offset,
+      photosLength: photos.length 
+    });
+    
+    if (loading || loadingMore) {
+      console.log("⚠️ [MyPhotos] loadPhotos BLOQUEADO - já está carregando");
+      return;
+    }
 
     if (reset) {
+      console.log("🔍 [MyPhotos] Setando loading = true (reset)");
       setLoading(true);
     } else {
+      console.log("🔍 [MyPhotos] Setando loadingMore = true");
       setLoadingMore(true);
     }
 
     const nextOffset = reset ? 0 : offset;
+    console.log("🔍 [MyPhotos] Chamando getMyDownloadedPhotos", { 
+      limit: PHOTOS_PER_LOAD, 
+      offset: nextOffset 
+    });
 
     try {
       const data = await getMyDownloadedPhotos(PHOTOS_PER_LOAD, nextOffset);
+      console.log("✅ [MyPhotos] Dados recebidos:", data.length, "fotos");
+      console.log("🔍 [MyPhotos] Dados completos:", data);
       
       if (reset) {
+        console.log("🔍 [MyPhotos] Resetando fotos com novos dados");
         setPhotos(data);
       } else {
+        console.log("🔍 [MyPhotos] Adicionando fotos às existentes");
         setPhotos(prev => {
           const merged = [...prev, ...data];
-          // Remove duplicatas baseado no ID
           const unique = Array.from(
             new Map(merged.map((item) => [item.id, item])).values()
           );
+          console.log("🔍 [MyPhotos] Fotos após merge:", unique.length);
           return unique;
         });
       }
       
       setOffset(nextOffset + data.length);
       setHasMore(data.length >= PHOTOS_PER_LOAD);
-    } catch (err) {
-      console.error("Erro ao carregar fotos baixadas", err);
+      console.log("✅ [MyPhotos] Estado atualizado:", {
+        photosCount: reset ? data.length : photos.length + data.length,
+        offset: nextOffset + data.length,
+        hasMore: data.length >= PHOTOS_PER_LOAD
+      });
+    } catch (err: any) {
+      console.error("❌ [MyPhotos] ERRO ao carregar fotos:", err);
+      console.error("❌ [MyPhotos] Detalhes do erro:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        url: err.config?.url,
+        baseURL: err.config?.baseURL
+      });
       setHasMore(false);
     } finally {
+      console.log("🔍 [MyPhotos] Finalizando loadPhotos - setando loading = false");
       setLoading(false);
       setLoadingMore(false);
+      console.log("✅ [MyPhotos] loadPhotos FINALIZADO");
     }
   };
 
   // ===== CACHE: Carregar dados ao montar =====
   useEffect(() => {
-    if (initialized) return;
-
-    // Tenta carregar do cache
-    const cached = getCache(cacheKey);
+    console.log("🔍 [MyPhotos] useEffect INICIADO", { initialized });
     
-    if (cached && cached.data.length > 0) {
+    if (initialized) {
+      console.log("⚠️ [MyPhotos] Já inicializado, pulando");
+      return;
+    }
+
+    console.log("🔍 [MyPhotos] Verificando cache...");
+    const cached = getCache(cacheKey);
+    console.log("🔍 [MyPhotos] Cache encontrado:", {
+      exists: !!cached,
+      hasData: cached?.data && Array.isArray(cached.data) && cached.data.length > 0,
+      dataLength: cached?.data?.length || 0,
+      cacheKey
+    });
+    
+    if (cached && cached.data && cached.data.length > 0) {
+      console.log("✅ [MyPhotos] Cache encontrado com dados, usando cache");
       setPhotos(cached.data);
       setOffset(cached.data.length);
       setHasMore(cached.data.length >= PHOTOS_PER_LOAD);
       setLoading(false);
       setInitialized(true);
+      console.log("✅ [MyPhotos] Estado atualizado do cache");
       
       const targetPosition = cached.scrollPosition;
       
@@ -134,9 +194,12 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
         }, delay);
       });
       
+      // Revalidar em background
       (async () => {
         try {
+          console.log("🔍 [MyPhotos] Revalidando cache em background...");
           const freshData = await getMyDownloadedPhotos(100, 0);
+          console.log("✅ [MyPhotos] Cache revalidado:", freshData.length, "fotos");
           
           const cachedIds = cached.data.map((p: DownloadedPhoto) => p.id).sort().join(',');
           const freshIds = freshData.map((p: DownloadedPhoto) => p.id).sort().join(',');
@@ -173,12 +236,23 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
             setCache(cacheKey, freshData, targetPosition);
           }
         } catch (err) {
-          console.error('Erro ao revalidar cache:', err);
+          console.error('❌ [MyPhotos] Erro ao revalidar cache:', err);
         }
       })();
     } else {
-      loadPhotos(true);
-      setInitialized(true);
+      console.log("🔍 [MyPhotos] SEM CACHE - Carregando do servidor");
+      console.log("🔍 [MyPhotos] Chamando loadPhotos(true)...");
+      
+      loadPhotos(true)
+        .then(() => {
+          console.log("✅ [MyPhotos] loadPhotos concluído com sucesso");
+          setInitialized(true);
+        })
+        .catch((err) => {
+          console.error("❌ [MyPhotos] Erro ao carregar fotos na inicialização:", err);
+          setLoading(false);
+          setInitialized(true);
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
