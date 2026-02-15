@@ -22,7 +22,7 @@ export async function searchFace(
   const formData = new FormData();
   formData.append("file", file);
   formData.append("threshold", "70");
-  formData.append("max_faces", "15"); // mais faces para fotos de grupo
+  formData.append("max_faces", "30"); // mais faces para fotos de grupo
   if (collectionId) formData.append("collection_id", collectionId);
 
   const { data } = await api.post<SearchFaceResponse>(

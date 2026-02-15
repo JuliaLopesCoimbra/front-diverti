@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
 import api from "@/app/services/auth/axiosConfig";
 import { jwtDecode } from "jwt-decode";
@@ -53,6 +53,69 @@ export default function AdBanner({ isFirst = false, eventId }: AdBannerProps = {
   const [ad, setAd] = useState<AdPlacement | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const viewRegisteredRef = useRef(false); // Para evitar registrar múltiplas views
+  const viewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastViewTimeRef = useRef<number>(0);
+
+  // Função helper para obter identificador do anúncio
+  const getAdIdentifier = useCallback((adData: AdPlacement): string => {
+    let adIdentifier = adData.image_url;
+    if (adIdentifier.startsWith("/ads/")) {
+      adIdentifier = adIdentifier.replace("/ads/", "").replace(".png", "");
+    } else if (adIdentifier.includes("/")) {
+      // Se for URL completa, pega a última parte
+      adIdentifier = adIdentifier.split("/").pop() || adIdentifier;
+      // Remove extensão se houver
+      adIdentifier = adIdentifier.replace(/\.(png|jpg|jpeg|gif)$/i, "");
+    }
+    return adIdentifier;
+  }, []);
+
+  // Função para registrar view no backend
+  const registerAdView = useCallback(async (adData: AdPlacement) => {
+    // Só registra se tiver eventId
+    if (!eventId || viewRegisteredRef.current) {
+      return;
+    }
+
+    const now = Date.now();
+    // Throttle: máximo 1 view a cada 5 segundos
+    if (now - lastViewTimeRef.current < 5000) {
+      return;
+    }
+
+    // Limpa timeout anterior se existir
+    if (viewTimeoutRef.current) {
+      clearTimeout(viewTimeoutRef.current);
+    }
+
+    // Debounce: espera 2 segundos de visibilidade antes de registrar
+    viewTimeoutRef.current = setTimeout(async () => {
+      if (viewRegisteredRef.current) return;
+
+      try {
+        const viewData = {
+          event_id: eventId,
+          ad_identifier: getAdIdentifier(adData),
+          ad_url: adData.image_url,
+        };
+
+        await api.post("/ads/views", viewData).catch((error) => {
+          // Silenciosamente ignora erros (especialmente rate limit 429)
+          if (error.response?.status !== 429) {
+            console.warn("Erro ao registrar view de anúncio:", error);
+          }
+        });
+        
+        viewRegisteredRef.current = true;
+        lastViewTimeRef.current = Date.now();
+      } catch (error) {
+        // Ignora erros silenciosamente
+        console.warn("Erro ao registrar view de anúncio:", error);
+      }
+    }, 2000); // Espera 2 segundos
+  }, [eventId, getAdIdentifier]);
 
   // Função para registrar clique no backend
   const registerAdClick = async (adData: AdPlacement) => {
@@ -62,20 +125,9 @@ export default function AdBanner({ isFirst = false, eventId }: AdBannerProps = {
     }
 
     try {
-      // Identifica o anúncio (extrai o nome do arquivo da image_url)
-      let adIdentifier = adData.image_url;
-      if (adIdentifier.startsWith("/ads/")) {
-        adIdentifier = adIdentifier.replace("/ads/", "").replace(".png", "");
-      } else if (adIdentifier.includes("/")) {
-        // Se for URL completa, pega a última parte
-        adIdentifier = adIdentifier.split("/").pop() || adIdentifier;
-        // Remove extensão se houver
-        adIdentifier = adIdentifier.replace(/\.(png|jpg|jpeg|gif)$/i, "");
-      }
-
       const clickData = {
         event_id: eventId,
-        ad_identifier: adIdentifier,
+        ad_identifier: getAdIdentifier(adData),
         ad_url: adData.image_url,
         redirect_url: adData.redirect_url,
       };
@@ -154,6 +206,51 @@ export default function AdBanner({ isFirst = false, eventId }: AdBannerProps = {
     fetchAd();
   }, [isFirst]);
 
+  // Intersection Observer para detectar quando o anúncio fica visível
+  useEffect(() => {
+    if (!ad || !bannerRef.current || !eventId) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Registra view quando o anúncio fica visível (pelo menos 70% visível)
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+            registerAdView(ad);
+          } else {
+            // Se sair da tela, cancela o timeout
+            if (viewTimeoutRef.current) {
+              clearTimeout(viewTimeoutRef.current);
+              viewTimeoutRef.current = null;
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.7, // 70% do anúncio precisa estar visível
+        rootMargin: "0px",
+      }
+    );
+
+    observer.observe(bannerRef.current);
+
+    return () => {
+      observer.disconnect();
+      if (viewTimeoutRef.current) {
+        clearTimeout(viewTimeoutRef.current);
+      }
+    };
+  }, [ad, eventId, registerAdView]);
+
+  // Reset do flag quando o anúncio muda
+  useEffect(() => {
+    viewRegisteredRef.current = false;
+    lastViewTimeRef.current = 0;
+    if (viewTimeoutRef.current) {
+      clearTimeout(viewTimeoutRef.current);
+      viewTimeoutRef.current = null;
+    }
+  }, [ad]);
+
   if (loading) {
     return (
       <Box sx={{ mx: { xs: 2, md: "auto" }, mt: 2, mb: 2, maxWidth: { xs: "100%", md: "800px", lg: "900px" }, width: { xs: "calc(100% - 32px)", md: "100%" } }}>
@@ -166,6 +263,7 @@ export default function AdBanner({ isFirst = false, eventId }: AdBannerProps = {
 
   return (
     <Box
+      ref={bannerRef}
       sx={{
         mt: 0, mb: 1, mx: { xs: 2, md: "auto" },
         maxWidth: { xs: "100%", md: "800px", lg: "900px" },
