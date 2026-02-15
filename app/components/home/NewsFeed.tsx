@@ -570,7 +570,7 @@ export default function NewsFeed({ eventId, event }: Props) {
                         },
                       }}
                     >
-                      <AdBanner />
+                      <AdBanner eventId={eventId} />
                     </Box>
                     <Divider
                       sx={{

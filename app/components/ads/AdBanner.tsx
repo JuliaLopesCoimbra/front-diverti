@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
+import api from "@/app/services/auth/axiosConfig";
+import { jwtDecode } from "jwt-decode";
 
 interface AdPlacement {
   image_url: string;
@@ -10,14 +12,12 @@ interface AdPlacement {
   alt_text: string;
 }
 
-// Lista de anúncios mockados disponíveis na pasta public/ads
 const MOCK_ADS: AdPlacement[] = [
   {
     image_url: "/ads/1.png",
     redirect_url: "https://www.pernod-ricard.com/pt/locations/brasil",
     alt_text: "Beefeater",
   },
-  
   {
     image_url: "/ads/2.png",
     redirect_url: "https://www.friboi.com.br/marcas/maturatta-friboi/",
@@ -26,39 +26,84 @@ const MOCK_ADS: AdPlacement[] = [
   {
     image_url: "/ads/3.png",
     redirect_url: "https://www.pernod-ricard.com",
-    alt_text: "Pernod - Oferta Exclusiva N1",
+    alt_text: "Brahma",
   },
-
   {
     image_url: "/ads/5.png",
     redirect_url: "https://www.pernod-ricard.com/pt/locations/brasil",
-    alt_text: "UOL - Oferta Exclusiva N1",
+    alt_text: "Ballantines",
   },
 ];
 
-// Função para selecionar um anúncio aleatório da lista mockada
 const getRandomMockAd = (): AdPlacement => {
   const randomIndex = Math.floor(Math.random() * MOCK_ADS.length);
   return MOCK_ADS[randomIndex];
 };
 
-// Função para obter o anúncio 3.png
 const getFirstAd = (): AdPlacement => {
   return MOCK_ADS.find(ad => ad.image_url === "/ads/3.png") || MOCK_ADS[2];
 };
 
 interface AdBannerProps {
-  isFirst?: boolean; // Se true, sempre usa o 3.png
+  isFirst?: boolean;
+  eventId?: number; // ID do evento para tracking de cliques
 }
 
-export default function AdBanner({ isFirst = false }: AdBannerProps = {}) {
+export default function AdBanner({ isFirst = false, eventId }: AdBannerProps = {}) {
   const [ad, setAd] = useState<AdPlacement | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
 
+  // Função para registrar clique no backend
+  const registerAdClick = async (adData: AdPlacement) => {
+    // Só registra se tiver eventId
+    if (!eventId) {
+      return;
+    }
+
+    try {
+      // Identifica o anúncio (extrai o nome do arquivo da image_url)
+      let adIdentifier = adData.image_url;
+      if (adIdentifier.startsWith("/ads/")) {
+        adIdentifier = adIdentifier.replace("/ads/", "").replace(".png", "");
+      } else if (adIdentifier.includes("/")) {
+        // Se for URL completa, pega a última parte
+        adIdentifier = adIdentifier.split("/").pop() || adIdentifier;
+        // Remove extensão se houver
+        adIdentifier = adIdentifier.replace(/\.(png|jpg|jpeg|gif)$/i, "");
+      }
+
+      const clickData = {
+        event_id: eventId,
+        ad_identifier: adIdentifier,
+        ad_url: adData.image_url,
+        redirect_url: adData.redirect_url,
+      };
+
+      // Tenta registrar o clique (não bloqueia se falhar)
+      await api.post("/ads/clicks", clickData).catch((error) => {
+        // Silenciosamente ignora erros para não interromper a experiência do usuário
+        console.warn("Erro ao registrar clique de anúncio:", error);
+      });
+    } catch (error) {
+      // Silenciosamente ignora erros
+      console.warn("Erro ao registrar clique de anúncio:", error);
+    }
+  };
+
+  // Função para lidar com o clique
+  const handleAdClick = async () => {
+    if (!ad) return;
+
+    // Registra o clique (não bloqueia a navegação)
+    await registerAdClick(ad);
+
+    // Abre o link (sempre executa, mesmo se o registro falhar)
+    window.open(ad.redirect_url, "_blank");
+  };
+
   useEffect(() => {
     const fetchAd = async () => {
-      // Se for o primeiro banner, sempre usa o 3.png
       if (isFirst) {
         setAd(getFirstAd());
         setLoading(false);
@@ -66,32 +111,40 @@ export default function AdBanner({ isFirst = false }: AdBannerProps = {}) {
       }
 
       try {
-        const random = Math.floor(Math.random() * 1000000);
+        const accessKey = 'A48227066';
+        const zone = 'n1'; 
+    
+        // Esta URL simplificada é a mais estável para contas Pro
         const res = await fetch(
-          `https://servedbyadbutler.com/adserve/;ID=189447;size=300x250;setID=1132395;type=json;rnd=${random}`,
+          `https://www.adplugg.com/serve/${accessKey}/json.js?zn=${zone}`,
           { cache: 'no-store' }
         );
         
+        if (!res.ok) throw new Error('Aguardando ativação das métricas no AdPlugg');
+    
         const data = await res.json();
-
-        // Verifica se o status é SUCESSO e se existe de fato um anúncio no objeto placements
-        if (data.status === "SUCCESS" && data.placements && data.placements.placement_1) {
-          const placement = data.placements.placement_1;
-          setAd(placement);
-
-          // REGISTRO DE VIEW (Apenas se não for o fallback)
-          if (placement.viewable_url) {
+        const adsList = Array.isArray(data) ? data : (data.ads || []);
+    
+        if (adsList.length > 0) {
+          const remoteAd = adsList[0];
+          
+          // O AdPlugg só conta a VIEW se batermos no pixel_url
+          if (remoteAd.pixel_url) {
             const img = new window.Image();
-            img.src = placement.viewable_url;
+            img.src = remoteAd.pixel_url;
           }
+    
+          setAd({
+            image_url: remoteAd.image_url,
+            redirect_url: remoteAd.click_url, // O AdPlugg conta o CLICK aqui
+            alt_text: remoteAd.name || "N1 App"
+          });
         } else {
-          // Caso retorne "NO_ADS" ou placements vazio
-          console.log("AdButler retornou NO_ADS. Usando anúncio mockado.");
           setAd(getRandomMockAd());
         }
       } catch (error) {
-        // Caso ocorra erro de conexão, timeout ou AdBlock
-        console.warn("Erro de conexão com AdButler. Carregando anúncio mockado.");
+        // Se a API falhar, mostramos o local para não perder o anúncio na tela
+        console.warn("API AdPlugg em propagação. Métricas iniciarão em breve.");
         setAd(getRandomMockAd());
       } finally {
         setLoading(false);
@@ -103,97 +156,38 @@ export default function AdBanner({ isFirst = false }: AdBannerProps = {}) {
 
   if (loading) {
     return (
-      <Box 
-        sx={{ 
-          mx: { xs: 2, md: "auto" },
-          mt: 2, 
-          mb: 2,
-          maxWidth: { xs: "100%", md: "800px", lg: "900px" },
-          width: { xs: "calc(100% - 32px)", md: "100%" },
-        }}
-      >
+      <Box sx={{ mx: { xs: 2, md: "auto" }, mt: 2, mb: 2, maxWidth: { xs: "100%", md: "800px", lg: "900px" }, width: { xs: "calc(100% - 32px)", md: "100%" } }}>
         <Skeleton variant="rectangular" width="100%" height={200} sx={{ borderRadius: 2 }} />
       </Box>
     );
   }
 
-  // Se por algum motivo o ad ainda for null, não renderiza nada para não quebrar o layout
   if (!ad) return null;
 
   return (
     <Box
       sx={{
-        mt: 0,
-        mb: 1,
-        mx: { xs: 2, md: "auto" },
+        mt: 0, mb: 1, mx: { xs: 2, md: "auto" },
         maxWidth: { xs: "100%", md: "800px", lg: "900px" },
         width: { xs: "calc(100% - 32px)", md: "100%" },
-        borderRadius: "16px",
-        overflow: "hidden",
-       
-        position: "relative",
-        cursor: "pointer",
+        borderRadius: "16px", overflow: "hidden", position: "relative", cursor: "pointer",
         transition: "all 0.3s ease",
-        "&:hover": {
-          transform: "translateY(-4px)",
-          boxShadow: "0 8px 30px rgba(255, 201, 31, 0.2)",
-          borderColor: "rgba(255, 201, 31, 0.3)",
-        },
+        "&:hover": { transform: "translateY(-4px)", boxShadow: "0 8px 30px rgba(255, 201, 31, 0.2)" },
       }}
-      onClick={() => window.open(ad.redirect_url, "_blank")}
+      onClick={handleAdClick}
     >
-      <Box
-        sx={{
-          position: "relative",
-          width: "100%",
-          height: { xs: 100, sm: 250, md: 300 },
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ position: "relative", width: "100%", height: { xs: 100, sm: 250, md: 300 }, backgroundColor: "rgba(0, 0, 0, 0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
         {!imageError ? (
           <img
             src={ad.image_url}
-            alt={ad.alt_text || "Propaganda N1"}
-            onError={(e) => {
-              console.warn("Erro ao carregar imagem do anúncio:", e);
-              setImageError(true);
-            }}
+            alt={ad.alt_text}
+            onError={() => setImageError(true)}
             onLoad={() => setImageError(false)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center 47%",
-              cursor: "pointer",
-            }}
-            
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center 47%" }}
           />
         ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-              height: "100%",
-              color: "#fff",
-              padding: 2,
-              textAlign: "center",
-            }}
-          >
-            <Typography
-              variant="body2"
-              sx={{
-                color: "rgba(255,255,255,0.7)",
-                fontSize: { xs: "0.75rem", sm: "0.875rem" },
-              }}
-            >
-              Anúncio indisponível
-            </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%", color: "#fff" }}>
+            <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.7)" }}>Anúncio indisponível</Typography>
           </Box>
         )}
       </Box>
