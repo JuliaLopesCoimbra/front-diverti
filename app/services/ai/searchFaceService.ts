@@ -17,13 +17,15 @@ interface SearchFaceResponse {
 
 export async function searchFace(
   file: File,
-  collectionId?: string
+  collectionId?: string,
+  eventId?: number
 ): Promise<SearchFaceResponse> {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("threshold", "70");
   formData.append("max_faces", "100"); // mais faces para fotos de grupo
   if (collectionId) formData.append("collection_id", collectionId);
+  if (eventId) formData.append("event_id", eventId.toString());
 
   const { data } = await api.post<SearchFaceResponse>(
     "/photo-ai/search-face",

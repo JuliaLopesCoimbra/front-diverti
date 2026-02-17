@@ -350,7 +350,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
         return;
       }
 
-      const response = await searchFace(file, String(eventId));
+      const response = await searchFace(file, String(eventId), eventId);
       console.log("Resposta completa da API:", response);
       console.log("Matches:", response.matches);
 
