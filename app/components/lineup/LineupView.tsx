@@ -622,42 +622,44 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   )}
                 </Box>
 
-                <Box sx={{ mt: { xs: 0.5, sm: 1 }, display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography
-                    sx={{
-                      color: "#fff",
-                      fontSize: { xs: "1.25rem", md: "1.9rem" },
-                      fontWeight: 700,
-                      fontFamily: "monospace",
-                    }}
-                  >
-                    {formatTime(paradeItem.performance_time)}
-                  </Typography>
-                  {paradeItem.performance_end_time && (
-                    <>
-                      <Typography
-                        sx={{
-                          color: "rgba(255,255,255,0.7)",
-                          fontSize: { xs: "0.95rem", md: "1.3rem" },
-                          fontWeight: 500,
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        -
-                      </Typography>
-                      <Typography
-                        sx={{
-                          color: "rgba(255,255,255,0.7)",
-                          fontSize: { xs: "0.95rem", md: "1.3rem" },
-                          fontWeight: 500,
-                          fontFamily: "monospace",
-                        }}
-                      >
-                        {formatTime(paradeItem.performance_end_time)}
-                      </Typography>
-                    </>
-                  )}
-                </Box>
+                {paradeItem.event_date !== "2026-02-21" && (
+                  <Box sx={{ mt: { xs: 0.5, sm: 1 }, display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography
+                      sx={{
+                        color: "#fff",
+                        fontSize: { xs: "1.25rem", md: "1.9rem" },
+                        fontWeight: 700,
+                        fontFamily: "monospace",
+                      }}
+                    >
+                      {formatTime(paradeItem.performance_time)}
+                    </Typography>
+                    {paradeItem.performance_end_time && (
+                      <>
+                        <Typography
+                          sx={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: { xs: "0.95rem", md: "1.3rem" },
+                            fontWeight: 500,
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          -
+                        </Typography>
+                        <Typography
+                          sx={{
+                            color: "rgba(255,255,255,0.7)",
+                            fontSize: { xs: "0.95rem", md: "1.3rem" },
+                            fontWeight: 500,
+                            fontFamily: "monospace",
+                          }}
+                        >
+                          {formatTime(paradeItem.performance_end_time)}
+                        </Typography>
+                      </>
+                    )}
+                  </Box>
+                )}
               </Box>
             </Paper>
               );
