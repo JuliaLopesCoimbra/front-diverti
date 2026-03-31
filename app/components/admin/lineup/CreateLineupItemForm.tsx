@@ -12,7 +12,6 @@ import {
   Avatar,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import {
   createLineupItem,
   updateLineupItem,
@@ -31,6 +30,40 @@ interface CreateLineupItemFormProps {
   onSuccess?: () => void;
 }
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object") {
+    const apiError = error as {
+      message?: string;
+      response?: { data?: { detail?: string } };
+    };
+    return apiError.response?.data?.detail || apiError.message || fallback;
+  }
+
+  return fallback;
+};
+
+const focusedInputSx = {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "rgba(255,255,255,0.05)",
+    color: "#fff",
+    "& fieldset": {
+      borderColor: "rgba(255,255,255,0.2)",
+    },
+    "&:hover fieldset": {
+      borderColor: "rgba(255,255,255,0.3)",
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: "rgb(255, 31, 33)",
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: "rgba(255,255,255,0.7)",
+    "&.Mui-focused": {
+      color: "rgb(255, 31, 33)",
+    },
+  },
+};
+
 export default function CreateLineupItemForm({
   eventId,
   lineupItemId,
@@ -41,8 +74,6 @@ export default function CreateLineupItemForm({
   const [performanceEndTime, setPerformanceEndTime] = useState("");
   const [stage, setStage] = useState("");
   const [eventDate, setEventDate] = useState("");
-  const [displayOrder, setDisplayOrder] = useState<number>(0);
-  const [originalDisplayOrder, setOriginalDisplayOrder] = useState<number>(0);
   const [description, setDescription] = useState("");
   const [artistImage, setArtistImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -50,7 +81,6 @@ export default function CreateLineupItemForm({
   const [loadingData, setLoadingData] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
   const [notifyModalOpen, setNotifyModalOpen] = useState(false);
-  const [pendingSubmit, setPendingSubmit] = useState(false);
   const { showToast } = useToast();
   const router = useRouter();
   const isEditing = !!lineupItemId;
@@ -66,13 +96,11 @@ export default function CreateLineupItemForm({
           setPerformanceEndTime(item.performance_end_time ? item.performance_end_time.substring(0, 5) : ""); // HH:mm
           setStage(item.stage || "");
           setEventDate(item.event_date || ""); // YYYY-MM-DD
-          setDisplayOrder(item.display_order ?? 0);
-          setOriginalDisplayOrder(item.display_order ?? 0);
           setDescription(item.description || "");
           if (item.artist_image_url) {
             setPreview(item.artist_image_url);
           }
-        } catch (err: any) {
+        } catch (err) {
           console.error("Erro ao buscar item:", err);
           showToast("Erro ao carregar dados do artista", "error");
         } finally {
@@ -114,7 +142,6 @@ export default function CreateLineupItemForm({
     }
 
     // Abre o modal de confirmação antes de salvar
-    setPendingSubmit(true);
     setNotifyModalOpen(true);
   };
 
@@ -130,8 +157,6 @@ export default function CreateLineupItemForm({
           performance_end_time: performanceEndTime || undefined,
           stage: stage || undefined,
           event_date: eventDate || undefined,
-          // Só envia display_order se foi alterado
-          display_order: displayOrder !== originalDisplayOrder ? displayOrder : undefined,
           artist_image: artistImage || undefined,
           remove_image: removeImage,
           description: description || undefined,
@@ -146,7 +171,6 @@ export default function CreateLineupItemForm({
           performance_end_time: performanceEndTime || undefined,
           stage: stage || undefined,
           event_date: eventDate || undefined,
-          display_order: displayOrder,
           artist_image: artistImage || undefined,
           description: description || undefined,
         };
@@ -159,7 +183,7 @@ export default function CreateLineupItemForm({
         try {
           await notifyLineupUpdated(eventId);
           showToast("Notificações enviadas com sucesso!", "success");
-        } catch (notifyErr: any) {
+        } catch (notifyErr) {
           console.error("Erro ao enviar notificações:", notifyErr);
           // Não quebra o fluxo se a notificação falhar
           showToast("Artista salvo, mas houve um erro ao enviar notificações", "warning");
@@ -171,13 +195,11 @@ export default function CreateLineupItemForm({
       } else {
         router.push(`/pages/admin/events/${eventId}/lineup`);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro ao salvar artista:", err);
-      const errorMessage = err.response?.data?.detail || err.message || "Erro ao salvar artista";
-      showToast(errorMessage, "error");
+      showToast(getErrorMessage(err, "Erro ao salvar artista"), "error");
     } finally {
       setLoading(false);
-      setPendingSubmit(false);
     }
   };
 
@@ -253,27 +275,7 @@ export default function CreateLineupItemForm({
               value={artistName}
               onChange={(e) => setArtistName(e.target.value)}
               required
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
-                  },
-                },
-              }}
+              sx={focusedInputSx}
             />
 
             {/* Horário de Início */}
@@ -291,29 +293,14 @@ export default function CreateLineupItemForm({
                 step: 300, // 5 minutos
               }}
               sx={{
+                ...focusedInputSx,
                 "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
+                  ...focusedInputSx["& .MuiOutlinedInput-root"],
                   "& input": {
                     "&::-webkit-calendar-picker-indicator": {
                       filter: "invert(1)",
                       cursor: "pointer",
                     },
-                  },
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
                   },
                 },
               }}
@@ -333,29 +320,14 @@ export default function CreateLineupItemForm({
                 step: 300, // 5 minutos
               }}
               sx={{
+                ...focusedInputSx,
                 "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
+                  ...focusedInputSx["& .MuiOutlinedInput-root"],
                   "& input": {
                     "&::-webkit-calendar-picker-indicator": {
                       filter: "invert(1)",
                       cursor: "pointer",
                     },
-                  },
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
                   },
                 },
               }}
@@ -368,27 +340,7 @@ export default function CreateLineupItemForm({
               value={stage}
               onChange={(e) => setStage(e.target.value)}
               placeholder="Ex: Palco Principal, Palco 2, etc."
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
-                  },
-                },
-              }}
+              sx={focusedInputSx}
             />
 
             {/* Data do Evento */}
@@ -402,59 +354,14 @@ export default function CreateLineupItemForm({
                 shrink: true,
               }}
               sx={{
+                ...focusedInputSx,
                 "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
+                  ...focusedInputSx["& .MuiOutlinedInput-root"],
                   "& input": {
                     "&::-webkit-calendar-picker-indicator": {
                       filter: "invert(1)",
                       cursor: "pointer",
                     },
-                  },
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
-                  },
-                },
-              }}
-            />
-
-            {/* Ordem de Exibição */}
-            <TextField
-              fullWidth
-              label="Ordem de Exibição"
-              type="number"
-              value={displayOrder}
-              onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
                   },
                 },
               }}
@@ -468,27 +375,7 @@ export default function CreateLineupItemForm({
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  color: "#fff",
-                  "& fieldset": {
-                    borderColor: "rgba(255,255,255,0.2)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(255,255,255,0.3)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#ffc91f",
-                  },
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(255,255,255,0.7)",
-                  "&.Mui-focused": {
-                    color: "#ffc91f",
-                  },
-                },
-              }}
+              sx={focusedInputSx}
             />
 
             {/* Foto do Artista */}
@@ -559,16 +446,16 @@ export default function CreateLineupItemForm({
                 disabled={loading}
                 sx={{
                   flex: 1,
-                  backgroundColor: "#ffc91f",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 600,
                   "&:hover": {
-                    backgroundColor: "#e6b800",
+                    backgroundColor: "rgb(220, 20, 22)",
                   },
                 }}
               >
                 {loading ? (
-                  <CircularProgress size={20} sx={{ color: "#000" }} />
+                  <CircularProgress size={20} sx={{ color: "#fff" }} />
                 ) : isEditing ? (
                   "Atualizar"
                 ) : (
@@ -585,7 +472,6 @@ export default function CreateLineupItemForm({
         open={notifyModalOpen}
         onClose={() => {
           setNotifyModalOpen(false);
-          setPendingSubmit(false);
         }}
         onConfirm={handleConfirmSubmit}
         loading={loading}
@@ -593,4 +479,5 @@ export default function CreateLineupItemForm({
     </Box>
   );
 }
+
 

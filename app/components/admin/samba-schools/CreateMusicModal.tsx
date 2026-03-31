@@ -346,12 +346,12 @@ export default function CreateMusicModal({
           variant="contained"
           disabled={loading || !songName.trim() || !lyrics.trim()}
           sx={{
-            backgroundColor: "#ffc91f",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&:disabled": {
               backgroundColor: "rgba(255,201,31,0.3)",
@@ -360,7 +360,7 @@ export default function CreateMusicModal({
           }}
         >
           {loading ? (
-            <CircularProgress size={24} sx={{ color: "#000" }} />
+            <CircularProgress size={24} sx={{ color: "#fff" }} />
           ) : isEditMode ? (
             "Atualizar"
           ) : (
@@ -371,4 +371,5 @@ export default function CreateMusicModal({
     </Dialog>
   );
 }
+
 

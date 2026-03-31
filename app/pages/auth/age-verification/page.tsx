@@ -190,9 +190,9 @@ function AgeVerificationContent() {
                   checked={confirmed}
                   onChange={(e) => setConfirmed(e.target.checked)}
                   sx={{
-                    color: "#fff",
+                    color: "rgb(255, 31, 33)",
                     "&.Mui-checked": {
-                      color: "#ffcc01",
+                      color: "rgb(255, 31, 33)",
                     },
                   }}
                 />
@@ -211,16 +211,16 @@ function AgeVerificationContent() {
               onClick={handleSubmit}
               disabled={loading || !confirmed || !birthDate}
               sx={{
-                backgroundColor: "#ffcc01",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 700,
                 padding: "14px",
                 borderRadius: "14px",
                 "&:hover": {
-                  backgroundColor: "#ffd633",
+                  backgroundColor: "rgb(220, 20, 22)",
                 },
                 "&:disabled": {
-                  backgroundColor: "rgba(255, 204, 1, 0.5)",
+                  backgroundColor: "rgba(255, 31, 33, 0.5)",
                 },
               }}
             >
@@ -256,4 +256,5 @@ export default function AgeVerificationPage() {
     </Suspense>
   );
 }
+
 

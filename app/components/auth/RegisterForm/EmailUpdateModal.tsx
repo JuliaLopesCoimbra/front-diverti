@@ -42,7 +42,7 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ color: "#fff", fontWeight: 600, fontSize: "1.5rem" }}>
+      <DialogTitle sx={{ color: "rgb(255, 120, 122)", fontWeight: 600, fontSize: "1.5rem" }}>
         Atualizar Email
       </DialogTitle>
       <DialogContent>
@@ -65,16 +65,16 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
                 borderColor: "rgba(255, 255, 255, 0.3)",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#ffcc01",
+                borderColor: "rgb(255, 31, 33)",
               },
             },
             "& .MuiInputLabel-root": {
-              color: "rgba(255, 255, 255, 0.7)",
+              color: "rgba(255, 120, 122, 0.95)",
               "&.Mui-focused": {
-                color: "#ffcc01",
+                color: "rgb(255, 31, 33)",
               },
             },
           }}
@@ -98,17 +98,17 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
           disabled={updating || !email}
           variant="contained"
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&:disabled": {
-              backgroundColor: "rgba(255, 204, 1, 0.5)",
-              color: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: "rgba(255, 31, 33, 0.45)",
+              color: "rgba(255, 255, 255, 0.7)",
             },
           }}
         >
@@ -120,4 +120,5 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
 };
 
 export default EmailUpdateModal;
+
 

@@ -52,10 +52,10 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
               borderRadius: "4px",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "rgba(255, 204, 1, 0.5)",
+              background: "rgba(255, 31, 33, 0.5)",
               borderRadius: "4px",
               "&:hover": {
-                background: "rgba(255, 204, 1, 0.7)",
+                background: "rgba(255, 31, 33, 0.7)",
               },
             },
           }}
@@ -64,7 +64,7 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
             A HOLDING CLUBE, Inscrita no CNPJ: 07.900.154/0001-89 com endereço profissional a Rua Purpurina, 400 – Vila Madalena - Centro, CEP 05433-000, cidade de SÃO PAULO, estado de SÃO PAULO doravante denominado(a) CONTROLADORA.
           </Typography>
 
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: "#ffcc01" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: "rgb(255, 120, 122)" }}>
             1. Aceite para Tratamento de Dados Pessoais
           </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 2 }}>
@@ -74,7 +74,7 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
             O tratamento poderá envolver coleta, armazenamento, utilização, acesso e demais operações necessárias à execução das funcionalidades do aplicativo, sendo adotadas medidas técnicas e administrativas adequadas para garantir a segurança e proteção das informações.
           </Typography>
 
-          <Typography variant="h6" sx={{ fontWeight: 600, mt: 4, mb: 2, color: "#ffcc01" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mt: 4, mb: 2, color: "rgb(255, 120, 122)" }}>
             2. Aceite para Envio de Comunicações, Promoções e Conteúdos de Marketing
           </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 2 }}>
@@ -90,13 +90,13 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
           onClick={onClose}
           variant="contained"
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
           }}
         >
@@ -108,4 +108,5 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
 };
 
 export default LgpdModal;
+
 

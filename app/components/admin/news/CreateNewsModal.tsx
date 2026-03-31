@@ -332,11 +332,11 @@ export default function CreateNewsModal({
             variant="contained"
             disabled={loading || !title.trim() || !content.trim() || !image}
             sx={{
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "rgb(220, 20, 22)",
               },
               "&:disabled": {
                 backgroundColor: "rgba(255,201,31,0.3)",
@@ -345,7 +345,7 @@ export default function CreateNewsModal({
             }}
           >
             {loading ? (
-              <CircularProgress size={20} sx={{ color: "#000" }} />
+              <CircularProgress size={20} sx={{ color: "#fff" }} />
             ) : (
               "Criar"
             )}
@@ -355,4 +355,5 @@ export default function CreateNewsModal({
     </Dialog>
   );
 }
+
 

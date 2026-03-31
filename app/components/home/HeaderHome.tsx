@@ -374,7 +374,7 @@ export default function HomeHeader({
             />
           </Box>
 
-          {/* DIREITA: NOTIFICAÇÕES + AVATAR - Skeleton */}
+          {/* DIREITA: NOTIFICAÃ‡Ã•ES + AVATAR - Skeleton */}
           <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
             <Skeleton
               variant="circular"
@@ -465,7 +465,7 @@ export default function HomeHeader({
           </Typography>
         </Box>
 
-        {/* DIREITA: NOTIFICAÇÕES + AVATAR */}
+        {/* DIREITA: NOTIFICAÃ‡Ã•ES + AVATAR */}
         <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
           <IconButton
             onClick={(e) => setNotificationsAnchorEl(e.currentTarget)}
@@ -488,7 +488,7 @@ export default function HomeHeader({
             sx={{ 
               width: { xs: 40, md: 56, lg: 64 }, 
               height: { xs: 40, md: 56, lg: 64 },
-              border: "2px solid #FFD600",
+              border: "2px solid rgb(255, 31, 33)",
               cursor: "pointer",
               transition: "transform 0.2s",
               "&:hover": {
@@ -553,7 +553,7 @@ export default function HomeHeader({
         </Box>
       )}
 
-      {/* MENU DE NOTIFICAÇÕES (POPUP) */}
+      {/* MENU DE NOTIFICAÃ‡Ã•ES (POPUP) */}
       <Menu
         anchorEl={notificationsAnchorEl}
         open={notificationsOpen}
@@ -616,7 +616,7 @@ export default function HomeHeader({
           )}
         </Box>
 
-        {/* CONTEÚDO */}
+        {/* CONTEÃšDO */}
         <Box 
           sx={{ 
             maxHeight: "60vh", 
@@ -767,7 +767,7 @@ export default function HomeHeader({
                                   width: 8,
                                   height: 8,
                                   borderRadius: "50%",
-                                  backgroundColor: "#ffcc01",
+                                  backgroundColor: "rgb(255, 31, 33)",
                                   ml: 1,
                                   flexShrink: 0,
                                 }}
@@ -899,3 +899,4 @@ export default function HomeHeader({
     </Box>
   );
 }
+

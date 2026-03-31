@@ -42,7 +42,7 @@ const RegisterConfirmationModal: React.FC<RegisterConfirmationModalProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ color: "#fff", fontWeight: 600, fontSize: "1.25rem", pb: 1 }}>
+      <DialogTitle sx={{ color: "rgb(255, 120, 122)", fontWeight: 600, fontSize: "1.25rem", pb: 1 }}>
         Confirmação
       </DialogTitle>
       <DialogContent>
@@ -72,7 +72,7 @@ const RegisterConfirmationModal: React.FC<RegisterConfirmationModalProps> = ({
         <Typography
           variant="body2"
           sx={{
-            color: "#ffcc01",
+            color: "rgb(255, 120, 122)",
             fontSize: "0.85rem",
             textAlign: "center",
           }}
@@ -99,16 +99,16 @@ const RegisterConfirmationModal: React.FC<RegisterConfirmationModalProps> = ({
           disabled={loading}
           variant="contained"
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&:disabled": {
-              backgroundColor: "rgba(255, 204, 1, 0.5)",
-              color: "rgba(0, 0, 0, 0.5)",
+              backgroundColor: "rgba(255, 31, 33, 0.45)",
+              color: "rgba(255, 255, 255, 0.7)",
             },
           }}
         >
@@ -120,4 +120,5 @@ const RegisterConfirmationModal: React.FC<RegisterConfirmationModalProps> = ({
 };
 
 export default RegisterConfirmationModal;
+
 

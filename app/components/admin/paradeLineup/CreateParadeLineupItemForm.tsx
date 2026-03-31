@@ -463,16 +463,16 @@ export default function CreateParadeLineupItemForm({
                 disabled={loading}
                 sx={{
                   flex: 1,
-                  backgroundColor: "#ffc91f",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 600,
                   "&:hover": {
-                    backgroundColor: "#e6b800",
+                    backgroundColor: "rgb(220, 20, 22)",
                   },
                 }}
               >
                 {loading ? (
-                  <CircularProgress size={20} sx={{ color: "#000" }} />
+                  <CircularProgress size={20} sx={{ color: "#fff" }} />
                 ) : isEditing ? (
                   "Atualizar"
                 ) : (
@@ -486,6 +486,7 @@ export default function CreateParadeLineupItemForm({
     </Box>
   );
 }
+
 
 
 

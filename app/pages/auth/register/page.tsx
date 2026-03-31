@@ -305,22 +305,22 @@ const RegisterForm: React.FC = () => {
                 sx={{
                   mt: 4,
                   mb: 2,
-                  backgroundColor: "#ffcc01",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 700,
                   fontSize: "1rem",
                   padding: "14px",
                   borderRadius: "14px",
                   textTransform: "none",
-                  boxShadow: "0 4px 14px rgba(255, 204, 1, 0.3)",
+                  boxShadow: "0 4px 14px rgba(255, 31, 33, 0.35)",
                   "&:hover": {
-                    backgroundColor: "#ffd633",
-                    boxShadow: "0 6px 20px rgba(255, 204, 1, 0.4)",
+                    backgroundColor: "rgb(220, 20, 22)",
+                    boxShadow: "0 6px 20px rgba(255, 31, 33, 0.45)",
                     transform: "translateY(-1px)",
                   },
                   "&:disabled": {
-                    backgroundColor: "rgba(255, 204, 1, 0.5)",
-                    color: "rgba(0, 0, 0, 0.5)",
+                    backgroundColor: "rgba(255, 31, 33, 0.45)",
+                    color: "rgba(255, 255, 255, 0.7)",
                   },
                   transition: "all 0.3s ease",
                 }}
@@ -361,3 +361,4 @@ const RegisterForm: React.FC = () => {
 };
 
 export default RegisterForm;
+

@@ -164,7 +164,7 @@ export default function HamburgerMenu({
             <Box
               sx={{
                 width: "100%",
-                backgroundColor: "#6b4eff",
+                backgroundColor: "#ff1f21",
                 borderRadius: 2,
                 padding: 2,
                 display: "flex",
@@ -240,7 +240,7 @@ export default function HamburgerMenu({
                     },
                   }}
                 >
-                  <AddIcon sx={{ color: "#ffc91f" }} />
+                  <AddIcon sx={{ color: "primary.main" }} />
                 </IconButton>
               )}
             </Box>
@@ -290,7 +290,7 @@ export default function HamburgerMenu({
                     sx={{
                       position: "relative",
                       cursor: "pointer",
-                      border: isSelected ? "3px solid #ffc91f" : "none",
+                      border: isSelected ? "3px solid rgb(255, 31, 33)" : "none",
                       borderRadius: 2,
                       padding: isSelected ? "3px" : 0,
                       transition: "all 0.2s",
@@ -532,7 +532,7 @@ export default function HamburgerMenu({
               sx={{
                 justifyContent: "center",
                 gap: 1,
-                color: "#ffc91f",
+                color: "primary.main",
               }}
             >
               <LogoutIcon fontSize="small" />

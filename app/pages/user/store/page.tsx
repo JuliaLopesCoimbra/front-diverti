@@ -416,7 +416,7 @@ export default function StorePage() {
                     mb: 1,
                   }}
                 >
-                  Loja N1
+                  Loja Rock In Rio
                 </Typography>
                 <Typography
                   variant="body2"
@@ -428,8 +428,8 @@ export default function StorePage() {
                   }}
                 >
                   {currentEvent?.meeting_point_location 
-                    ? `A loja N1 está localizada no endereço do Meeting Point: ${currentEvent.meeting_point_location}. Estes produtos estão sendo vendidos na loja N1 do evento. Clique em qualquer produto para ver mais detalhes.`
-                    : "Estes produtos estão sendo vendidos na loja N1 do evento. Clique em qualquer produto para ver mais detalhes."}
+                    ? `A loja Rock In Rio está localizada no endereço do Meeting Point: ${currentEvent.meeting_point_location}. Estes produtos estão sendo vendidos na loja Rock In Rio do evento. Clique em qualquer produto para ver mais detalhes.`
+                    : "Estes produtos estão sendo vendidos na loja Rock In Rio do evento. Clique em qualquer produto para ver mais detalhes."}
                 </Typography>
               </Box>
 

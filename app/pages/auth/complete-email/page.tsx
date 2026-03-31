@@ -242,8 +242,8 @@ function CompleteEmailContent() {
               mt: 2,
               py: 1.5,
               borderRadius: "12px",
-              backgroundColor: "#ffcc01",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               fontSize: "16px",
               textTransform: "none",
@@ -256,7 +256,7 @@ function CompleteEmailContent() {
               },
             }}
           >
-            {loading ? <CircularProgress size={24} sx={{ color: "#000" }} /> : "Continuar"}
+            {loading ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Continuar"}
           </Button>
         </Box>
       </Container>
@@ -282,4 +282,5 @@ export default function CompleteEmailPage() {
     </Suspense>
   );
 }
+
 

@@ -105,7 +105,7 @@ const LoginForm: React.FC = () => {
       };
       const response = await loginUser(loginData);
 
-      // sucesso → reseta tentativas
+      // sucesso â†’ reseta tentativas
       setShowForgotPassword(false);
       setShowResendEmail(false);
 
@@ -399,22 +399,13 @@ const LoginForm: React.FC = () => {
           }}
         >
           <Image
-            src="/logo/logo-n1.png"
-            alt="Camarote N1"
-            width={80}
-            height={80}
-            style={{ marginBottom: "16px" }}
+            src="/logo/rockinrio.png"
+            alt="Rock in Rio"
+            width={300}
+            height={300}
+           
           />
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: "24px", md: "28px" },
-              textAlign: "center",
-            }}
-          >
-            Login
-          </Typography>
+   
         </Box>
         <Typography
           className={shouldAnimate ? "slide-up-delay-1" : ""}
@@ -446,7 +437,7 @@ const LoginForm: React.FC = () => {
             spellCheck: false,
           }}
           InputLabelProps={{
-            shrink: true, // ✅ fixa o label em cima
+            shrink: true, // âœ… fixa o label em cima
             sx: {
               color: "#fff",
               fontSize: 13,
@@ -574,12 +565,12 @@ const LoginForm: React.FC = () => {
               checked={keepMeLoggedIn}
               onChange={(e) => setKeepMeLoggedIn(e.target.checked)}
               sx={{
-                color: "#ffcc01", // cor quando desmarcado
+                color: "rgb(255, 31, 33)", // cor quando desmarcado
                 "&.Mui-checked": {
-                  color: "#ffcc01", // cor quando marcado
+                  color: "rgb(255, 31, 33)", // cor quando marcado
                 },
                 "&:hover": {
-                  backgroundColor: "rgba(255, 204, 1, 0.08)", // hover suave
+                  backgroundColor: "rgba(255, 31, 33, 0.08)", // hover suave
                 },
               }}
             />
@@ -600,8 +591,8 @@ const LoginForm: React.FC = () => {
           sx={{
             mt: { xs: 2, md: 3 },
             mb: 1,
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 700,
             borderRadius: "12px",
             textTransform: "none",
@@ -610,7 +601,7 @@ const LoginForm: React.FC = () => {
             boxShadow: "0 4px 12px rgba(255, 204, 1, 0.3)",
             transition: "all 0.2s ease",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
               transform: "translateY(-2px)",
               boxShadow: "0 6px 16px rgba(255, 204, 1, 0.4)",
             },
@@ -872,16 +863,16 @@ const LoginForm: React.FC = () => {
             href="/pages/auth/register"
             style={{
               textDecoration: "none",
-              color: "#ffcc01",
+              color: "rgb(255, 31, 33)",
               fontWeight: 600,
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#e6b800";
+              e.currentTarget.style.color = "rgb(220, 20, 22)";
               e.currentTarget.style.textDecoration = "underline";
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.color = "#ffcc01";
+              e.currentTarget.style.color = "rgb(255, 31, 33)";
               e.currentTarget.style.textDecoration = "none";
             }}
           >
@@ -894,3 +885,4 @@ const LoginForm: React.FC = () => {
 };
 
 export default LoginForm;
+

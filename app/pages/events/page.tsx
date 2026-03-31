@@ -327,8 +327,8 @@ export default function EventsPage() {
               <Button
                 sx={{
                   marginTop: 1,
-                  backgroundColor: "#FFD600",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 700,
                   padding: { xs: "10px 24px", md: "10px 28px" },
                   borderRadius: "30px",
@@ -352,6 +352,7 @@ export default function EventsPage() {
     </div>
   );
 }
+
 
 
 

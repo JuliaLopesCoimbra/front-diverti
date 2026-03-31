@@ -74,9 +74,13 @@ export default function BottomNav() {
               router.push(item.path);
             }}
             sx={{
-              color: isActive ? "#ffc91f" : "#fff",
+              color: isActive ? "primary.main" : "rgba(255, 31, 33, 0.75)",
               "& svg": {
                 fontSize: isActive ? 28 : 24,
+              },
+              "&:hover": {
+                color: "primary.main",
+                backgroundColor: "rgba(255, 31, 33, 0.08)",
               },
               transition: "all 0.2s ease",
             }}

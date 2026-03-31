@@ -414,22 +414,22 @@ export default function CreateSambaSchoolForm({
             sx={{
               flex: 1,
               borderRadius: "999px",
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 700,
               fontSize: { xs: "0.875rem", sm: "1.1rem" },
               py: { xs: 1, sm: 1.5 },
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#ffd54f",
+                backgroundColor: "rgb(220, 20, 22)",
               },
               "&:disabled": {
-                backgroundColor: "rgba(255, 201, 31, 0.5)",
+                backgroundColor: "rgba(255, 31, 33, 0.5)",
               },
             }}
           >
             {loading ? (
-              <CircularProgress size={24} sx={{ color: "#000" }} />
+              <CircularProgress size={24} sx={{ color: "#fff" }} />
             ) : (
               "Criar Escola de Samba"
             )}
@@ -439,4 +439,5 @@ export default function CreateSambaSchoolForm({
     </Box>
   );
 }
+
 

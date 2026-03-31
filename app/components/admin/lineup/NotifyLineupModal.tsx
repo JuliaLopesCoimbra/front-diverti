@@ -82,10 +82,10 @@ export default function NotifyLineupModal({
             width: 48,
             height: 48,
             borderRadius: "50%",
-            backgroundColor: "rgba(255, 201, 31, 0.1)",
+            backgroundColor: "rgba(255, 31, 33, 0.1)",
           }}
         >
-          <NotificationsIcon sx={{ color: "#ffc91f", fontSize: 28 }} />
+          <NotificationsIcon sx={{ color: "primary.main", fontSize: 28 }} />
         </Box>
       Modificação de Line Up
       </DialogTitle>
@@ -102,7 +102,7 @@ export default function NotifyLineupModal({
             backgroundColor: "rgba(255,255,255,0.05)",
             borderRadius: 1,
             p: 2,
-            borderLeft: "3px solid #ffc91f",
+            borderLeft: "3px solid rgb(255, 31, 33)",
             mb: 2,
           }}
         >
@@ -112,9 +112,9 @@ export default function NotifyLineupModal({
                 checked={shouldNotify}
                 onChange={(e) => setShouldNotify(e.target.checked)}
                 sx={{
-                  color: "#ffc91f",
+                  color: "primary.main",
                   "&.Mui-checked": {
-                    color: "#ffc91f",
+                    color: "primary.main",
                   },
                 }}
               />
@@ -157,10 +157,13 @@ export default function NotifyLineupModal({
         <Button
           onClick={handleClose}
           disabled={loading}
+          variant="outlined"
           sx={{
-            color: "rgba(255,255,255,0.7)",
+            color: "primary.main",
+            borderColor: "rgba(255, 31, 33, 0.5)",
             "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.05)",
+              borderColor: "primary.main",
+              backgroundColor: "rgba(255, 31, 33, 0.08)",
             },
           }}
         >
@@ -171,20 +174,20 @@ export default function NotifyLineupModal({
           disabled={loading}
           variant="contained"
           sx={{
-            backgroundColor: "#ffc91f",
-            color: "#000",
+            backgroundColor: "primary.main",
+            color: "#fff",
             fontWeight: 600,
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "primary.dark",
             },
             "&:disabled": {
-              backgroundColor: "rgba(255, 201, 31, 0.3)",
-              color: "rgba(0,0,0,0.3)",
+              backgroundColor: "rgba(255, 31, 33, 0.35)",
+              color: "rgba(255,255,255,0.6)",
             },
           }}
         >
           {loading ? (
-            <CircularProgress size={20} sx={{ color: "#000" }} />
+            <CircularProgress size={20} sx={{ color: "#fff" }} />
           ) : (
             "Confirmar"
           )}
@@ -193,4 +196,5 @@ export default function NotifyLineupModal({
     </Dialog>
   );
 }
+
 

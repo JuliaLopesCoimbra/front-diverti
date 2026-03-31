@@ -285,13 +285,13 @@ function FirstAccessContent() {
           variant="contained"
           sx={{
             mt: 2,
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&.Mui-disabled": {
               backgroundColor: "rgba(255, 204, 1, 0.4)",
@@ -330,4 +330,5 @@ export default function FirstAccessPage() {
     </Suspense>
   );
 }
+
 

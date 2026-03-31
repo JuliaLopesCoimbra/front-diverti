@@ -1,27 +1,19 @@
 /**
- * Fundo fixo: sempre dashboard.png (Home e Enredo).
+ * Fundo fixo preto fosco.
  */
 export const dashboardOnlySx = {
-  backgroundImage: "url(/background/dashboard.png)",
-  backgroundSize: "100% 100vh",
-  backgroundRepeat: "repeat",
-  backgroundPosition: "0 0",
-  backgroundAttachment: "scroll",
+  backgroundColor: "#111111",
+  backgroundImage:
+    "radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 32%), radial-gradient(circle at bottom right, rgba(255,255,255,0.03), transparent 28%), linear-gradient(180deg, #1a1a1a 0%, #111111 45%, #0b0b0b 100%)",
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "cover",
   width: "100%",
   boxSizing: "border-box",
 } as const;
 
 /**
- * Fundo responsivo (Eventos e Foto IA):
- * - Tela estreita → dashboard.png
- * - Tela larga (min-width 1024px) → prizebackgroundpc.png
+ * Mantem o mesmo fundo preto fosco em qualquer tela.
  */
 export const dashboardBackgroundSx = {
   ...dashboardOnlySx,
-  /* Horizontal/largo (PC): prizebackgroundpc.png - min-width mais confiável que orientation no desktop */
-  "@media (min-width: 1024px)": {
-    backgroundImage: "url(/background/prizebackgroundpc.png)",
-    /* 100svh = altura visível da viewport no PC, evita telha “cortar” no meio da tela */
-    backgroundSize: "100% 100svh",
-  },
 } as const;

@@ -98,7 +98,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
         variant="body1"
         sx={{
           mb: 4,
-          color: "rgba(255, 255, 255, 0.9)",
+          color: "rgba(255, 120, 122, 0.95)",
           fontSize: "0.95rem",
           lineHeight: 1.6,
         }}
@@ -116,10 +116,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           sx={{
@@ -133,12 +133,12 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
@@ -168,10 +168,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           sx={{
@@ -186,12 +186,12 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
@@ -225,10 +225,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           sx={{
@@ -243,12 +243,12 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
@@ -273,10 +273,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           sx={{
@@ -291,12 +291,12 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
@@ -328,10 +328,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           InputProps={{
@@ -343,7 +343,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 <IconButton
                   onClick={onToggleShowPassword}
                   edge="end"
-                  sx={{ color: "rgba(255, 255, 255, 0.7)" }}
+                  sx={{ color: "rgba(255, 120, 122, 0.95)" }}
                 >
                   {showPassword ? <VisibilityOff /> : <Visibility />}
                 </IconButton>
@@ -397,10 +397,10 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           InputLabelProps={{
             shrink: true,
             sx: {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
           }}
           FormHelperTextProps={{ sx: { color: "#ff6b6b" } }}
@@ -416,12 +416,12 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
@@ -445,24 +445,24 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                 borderWidth: "1.5px",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "#fff",
+                  borderColor: "rgb(255, 31, 33)",
                   borderWidth: "2px",
                 },
               },
             },
             "& .MuiInputLabel-root": {
-              color: "#fff",
+              color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
+              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
             },
             "& .MuiSelect-icon": {
-              color: "rgba(255, 255, 255, 0.7)",
+              color: "rgba(255, 120, 122, 0.95)",
             },
           }}
         >
@@ -488,13 +488,13 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
                   "& .MuiMenuItem-root": {
                     color: "#fff",
                     "&:hover": {
-                      backgroundColor: "rgba(255, 204, 1, 0.2)",
+                      backgroundColor: "rgba(255, 31, 33, 0.18)",
                     },
                     "&.Mui-selected": {
-                      backgroundColor: "rgba(255, 204, 1, 0.3)",
-                      color: "#ffcc01",
+                      backgroundColor: "rgba(255, 31, 33, 0.28)",
+                      color: "rgb(255, 120, 122)",
                       "&:hover": {
-                        backgroundColor: "rgba(255, 204, 1, 0.4)",
+                        backgroundColor: "rgba(255, 31, 33, 0.36)",
                       },
                     },
                   },
@@ -518,9 +518,9 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               checked={lgpdAccepted}
               onChange={(e) => onLgpdAcceptedChange(e.target.checked)}
               sx={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "#ffcc01",
+                  color: "rgb(255, 31, 33)",
                 },
               }}
             />
@@ -537,7 +537,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
             onClick={() => setShowLgpdDataProtectionModal(true)}
             sx={{
               textTransform: "none",
-              color: "#ffcc01",
+              color: "rgb(255, 120, 122)",
               fontSize: "0.7rem",
               textDecoration: "underline",
               padding: 0,
@@ -563,9 +563,9 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               checked={marketingEmailAccepted}
               onChange={(e) => onMarketingEmailAcceptedChange(e.target.checked)}
               sx={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "#ffcc01",
+                  color: "rgb(255, 31, 33)",
                 },
               }}
             />
@@ -582,7 +582,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
             onClick={() => setShowMarketingConsentModal(true)}
             sx={{
               textTransform: "none",
-              color: "#ffcc01",
+              color: "rgb(255, 120, 122)",
               fontSize: "0.7rem",
               textDecoration: "underline",
               padding: 0,
@@ -605,9 +605,9 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               checked={ageTermsAccepted}
               onChange={(e) => onAgeTermsAcceptedChange(e.target.checked)}
               sx={{
-                color: "rgba(255, 255, 255, 0.7)",
+                color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "#ffcc01",
+                  color: "rgb(255, 31, 33)",
                 },
               }}
             />
@@ -626,7 +626,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
           onClick={onShowLgpdModal}
           sx={{
             textTransform: "none",
-            color: "#ffcc01",
+            color: "rgb(255, 120, 122)",
             fontSize: "0.7rem",
             textDecoration: "underline",
             padding: 0,

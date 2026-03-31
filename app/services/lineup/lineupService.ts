@@ -41,6 +41,11 @@ export interface UpdateLineupItemData {
   description?: string;
 }
 
+export interface ReorderLineupItemsData {
+  event_date?: string;
+  item_ids: number[];
+}
+
 // Função pública para buscar lineup de um evento (sem autenticação)
 export const getLineupItemsByEvent = async (eventId: number): Promise<LineupItemResponse[]> => {
   const API_URL = getApiUrl();
@@ -54,7 +59,7 @@ export const getLineupItemsByEvent = async (eventId: number): Promise<LineupItem
   try {
     const response = await axios.get<LineupItemResponse[]>(url);
     return response.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("Erro ao buscar lineup do evento:", error);
     throw error;
   }
@@ -151,6 +156,17 @@ export const updateLineupItem = async (
 // Função para deletar um item do lineup
 export const deleteLineupItem = async (lineupItemId: number): Promise<void> => {
   await api.delete(`/admin/lineup-items/${lineupItemId}`);
+};
+
+export const reorderLineupItems = async (
+  eventId: number,
+  data: ReorderLineupItemsData
+): Promise<LineupItemResponse[]> => {
+  const response = await api.patch<LineupItemResponse[]>(
+    `/admin/events/${eventId}/lineup-items/reorder`,
+    data
+  );
+  return response.data;
 };
 
 // Função para notificar todos sobre atualização do lineup

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -161,7 +161,7 @@ export default function LikedPostsPage() {
             localStorage.removeItem(STORAGE_KEY);
           }
         }
-        // Se o evento atual foi desativado e o usuário NÃO é admin/subadmin, troca para um ativo
+        // Se o evento atual foi desativado e o usuário NÃƒO é admin/subadmin, troca para um ativo
         else if (!updatedEvent.is_active && !isAdmin) {
           const activeEvent = data.find((event) => event.is_active);
           if (activeEvent) {
@@ -672,8 +672,8 @@ export default function LikedPostsPage() {
                 <Chip
                   label={posts.length}
                   sx={{
-                    backgroundColor: "#ffc91f",
-                    color: "#000",
+                    backgroundColor: "rgb(255, 31, 33)",
+                    color: "#fff",
                     fontWeight: 700,
                     fontSize: "0.875rem",
                     height: "32px",
@@ -683,7 +683,7 @@ export default function LikedPostsPage() {
             </Box>
 
             <Box paddingX={2} paddingBottom={2}>
-              {/* LOADING INICIAL OU REVALIDAÇÃO */}
+              {/* LOADING INICIAL OU REVALIDAÃ‡ÃƒO */}
               {(initialLoading || isRevalidating || (loading && posts.length === 0)) && (
                 <Box display="flex" flexDirection="column" gap={2} paddingX={2}>
                   {Array.from({ length: 3 }).map((_, i) => (
@@ -804,7 +804,7 @@ export default function LikedPostsPage() {
                             variant="h4"
                             sx={{ color: "rgba(255,255,255,0.3)" }}
                           >
-                            📷
+                            ðŸ“·
                           </Typography>
                         </Box>
                       )}
@@ -868,7 +868,7 @@ export default function LikedPostsPage() {
                                 fontSize={12}
                                 sx={{ color: "rgba(255,255,255,0.5)" }}
                               >
-                                •
+                                â€¢
                               </Typography>
                             </>
                           )}
@@ -969,4 +969,5 @@ function PostItemSkeleton() {
     </Card>
   );
 }
+
 

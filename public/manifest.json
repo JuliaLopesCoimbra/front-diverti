@@ -1,6 +1,6 @@
 {
-    "name": "N1 - Application Event",
-    "short_name": "N1 App",
+    "name": "RockWorld - Application Event",
+    "short_name": "RockWorld App",
     "description": "Plataforma de eventos N1",
     "start_url": "/",
     "display": "standalone",

@@ -118,8 +118,8 @@ export default function CTA({
                 handleClick();
               }}
               sx={{
-                backgroundColor: "#ffcc01",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 600,
                 borderRadius: "20px",
                 textTransform: "none",
@@ -127,7 +127,7 @@ export default function CTA({
                 py: 1,
                 fontSize: 13,
                 "&:hover": {
-                  backgroundColor: "#e6b800",
+                  backgroundColor: "rgb(220, 20, 22)",
                   transform: "scale(1.05)",
                 },
                 transition: "all 0.3s ease",
@@ -141,4 +141,5 @@ export default function CTA({
     </Box>
   );
 }
+
 

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -353,8 +353,8 @@ function EditNewsPageContent() {
                     variant="contained"
                     disabled={loading || !title.trim() || !content.trim() || (imagePreviews.length === 0 && images.length === 0) || !eventId || !newsId}
                     sx={{
-                      backgroundColor: "#ffcc01",
-                      color: "#000",
+                      backgroundColor: "rgb(255, 31, 33)",
+                      color: "#fff",
                       fontWeight: 700,
                       borderRadius: "12px",
                       textTransform: "none",
@@ -363,7 +363,7 @@ function EditNewsPageContent() {
                       boxShadow: "0 4px 16px rgba(255, 204, 1, 0.3)",
                       transition: "all 0.3s ease",
                       "&:hover": {
-                        backgroundColor: "#e6b800",
+                        backgroundColor: "rgb(220, 20, 22)",
                         transform: "translateY(-2px)",
                         boxShadow: "0 6px 20px rgba(255, 204, 1, 0.4)",
                       },
@@ -378,7 +378,7 @@ function EditNewsPageContent() {
                     }}
                   >
                     {loading ? (
-                      <CircularProgress size={20} sx={{ color: "#000" }} />
+                      <CircularProgress size={20} sx={{ color: "#fff" }} />
                     ) : (
                       "Salvar Alterações"
                     )}
@@ -414,3 +414,4 @@ export default function EditNewsPage() {
     </Suspense>
   );
 }
+

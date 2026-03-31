@@ -11,13 +11,14 @@ import { Skeleton } from "@mui/material";
 import NewsFeed from "@/app/components/home/NewsFeed";
 import AdBanner from "@/app/components/ads/AdBanner";
 import EventDetails from "@/app/components/home/EventDetails";
+import EventStands from "@/app/components/home/EventStands";
 import { useAuth } from "@/app/context/AuthContext";
 import PhotoAI from "@/app/components/home/PhotoAI";
-import Enredo from "@/app/components/home/Enredo";
 import EventMap from "@/app/components/home/EventMap";
 import LineUp from "@/app/components/home/LineUp";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
 import NotificationPermissionPopup from "@/app/components/home/NotificationPermissionPopup";
+import DashboardRoulette from "@/app/components/home/DashboardRoulette";
 import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 import {
   getNotificationPreferences,
@@ -34,7 +35,15 @@ const STORAGE_KEY = "selectedEventId";
 const SCROLL_KEY = "homeScrollY";
 const TAB_KEY = "homeActiveTab";
 
-type Tab = "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo";
+type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
+
+const VALID_TABS: Tab[] = ["home", "eventos", "estandes", "mapa", "lineup", "foto", "roleta"];
+
+const normalizeTab = (tab: string | null): Tab | null => {
+  if (!tab) return null;
+  if (tab === "enredo") return "roleta";
+  return VALID_TABS.includes(tab as Tab) ? (tab as Tab) : null;
+};
 
 const HomeContent: React.FC = () => {
   const searchParams = useSearchParams();
@@ -82,18 +91,16 @@ const HomeContent: React.FC = () => {
       ? new URLSearchParams(searchParams.toString())
       : new URLSearchParams(window.location.search);
     
-    const urlTab = urlParams.get("tab");
+    const urlTab = normalizeTab(urlParams.get("tab"));
     const urlEventId = urlParams.get("eventId") || urlParams.get("event"); // Suporta ambos "eventId" e "event"
 
     // Define aba: URL tem prioridade, senão sessionStorage, senão "home"
-    const validTabs: Tab[] = ["home", "eventos", "mapa", "lineup", "foto", "enredo"];
     const targetTab: Tab =
-      urlTab && validTabs.includes(urlTab as Tab)
-        ? (urlTab as Tab)
-        : (() => {
-            const saved = sessionStorage.getItem(TAB_KEY);
-            return saved && validTabs.includes(saved as Tab) ? (saved as Tab) : "home";
-          })();
+      urlTab ??
+      (() => {
+        const saved = normalizeTab(sessionStorage.getItem(TAB_KEY));
+        return saved ?? "home";
+      })();
     if (activeTab !== targetTab) {
       setActiveTab(targetTab);
     }
@@ -345,9 +352,9 @@ const HomeContent: React.FC = () => {
               currentEventIdRef.current = urlEvent.id;
               localStorage.setItem(STORAGE_KEY, urlEvent.id.toString());
               // Se houver tab na URL, atualiza a aba
-              const urlTab = urlParams.get("tab");
-              if (urlTab === "home" || urlTab === "eventos" || urlTab === "mapa" || urlTab === "lineup" || urlTab === "foto" || urlTab === "enredo") {
-                setActiveTab(urlTab as Tab);
+              const urlTab = normalizeTab(urlParams.get("tab"));
+              if (urlTab) {
+                setActiveTab(urlTab);
               }
               
               // Limpa o parâmetro event/eventId da URL após processar para permitir troca manual
@@ -641,7 +648,16 @@ const HomeContent: React.FC = () => {
             <EventDetails event={currentEvent} />
           </Box>
         )}
-
+        {activeTab === "estandes" && currentEvent && (
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <EventStands eventId={currentEvent.id} />
+          </Box>
+        )}
+  {activeTab === "roleta" && currentEvent && (
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <DashboardRoulette eventId={currentEvent.id} />
+          </Box>
+        )}
         {activeTab === "mapa" && currentEvent && (
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
             <EventMap event={currentEvent} />
@@ -660,11 +676,7 @@ const HomeContent: React.FC = () => {
           </Box>
         )}
 
-        {activeTab === "enredo" && currentEvent && (
-          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-            <Enredo eventId={currentEvent.id} spotifyPlaylistUrl={currentEvent.spotify_playlist_url} />
-          </Box>
-        )}
+      
       </Box>
       <BottomNav />
       <NotificationPermissionPopup

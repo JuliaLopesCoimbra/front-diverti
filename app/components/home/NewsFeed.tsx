@@ -59,7 +59,7 @@ function formatDate(dateString: string): string {
 }
 
 export default function NewsFeed({ eventId, event }: Props) {
-  const { isAdmin, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
+  const { role, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
   const router = useRouter();
   
   const { getCache, setCache } = useFeedCache();
@@ -74,7 +74,9 @@ export default function NewsFeed({ eventId, event }: Props) {
   const loaderRef = useRef<HTMLDivElement | null>(null);
   
   const canApprovePosts = isAdminMaster || isSubadmin;
+  const canAccessLiveStands = isAdminMaster || role === "admin";
   const isEventActive = event ? event.is_active === true : true;
+  const showActionButtons = isEventActive && (canCreatePost || canAccessLiveStands);
 
   const loadNews = async (reset = false) => {
     if (loading) return;
@@ -354,25 +356,46 @@ export default function NewsFeed({ eventId, event }: Props) {
         width: { xs: "100%", md: "100%" },
       }}
     >
-      {canCreatePost && isEventActive && (
+      {showActionButtons && (
         <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
           {canApprovePosts && isEventActive && <PendingPostsNotification eventId={eventId} />}
+          {canAccessLiveStands && (
+            <Button
+              variant="outlined"
+              onClick={() => router.push(`/pages/admin/live-stands?eventId=${eventId}`)}
+              sx={{
+                color: "#fff",
+                borderColor: "rgba(255,255,255,0.35)",
+                fontWeight: 600,
+                borderRadius: "14px",
+                textTransform: "none",
+                "&:hover": {
+                  borderColor: "rgba(255,255,255,0.6)",
+                  backgroundColor: "rgba(255,255,255,0.08)",
+                },
+              }}
+            >
+              Dashboard de estandes
+            </Button>
+          )}
+          {canCreatePost && (
           <Button
             variant="contained"
             onClick={() => router.push(`/pages/news/create?eventId=${eventId}`)}
             sx={{
-              backgroundColor: "#ffcc01",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               borderRadius: "14px",
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "rgb(220, 20, 22)",
               },
             }}
           >
             + Adicionar post
           </Button>
+          )}
         </Box>
       )}
 
@@ -657,3 +680,4 @@ function NewsItemSkeleton() {
     </Card>
   );
 }
+

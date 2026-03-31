@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -10,17 +10,21 @@ import {
   IconButton,
   Paper,
   Avatar,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
 import {
   getLineupItemsByEventAdmin,
   deleteLineupItem,
+  reorderLineupItems,
   LineupItemResponse,
 } from "@/app/services/lineup/lineupService";
 import {
@@ -28,9 +32,81 @@ import {
   deleteParadeLineupItem,
   ParadeLineupItemResponse,
 } from "@/app/services/paradeLineup/paradeLineupService";
+import {
+  EventResponse,
+  getEventById,
+} from "@/app/services/events/eventAppService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
-import { getEventById } from "@/app/services/events/eventAppService";
 import DeleteLineupItemModal from "@/app/components/admin/lineup/DeleteLineupItemModal";
+
+const NO_DATE_TAB = "__no_date__";
+
+const formatTime = (timeString: string): string => {
+  const parts = timeString.split(":");
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`;
+  }
+  return timeString;
+};
+
+const formatDateOnly = (
+  dateStr: string,
+  options: Intl.DateTimeFormatOptions = {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }
+) => new Date(`${dateStr}T12:00:00`).toLocaleDateString("pt-BR", options);
+
+const extractEventDates = (event: EventResponse | null): string[] => {
+  if (!event?.event_dates) {
+    return [];
+  }
+
+  const matches = event.event_dates.match(/\d{4}-\d{2}-\d{2}/g);
+  return matches ? Array.from(new Set(matches)).sort() : [];
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error && typeof error === "object") {
+    const apiError = error as {
+      response?: { data?: { detail?: string } };
+    };
+    return apiError.response?.data?.detail || fallback;
+  }
+
+  return fallback;
+};
+
+const isItemInTab = (item: LineupItemResponse, tabValue: string | null) => {
+  if (!tabValue) {
+    return true;
+  }
+
+  if (tabValue === NO_DATE_TAB) {
+    return !item.event_date;
+  }
+
+  return item.event_date === tabValue;
+};
+
+const replaceGroupOrder = (
+  currentItems: LineupItemResponse[],
+  reorderedGroup: LineupItemResponse[],
+  tabValue: string | null
+) => {
+  const groupIds = new Set(
+    currentItems.filter((item) => isItemInTab(item, tabValue)).map((item) => item.id)
+  );
+  let groupIndex = 0;
+
+  return currentItems.map((item) => {
+    if (!groupIds.has(item.id)) {
+      return item;
+    }
+    return reorderedGroup[groupIndex++];
+  });
+};
 
 export default function LineupManagementPage() {
   const params = useParams();
@@ -39,14 +115,39 @@ export default function LineupManagementPage() {
   const { isAdmin } = useAuth();
   const { showToast } = useToast();
 
-  const [lineupType, setLineupType] = useState<'shows' | 'parade'>('shows');
+  const [lineupType, setLineupType] = useState<"shows" | "parade">("shows");
   const [lineupItems, setLineupItems] = useState<LineupItemResponse[]>([]);
-  const [paradeLineupItems, setParadeLineupItems] = useState<ParadeLineupItemResponse[]>([]);
-  const [event, setEvent] = useState<any>(null);
+  const [paradeLineupItems, setParadeLineupItems] = useState<
+    ParadeLineupItemResponse[]
+  >([]);
+  const [event, setEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [deletingItem, setDeletingItem] = useState<LineupItemResponse | ParadeLineupItemResponse | null>(null);
+  const [deletingItem, setDeletingItem] = useState<
+    LineupItemResponse | ParadeLineupItemResponse | null
+  >(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedShowTab, setSelectedShowTab] = useState<string | null>(null);
+  const [draggedItemId, setDraggedItemId] = useState<number | null>(null);
+  const [reordering, setReordering] = useState(false);
+
+  const loadShows = useCallback(async () => {
+    const [items, eventData] = await Promise.all([
+      getLineupItemsByEventAdmin(eventId),
+      getEventById(eventId),
+    ]);
+    setLineupItems(items);
+    setEvent(eventData);
+  }, [eventId]);
+
+  const loadParade = useCallback(async () => {
+    const [items, eventData] = await Promise.all([
+      getParadeLineupItemsByEventAdmin(eventId),
+      getEventById(eventId),
+    ]);
+    setParadeLineupItems(items);
+    setEvent(eventData);
+  }, [eventId]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -57,22 +158,12 @@ export default function LineupManagementPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        if (lineupType === 'shows') {
-          const [items, eventData] = await Promise.all([
-            getLineupItemsByEventAdmin(eventId),
-            getEventById(eventId),
-          ]);
-          setLineupItems(items);
-          setEvent(eventData);
+        if (lineupType === "shows") {
+          await loadShows();
         } else {
-          const [items, eventData] = await Promise.all([
-            getParadeLineupItemsByEventAdmin(eventId),
-            getEventById(eventId),
-          ]);
-          setParadeLineupItems(items);
-          setEvent(eventData);
+          await loadParade();
         }
-      } catch (err: any) {
+      } catch (err) {
         console.error("Erro ao buscar dados:", err);
         showToast("Erro ao carregar lineup", "error");
       } finally {
@@ -83,46 +174,137 @@ export default function LineupManagementPage() {
     if (eventId) {
       fetchData();
     }
-  }, [eventId, isAdmin, router, showToast, lineupType]);
+  }, [eventId, isAdmin, lineupType, loadParade, loadShows, router, showToast]);
 
+  const showTabs = useMemo(() => {
+    const datesFromEvent = extractEventDates(event);
+    const datesFromItems = lineupItems
+      .map((item) => item.event_date)
+      .filter(Boolean) as string[];
+    const uniqueDates = Array.from(new Set([...datesFromEvent, ...datesFromItems])).sort();
+    const hasUndatedItems = lineupItems.some((item) => !item.event_date);
 
-  const handleDeleteClick = (item: LineupItemResponse | ParadeLineupItemResponse) => {
+    const dateTabs = uniqueDates.map((date) => ({
+      value: date,
+      label: formatDateOnly(date, {
+        day: "2-digit",
+        month: "short",
+      }),
+    }));
+
+    if (hasUndatedItems) {
+      dateTabs.push({ value: NO_DATE_TAB, label: "Sem data" });
+    }
+
+    return dateTabs;
+  }, [event, lineupItems]);
+
+  useEffect(() => {
+    if (lineupType !== "shows") {
+      return;
+    }
+
+    if (showTabs.length === 0) {
+      setSelectedShowTab(null);
+      return;
+    }
+
+    const hasCurrentTab = showTabs.some((tab) => tab.value === selectedShowTab);
+    if (!selectedShowTab || !hasCurrentTab) {
+      setSelectedShowTab(showTabs[0].value);
+    }
+  }, [lineupType, selectedShowTab, showTabs]);
+
+  const filteredShowItems = useMemo(() => {
+    if (!selectedShowTab) {
+      return lineupItems;
+    }
+
+    return lineupItems.filter((item) => isItemInTab(item, selectedShowTab));
+  }, [lineupItems, selectedShowTab]);
+
+  const handleDeleteClick = (
+    item: LineupItemResponse | ParadeLineupItemResponse
+  ) => {
     setDeletingItem(item);
     setDeleteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingItem) return;
+    if (!deletingItem) {
+      return;
+    }
 
     setDeleting(true);
     try {
-      if (lineupType === 'shows') {
+      if (lineupType === "shows") {
         await deleteLineupItem((deletingItem as LineupItemResponse).id);
         showToast("Artista deletado com sucesso!", "success");
-        const items = await getLineupItemsByEventAdmin(eventId);
-        setLineupItems(items);
+        await loadShows();
       } else {
         await deleteParadeLineupItem((deletingItem as ParadeLineupItemResponse).id);
         showToast("Escola de samba deletada com sucesso!", "success");
-        const items = await getParadeLineupItemsByEventAdmin(eventId);
-        setParadeLineupItems(items);
+        await loadParade();
       }
+
       setDeleteModalOpen(false);
       setDeletingItem(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error("Erro ao deletar item:", err);
-      throw err; // O modal vai tratar o erro
+      throw err;
     } finally {
       setDeleting(false);
     }
   };
 
-  const formatTime = (timeString: string): string => {
-    const parts = timeString.split(":");
-    if (parts.length >= 2) {
-      return `${parts[0]}:${parts[1]}`;
+  const handleDropOnShowItem = async (targetItemId: number) => {
+    if (
+      draggedItemId === null ||
+      draggedItemId === targetItemId ||
+      reordering
+    ) {
+      setDraggedItemId(null);
+      return;
     }
-    return timeString;
+
+    const currentGroupItems = [...filteredShowItems];
+    const draggedIndex = currentGroupItems.findIndex((item) => item.id === draggedItemId);
+    const targetIndex = currentGroupItems.findIndex((item) => item.id === targetItemId);
+
+    if (draggedIndex < 0 || targetIndex < 0) {
+      setDraggedItemId(null);
+      return;
+    }
+
+    const reorderedGroup = [...currentGroupItems];
+    const [draggedItem] = reorderedGroup.splice(draggedIndex, 1);
+    reorderedGroup.splice(targetIndex, 0, draggedItem);
+
+    const previousItems = lineupItems;
+    setLineupItems((currentItems) =>
+      replaceGroupOrder(currentItems, reorderedGroup, selectedShowTab)
+    );
+    setDraggedItemId(null);
+    setReordering(true);
+
+    try {
+      await reorderLineupItems(eventId, {
+        event_date:
+          selectedShowTab && selectedShowTab !== NO_DATE_TAB
+            ? selectedShowTab
+            : undefined,
+        item_ids: reorderedGroup.map((item) => item.id),
+      });
+
+      await loadShows();
+      showToast("Ordem do lineup atualizada!", "success");
+    } catch (err) {
+      console.error("Erro ao reordenar lineup:", err);
+      setLineupItems(previousItems);
+      showToast(getErrorMessage(err, "Erro ao salvar a nova ordem do lineup"), "error");
+    } finally {
+      setReordering(false);
+    }
   };
 
   if (loading) {
@@ -136,7 +318,7 @@ export default function LineupManagementPage() {
           justifyContent: "center",
         }}
       >
-        <CircularProgress sx={{ color: "#ffc91f" }} />
+        <CircularProgress sx={{ color: "primary.main" }} />
       </Box>
     );
   }
@@ -149,7 +331,6 @@ export default function LineupManagementPage() {
         color: "#fff",
       }}
     >
-      {/* Header */}
       <Box
         sx={{
           display: "flex",
@@ -180,9 +361,7 @@ export default function LineupManagementPage() {
         )}
       </Box>
 
-      {/* Lista de Itens */}
       <Box sx={{ p: 3, position: "relative" }}>
-        {/* Botões de Alternância */}
         <Box
           sx={{
             display: "flex",
@@ -195,7 +374,7 @@ export default function LineupManagementPage() {
           }}
         >
           <Button
-            onClick={() => setLineupType('shows')}
+            onClick={() => setLineupType("shows")}
             sx={{
               borderRadius: "999px",
               textTransform: "none",
@@ -207,17 +386,13 @@ export default function LineupManagementPage() {
               flex: 1,
               maxWidth: { xs: 200, md: 250 },
               fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-              // Ativo
-              backgroundColor: lineupType === 'shows' ? "#ffc91f" : "transparent",
-              color: lineupType === 'shows' ? "#000" : "#fff",
-              border: `1px solid ${
-                lineupType === 'shows' ? "#ffc91f" : "#fff"
-              }`,
+              backgroundColor: lineupType === "shows" ? "primary.main" : "transparent",
+              color: "#fff",
+              border: `1px solid ${lineupType === "shows" ? "primary.main" : "#fff"}`,
               "&:hover": {
-                backgroundColor: lineupType === 'shows'
-                  ? "#f5bf12"
-                  : "rgba(255,255,255,0.1)",
-                borderColor: lineupType === 'shows' ? "#f5bf12" : "#fff",
+                backgroundColor:
+                  lineupType === "shows" ? "primary.dark" : "rgba(255,255,255,0.1)",
+                borderColor: lineupType === "shows" ? "primary.dark" : "#fff",
                 fontWeight: 900,
               },
             }}
@@ -225,7 +400,7 @@ export default function LineupManagementPage() {
             Line Up de Shows
           </Button>
           <Button
-            onClick={() => setLineupType('parade')}
+            onClick={() => setLineupType("parade")}
             sx={{
               borderRadius: "999px",
               textTransform: "none",
@@ -237,17 +412,13 @@ export default function LineupManagementPage() {
               flex: 1,
               maxWidth: { xs: 200, md: 250 },
               fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-              // Ativo
-              backgroundColor: lineupType === 'parade' ? "#ffc91f" : "transparent",
-              color: lineupType === 'parade' ? "#000" : "#fff",
-              border: `1px solid ${
-                lineupType === 'parade' ? "#ffc91f" : "#fff"
-              }`,
+              backgroundColor: lineupType === "parade" ? "primary.main" : "transparent",
+              color: "#fff",
+              border: `1px solid ${lineupType === "parade" ? "primary.main" : "#fff"}`,
               "&:hover": {
-                backgroundColor: lineupType === 'parade'
-                  ? "#f5bf12"
-                  : "rgba(255,255,255,0.1)",
-                borderColor: lineupType === 'parade' ? "#f5bf12" : "#fff",
+                backgroundColor:
+                  lineupType === "parade" ? "primary.dark" : "rgba(255,255,255,0.1)",
+                borderColor: lineupType === "parade" ? "primary.dark" : "#fff",
                 fontWeight: 900,
               },
             }}
@@ -262,40 +433,44 @@ export default function LineupManagementPage() {
             alignItems: "center",
             justifyContent: "space-between",
             mb: 2,
-            position: "relative",
+            gap: 2,
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              color: "#fff",
-              fontWeight: 100,
-            }}
-          >
-            {lineupType === 'shows' ? 'Artistas que farão parte do Line Up' : 'Escolas de Samba que farão parte do Line Up de Desfile'}
-          </Typography>
+          <Box>
+            <Typography variant="h6" sx={{ color: "#fff", fontWeight: 100 }}>
+              {lineupType === "shows"
+                ? "Artistas que farão parte do line up"
+                : "Escolas de Samba que farao parte do line up de desfile"}
+            </Typography>
+            {lineupType === "shows" && (
+              <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.9rem", mt: 0.5 }}>
+                Arraste os cards para mudar a ordem dentro de cada dia.
+              </Typography>
+            )}
+          </Box>
           <IconButton
             onClick={() => {
-              if (lineupType === 'shows') {
+              if (lineupType === "shows") {
                 router.push(`/pages/admin/events/${eventId}/lineup/create`);
               } else {
                 router.push(`/pages/admin/events/${eventId}/parade-lineup/create`);
               }
             }}
             sx={{
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "primary.main",
+              color: "#fff",
               width: 48,
               height: 48,
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "primary.dark",
               },
             }}
           >
             <AddIcon />
           </IconButton>
         </Box>
-        {lineupType === 'shows' ? (
+
+        {lineupType === "shows" ? (
           lineupItems.length === 0 ? (
             <Paper
               elevation={0}
@@ -308,20 +483,240 @@ export default function LineupManagementPage() {
                 border: "1px solid rgba(255, 255, 255, 0.1)",
               }}
             >
-              <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
+              <MusicNoteIcon
+                sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }}
+              />
               <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
                 Nenhum artista cadastrado no lineup ainda.
               </Typography>
             </Paper>
           ) : (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
-              {lineupItems.map((item) => (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {showTabs.length > 0 && (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: 2,
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Tabs
+                    value={selectedShowTab || false}
+                    onChange={(_, value) => setSelectedShowTab(value)}
+                    variant={showTabs.length <= 5 ? "fullWidth" : "scrollable"}
+                    scrollButtons={showTabs.length > 5 ? "auto" : false}
+                    sx={{
+                      "& .MuiTab-root": {
+                        color: "rgba(255,255,255,0.7)",
+                        textTransform: "none",
+                        "&.Mui-selected": {
+                          color: "primary.main",
+                          fontWeight: 600,
+                        },
+                      },
+                      "& .MuiTabs-indicator": {
+                        backgroundColor: "primary.main",
+                        height: 3,
+                      },
+                    }}
+                  >
+                    {showTabs.map((tab) => (
+                      <Tab key={tab.value} value={tab.value} label={tab.label} />
+                    ))}
+                  </Tabs>
+                </Paper>
+              )}
+
+              {reordering && (
+                <Typography sx={{ color: "primary.main", fontSize: "0.9rem" }}>
+                  Salvando nova ordem...
+                </Typography>
+              )}
+
+              {filteredShowItems.length === 0 ? (
+                <Paper
+                  elevation={0}
+                  sx={{
+                    backgroundColor: "rgba(0, 0, 0, 0.4)",
+                    backdropFilter: "blur(10px)",
+                    borderRadius: 3,
+                    p: 4,
+                    textAlign: "center",
+                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Typography sx={{ color: "rgba(255,255,255,0.7)" }}>
+                    Nenhum artista cadastrado para este dia.
+                  </Typography>
+                </Paper>
+              ) : (
+                filteredShowItems.map((item, index) => (
+                  <Paper
+                    key={item.id}
+                    elevation={0}
+                    draggable={!reordering}
+                    onDragStart={() => setDraggedItemId(item.id)}
+                    onDragEnd={() => setDraggedItemId(null)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleDropOnShowItem(item.id)}
+                    sx={{
+                      backgroundColor:
+                        draggedItemId === item.id
+                          ? "rgba(255, 31, 33, 0.12)"
+                          : "rgba(0, 0, 0, 0.4)",
+                      backdropFilter: "blur(10px)",
+                      borderRadius: 3,
+                      p: 3,
+                      border: "1px solid rgba(255, 255, 255, 0.1)",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: 3,
+                      position: "relative",
+                      cursor: reordering ? "progress" : "grab",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 0.5,
+                        color: "rgba(255,255,255,0.45)",
+                        minWidth: 54,
+                        pt: 0.5,
+                      }}
+                    >
+                      <DragIndicatorIcon />
+                      <Typography sx={{ fontWeight: 700 }}>{index + 1}</Typography>
+                    </Box>
+
+                    <IconButton
+                      onClick={() => handleDeleteClick(item)}
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 8,
+                        color: "#ff3040",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 48, 64, 0.1)",
+                        },
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                    <IconButton
+                      onClick={() =>
+                        router.push(`/pages/admin/events/${eventId}/lineup/${item.id}/edit`)
+                      }
+                      sx={{
+                        position: "absolute",
+                        top: 8,
+                        right: 48,
+                        color: "primary.main",
+                        "&:hover": {
+                          backgroundColor: "rgba(255, 31, 33, 0.1)",
+                        },
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+
+                    {item.artist_image_url ? (
+                      <Avatar
+                        src={item.artist_image_url}
+                        alt={item.artist_name}
+                        sx={{
+                          width: 100,
+                          height: 100,
+                          border: "3px solid rgba(255, 31, 33, 0.35)",
+                          flexShrink: 0,
+                        }}
+                      />
+                    ) : (
+                      <Avatar
+                        sx={{
+                          width: 100,
+                          height: 100,
+                          backgroundColor: "rgba(255, 31, 33, 0.2)",
+                          border: "3px solid rgba(255, 31, 33, 0.35)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <MusicNoteIcon sx={{ fontSize: "2.5rem" }} />
+                      </Avatar>
+                    )}
+
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                        flex: 1,
+                        pr: 8,
+                        minWidth: 0,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          color: "#fff",
+                          fontSize: "1.25rem",
+                          fontWeight: 600,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item.artist_name}
+                      </Typography>
+
+                      <Typography
+                        sx={{
+                          color: "primary.main",
+                          fontSize: "1rem",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {formatTime(item.performance_time)}
+                        {item.performance_end_time
+                          ? ` - ${formatTime(item.performance_end_time)}`
+                          : ""}
+                      </Typography>
+
+                      {item.stage && (
+                        <Typography sx={{ color: "rgba(255,255,255,0.75)" }}>
+                          {item.stage}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Paper>
+                ))
+              )}
+            </Box>
+          )
+        ) : paradeLineupItems.length === 0 ? (
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              backdropFilter: "blur(10px)",
+              borderRadius: 3,
+              p: 4,
+              textAlign: "center",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+            }}
+          >
+            <MusicNoteIcon
+              sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }}
+            />
+            <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
+              Nenhuma escola de samba cadastrada no lineup de desfile ainda.
+            </Typography>
+          </Paper>
+        ) : (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {paradeLineupItems.map((item) => (
               <Paper
                 key={item.id}
                 elevation={0}
@@ -337,44 +732,45 @@ export default function LineupManagementPage() {
                   position: "relative",
                 }}
               >
-                  <IconButton
-                    onClick={() => handleDeleteClick(item)}
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      color: "#ff3040",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 48, 64, 0.1)",
-                      },
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
                 <IconButton
-                  onClick={() => router.push(`/pages/admin/events/${eventId}/lineup/${item.id}/edit`)}
+                  onClick={() => handleDeleteClick(item)}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    color: "#ff3040",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 48, 64, 0.1)",
+                    },
+                  }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+                <IconButton
+                  onClick={() =>
+                    router.push(`/pages/admin/events/${eventId}/parade-lineup/${item.id}/edit`)
+                  }
                   sx={{
                     position: "absolute",
                     top: 8,
                     right: 48,
-                    color: "#ffc91f",
+                    color: "primary.main",
                     "&:hover": {
-                      backgroundColor: "rgba(255, 201, 31, 0.1)",
+                      backgroundColor: "rgba(255, 31, 33, 0.1)",
                     },
                   }}
                 >
                   <EditIcon />
                 </IconButton>
 
-                {/* Foto do Artista - Esquerda */}
-                {item.artist_image_url ? (
+                {item.samba_school_image_url ? (
                   <Avatar
-                    src={item.artist_image_url}
-                    alt={item.artist_name}
+                    src={item.samba_school_image_url}
+                    alt={item.samba_school_name}
                     sx={{
                       width: 100,
                       height: 100,
-                      border: "3px solid rgba(255, 201, 31, 0.3)",
+                      border: "3px solid rgba(255, 31, 33, 0.35)",
                       flexShrink: 0,
                     }}
                   />
@@ -383,8 +779,8 @@ export default function LineupManagementPage() {
                     sx={{
                       width: 100,
                       height: 100,
-                      backgroundColor: "rgba(255, 201, 31, 0.2)",
-                      border: "3px solid rgba(255, 201, 31, 0.3)",
+                      backgroundColor: "rgba(255, 31, 33, 0.2)",
+                      border: "3px solid rgba(255, 31, 33, 0.35)",
                       flexShrink: 0,
                     }}
                   >
@@ -392,18 +788,16 @@ export default function LineupManagementPage() {
                   </Avatar>
                 )}
 
-                {/* Informações - Direita */}
                 <Box
                   sx={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 1,
                     flex: 1,
-                    pr: 8, // Padding para evitar sobreposição com os ícones
-                    minWidth: 0, // Permite que o texto seja truncado
+                    pr: 8,
+                    minWidth: 0,
                   }}
                 >
-                  {/* Nome do Artista */}
                   <Typography
                     sx={{
                       color: "#fff",
@@ -414,13 +808,12 @@ export default function LineupManagementPage() {
                       whiteSpace: "nowrap",
                     }}
                   >
-                    {item.artist_name}
+                    {item.samba_school_name || "Escola de Samba"}
                   </Typography>
 
-                  {/* Horário */}
                   <Typography
                     sx={{
-                      color: "#ffc91f",
+                      color: "primary.main",
                       fontSize: "1rem",
                       fontWeight: 500,
                     }}
@@ -428,7 +821,6 @@ export default function LineupManagementPage() {
                     {formatTime(item.performance_time)}
                   </Typography>
 
-                  {/* Ordem */}
                   <Typography
                     variant="caption"
                     sx={{
@@ -439,159 +831,20 @@ export default function LineupManagementPage() {
                   </Typography>
                 </Box>
               </Paper>
-              ))}
-            </Box>
-          )
-        ) : (
-          paradeLineupItems.length === 0 ? (
-            <Paper
-              elevation={0}
-              sx={{
-                backgroundColor: "rgba(0, 0, 0, 0.4)",
-                backdropFilter: "blur(10px)",
-                borderRadius: 3,
-                p: 4,
-                textAlign: "center",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-              }}
-            >
-              <MusicNoteIcon sx={{ fontSize: 64, color: "rgba(255,255,255,0.3)", mb: 2 }} />
-              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 2 }}>
-                Nenhuma escola de samba cadastrada no lineup de desfile ainda.
-              </Typography>
-            </Paper>
-          ) : (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
-              }}
-            >
-              {paradeLineupItems.map((item) => (
-                <Paper
-                  key={item.id}
-                  elevation={0}
-                  sx={{
-                    backgroundColor: "rgba(0, 0, 0, 0.4)",
-                    backdropFilter: "blur(10px)",
-                    borderRadius: 3,
-                    p: 3,
-                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 3,
-                    position: "relative",
-                  }}
-                >
-                  <IconButton
-                    onClick={() => handleDeleteClick(item)}
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 8,
-                      color: "#ff3040",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 48, 64, 0.1)",
-                      },
-                    }}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                  <IconButton
-                    onClick={() => router.push(`/pages/admin/events/${eventId}/parade-lineup/${item.id}/edit`)}
-                    sx={{
-                      position: "absolute",
-                      top: 8,
-                      right: 48,
-                      color: "#ffc91f",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 201, 31, 0.1)",
-                      },
-                    }}
-                  >
-                    <EditIcon />
-                  </IconButton>
-
-                  {item.samba_school_image_url ? (
-                    <Avatar
-                      src={item.samba_school_image_url}
-                      alt={item.samba_school_name}
-                      sx={{
-                        width: 100,
-                        height: 100,
-                        border: "3px solid rgba(255, 201, 31, 0.3)",
-                        flexShrink: 0,
-                      }}
-                    />
-                  ) : (
-                    <Avatar
-                      sx={{
-                        width: 100,
-                        height: 100,
-                        backgroundColor: "rgba(255, 201, 31, 0.2)",
-                        border: "3px solid rgba(255, 201, 31, 0.3)",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <MusicNoteIcon sx={{ fontSize: "2.5rem" }} />
-                    </Avatar>
-                  )}
-
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
-                      flex: 1,
-                      pr: 8,
-                      minWidth: 0,
-                    }}
-                  >
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontSize: "1.25rem",
-                        fontWeight: 600,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {item.samba_school_name || 'Escola de Samba'}
-                    </Typography>
-
-                    <Typography
-                      sx={{
-                        color: "#ffc91f",
-                        fontSize: "1rem",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {formatTime(item.performance_time)}
-                    </Typography>
-
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: "rgba(255,255,255,0.5)",
-                      }}
-                    >
-                      Ordem: {item.display_order}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
-          )
+            ))}
+          </Box>
         )}
       </Box>
 
-      {/* Modal de Exclusão */}
       {deletingItem && (
         <DeleteLineupItemModal
           open={deleteModalOpen}
-          artistName={lineupType === 'shows' ? (deletingItem as LineupItemResponse).artist_name : (deletingItem as ParadeLineupItemResponse).samba_school_name || 'Escola de Samba'}
+          artistName={
+            lineupType === "shows"
+              ? (deletingItem as LineupItemResponse).artist_name
+              : (deletingItem as ParadeLineupItemResponse).samba_school_name ||
+                "Escola de Samba"
+          }
           onClose={() => {
             setDeleteModalOpen(false);
             setDeletingItem(null);

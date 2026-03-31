@@ -59,15 +59,15 @@ export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refre
           startIcon={<PersonAdd />}
           onClick={onAddClick}
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             px: 3,
             py: 1.5,
             borderRadius: 2,
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
               transform: "translateY(-2px)",
               boxShadow: "0 4px 12px rgba(255, 204, 1, 0.4)",
             },
@@ -110,3 +110,4 @@ export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refre
     </Paper>
   );
 }
+

@@ -400,18 +400,18 @@ export default function BroadcastNotificationPage() {
                   disabled={loading || !title.trim() || !message.trim()}
                   startIcon={
                     loading ? (
-                      <CircularProgress size={20} sx={{ color: "#000" }} />
+                      <CircularProgress size={20} sx={{ color: "#fff" }} />
                     ) : (
                       <SendIcon />
                     )
                   }
                   sx={{
-                    backgroundColor: "#ffc91f",
-                    color: "#000",
+                    backgroundColor: "rgb(255, 31, 33)",
+                    color: "#fff",
                     fontWeight: 600,
                     px: 4,
                     "&:hover": {
-                      backgroundColor: "#ffd54f",
+                      backgroundColor: "rgb(220, 20, 22)",
                       transform: "translateY(-2px)",
                       boxShadow: "0 4px 12px rgba(255, 201, 31, 0.4)",
                     },
@@ -577,13 +577,13 @@ export default function BroadcastNotificationPage() {
               )
             }
             sx={{
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               textTransform: "none",
               px: 3,
               "&:hover": {
-                backgroundColor: "#ffd54f",
+                backgroundColor: "rgb(220, 20, 22)",
                 transform: "translateY(-2px)",
                 boxShadow: "0 4px 12px rgba(255, 201, 31, 0.4)",
               },
@@ -597,4 +597,5 @@ export default function BroadcastNotificationPage() {
     </Box>
   );
 }
+
 

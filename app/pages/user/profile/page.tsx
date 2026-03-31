@@ -598,10 +598,10 @@ export default function ProfilePage() {
                             onClick={handleSaveBirthDate}
                             disabled={saving}
                             sx={{
-                              backgroundColor: "#FFD600",
-                              color: "#000",
+                              backgroundColor: "rgb(255, 31, 33)",
+                              color: "#fff",
                               "&:hover": {
-                                backgroundColor: "#FFC107",
+                                backgroundColor: "rgb(220, 20, 22)",
                               },
                               flex: 1,
                             }}
@@ -730,10 +730,10 @@ export default function ProfilePage() {
                             onClick={handleSaveGender}
                             disabled={saving}
                             sx={{
-                              backgroundColor: "#FFD600",
-                              color: "#000",
+                              backgroundColor: "rgb(255, 31, 33)",
+                              color: "#fff",
                               "&:hover": {
-                                backgroundColor: "#FFC107",
+                                backgroundColor: "rgb(220, 20, 22)",
                               },
                               flex: 1,
                             }}
@@ -839,3 +839,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

@@ -38,7 +38,7 @@ export default function ImageUploadSection({
   return (
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <PhotoCamera sx={{ color: "#ffcc01", fontSize: 20 }} />
+        <PhotoCamera sx={{ color: "rgb(255, 31, 33)", fontSize: 20 }} />
         <Typography
           variant="subtitle1"
           sx={{
@@ -54,8 +54,8 @@ export default function ImageUploadSection({
             label={`${totalImagesCount}/${maxImages}`}
             size="small"
             sx={{
-              backgroundColor: "rgba(255, 204, 1, 0.2)",
-              color: "#ffcc01",
+              backgroundColor: "rgba(255, 31, 33, 0.2)",
+              color: "rgb(255, 31, 33)",
               fontWeight: 600,
               fontSize: "0.75rem",
               height: 20,
@@ -89,7 +89,7 @@ export default function ImageUploadSection({
               maxWidth: "100%",
               boxSizing: "border-box",
               "&:hover": {
-                borderColor: "rgba(255, 204, 1, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.5)",
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 transform: "translateY(-2px)",
               },
@@ -193,8 +193,8 @@ export default function ImageUploadSection({
                   backdropFilter: "blur(10px)",
                   "&:hover": {
                     backgroundColor: "rgba(255,255,255,0.1)",
-                    borderColor: "rgba(255, 204, 1, 0.5)",
-                    color: "#ffcc01",
+                    borderColor: "rgba(255, 31, 33, 0.5)",
+                    color: "rgb(255, 31, 33)",
                     transform: "translateY(-2px)",
                   },
                 }}

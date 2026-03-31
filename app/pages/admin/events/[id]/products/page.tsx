@@ -164,21 +164,21 @@ export default function EventProductsPage() {
               startIcon={<AddIcon />}
               onClick={() => router.push(`/pages/admin/products-event/create?eventId=${eventId}`)}
               sx={{
-                backgroundColor: "#ffc91f",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 700,
                 fontSize: { xs: "0.688rem", sm: "0.95rem" },
                 px: { xs: 1.5, sm: 3 },
                 py: { xs: 0.75, sm: 1.25 },
                 borderRadius: "8px",
                 textTransform: "none",
-                boxShadow: "0 4px 12px rgba(255, 201, 31, 0.3)",
+                boxShadow: "0 4px 12px rgba(255, 31, 33, 0.3)",
                 transition: "all 0.3s ease",
                 minWidth: { xs: "auto", sm: "auto" },
                 "&:hover": {
-                  backgroundColor: "#ffd54f",
+                  backgroundColor: "rgb(220, 20, 22)",
                   transform: "translateY(-2px)",
-                  boxShadow: "0 6px 16px rgba(255, 201, 31, 0.4)",
+                  boxShadow: "0 6px 16px rgba(255, 31, 33, 0.4)",
                 },
                 "& .MuiButton-startIcon": {
                   marginRight: { xs: "2px", sm: "8px" },
@@ -219,20 +219,20 @@ export default function EventProductsPage() {
               startIcon={<AddIcon />}
               onClick={() => router.push(`/pages/admin/products-event/create?eventId=${eventId}`)}
               sx={{
-                backgroundColor: "#ffc91f",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 700,
                 fontSize: "1rem",
                 px: 4,
                 py: 1.75,
                 borderRadius: "8px",
                 textTransform: "none",
-                boxShadow: "0 4px 12px rgba(255, 201, 31, 0.3)",
+                boxShadow: "0 4px 12px rgba(255, 31, 33, 0.3)",
                 transition: "all 0.3s ease",
                 "&:hover": {
-                  backgroundColor: "#ffd54f",
+                  backgroundColor: "rgb(220, 20, 22)",
                   transform: "translateY(-2px)",
-                  boxShadow: "0 6px 16px rgba(255, 201, 31, 0.4)",
+                  boxShadow: "0 6px 16px rgba(255, 31, 33, 0.4)",
                 },
               }}
             >

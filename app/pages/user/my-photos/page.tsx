@@ -12,6 +12,7 @@ import MyPosts from "@/app/components/my-posts/MyPosts";
 import MyPhotos from "@/app/components/my-photos/MyPhotos";
 import MenuOptions from "@/app/components/my-photos/MenuOptions";
 import RejectedPosts from "@/app/components/my-posts/RejectedPosts";
+import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 type ViewMode = "menu" | "posts" | "rejected" | "photos";
 const STORAGE_KEY = "selectedEventId";
@@ -335,9 +336,9 @@ export default function MyPhotosPage() {
   if (!isAuthenticated || loading) {
     return (
       <Box
-        className="dashboard-page-background"
-        style={{
+        sx={{
           minHeight: "100vh",
+          ...dashboardBackgroundSx,
           paddingBottom: "72px",
         }}
       >
@@ -429,9 +430,9 @@ export default function MyPhotosPage() {
   if (!currentEvent) {
     return (
       <Box
-        className="dashboard-page-background"
-        style={{
+        sx={{
           minHeight: "100vh",
+          ...dashboardBackgroundSx,
           paddingBottom: "72px",
         }}
       >
@@ -523,9 +524,9 @@ export default function MyPhotosPage() {
   return (
     <>
       <Box
-        className="dashboard-page-background"
-        style={{
+        sx={{
           minHeight: "100vh",
+          ...dashboardBackgroundSx,
           paddingBottom: "72px",
         }}
       >

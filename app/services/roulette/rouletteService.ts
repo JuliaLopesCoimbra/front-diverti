@@ -21,6 +21,16 @@ export interface SpinResponse {
   };
 }
 
+export interface PrizeResponse {
+  id: number;
+  event_id: number;
+  name: string;
+  probability: number;
+  position: number;
+  image_url?: string | null;
+  is_active: boolean;
+}
+
 export const getRouletteByEvent = async (
   eventId: number
 ): Promise<RouletteResponse> => {
@@ -36,6 +46,16 @@ export const spinRoulette = async (
 ): Promise<SpinResponse> => {
   const res = await api.post<SpinResponse>(
     `/roulette/events/${eventId}/spin`
+  );
+
+  return res.data;
+};
+
+export const getPrizesByEvent = async (
+  eventId: number
+): Promise<PrizeResponse[]> => {
+  const res = await api.get<PrizeResponse[]>(
+    `/roulette/events/${eventId}/prizes`
   );
 
   return res.data;

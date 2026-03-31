@@ -453,7 +453,14 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             variant="contained"
             size="large"
             fullWidth
-            sx={{ background: "#5a3cf1", borderRadius: 2, py: 1.5 }}
+            sx={{
+              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              borderRadius: 2,
+              py: 1.5,
+              "&:hover": {
+                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+              },
+            }}
             onClick={requestCamera}
             disabled={isRequestingCamera}
           >
@@ -493,7 +500,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               maxWidth: 320,
               margin: "0 auto",
               aspectRatio: "3 / 4",
-              border: "3px solid #6c54ff",
+              border: "3px solid rgb(255, 31, 33)",
               borderRadius: "50%",
               overflow: "hidden",
               background: "#d9d9d9",
@@ -599,7 +606,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               bottom: 20,
               left: "50%",
               transform: "translateX(-50%)",
-              background: "#6c54ff",
+              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
               borderRadius: 2,
               px: 3,
               py: 1,
@@ -609,7 +616,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               zIndex: 5,
               boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
               "&:hover": {
-                background: "#5a3cf1",
+                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
               },
             }}
           >
@@ -768,6 +775,27 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             </Typography>
           )}
 
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            sx={{
+              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              borderRadius: 2,
+              py: 1.5,
+              "&:hover": {
+                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+              },
+            }}
+            onClick={() => {
+              setResults([]);
+              setSearchMessage(null);
+              setStage("intro");
+            }}
+          >
+            Procurar novamente
+          </Button>
+
           {results.length === 0 ? (
             <Typography textAlign="center">
               Nenhuma foto encontrada. Tente novamente com outra imagem.
@@ -811,20 +839,6 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               ))}
             </Box>
           )}
-
-          <Button
-            variant="contained"
-            size="large"
-            fullWidth
-            sx={{ background: "#5a3cf1", borderRadius: 2, py: 1.5, mt: 1 }}
-            onClick={() => {
-              setResults([]);
-              setSearchMessage(null);
-              setStage("intro");
-            }}
-          >
-            Procurar novamente
-          </Button>
         </Box>
       </Box>
     </Box>
@@ -947,11 +961,11 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             variant="contained"
             startIcon={<DownloadIcon />}
             sx={{
-              backgroundColor: "#5a3cf1",
+              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
               color: "#fff",
               fontWeight: 600,
               "&:hover": {
-                backgroundColor: "#4a2cd0",
+                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
               },
             }}
           >

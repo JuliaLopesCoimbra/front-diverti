@@ -48,8 +48,8 @@ export default function EventIndisponivelPublic() {
       <Button
         onClick={() => router.push("/")}
         sx={{
-          backgroundColor: "#FFD600",
-          color: "#000",
+          backgroundColor: "rgb(255, 31, 33)",
+          color: "#fff",
           fontWeight: 700,
           padding: "12px 32px",
           borderRadius: "30px",
@@ -65,3 +65,4 @@ export default function EventIndisponivelPublic() {
     </Box>
   );
 }
+

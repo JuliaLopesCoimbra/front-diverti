@@ -242,13 +242,13 @@ function CompleteProfileContent() {
                     "& .MuiMenuItem-root": {
                       color: "#fff",
                       "&:hover": {
-                        backgroundColor: "rgba(255, 204, 1, 0.2)",
+                        backgroundColor: "rgba(255, 31, 33, 0.2)",
                       },
                       "&.Mui-selected": {
-                        backgroundColor: "rgba(255, 204, 1, 0.3)",
-                        color: "#ffcc01",
+                        backgroundColor: "rgba(255, 31, 33, 0.3)",
+                        color: "rgb(255, 31, 33)",
                         "&:hover": {
-                          backgroundColor: "rgba(255, 204, 1, 0.4)",
+                          backgroundColor: "rgba(255, 31, 33, 0.4)",
                         },
                       },
                     },
@@ -271,7 +271,7 @@ function CompleteProfileContent() {
                 sx={{
                   color: "rgba(255, 255, 255, 0.7)",
                   "&.Mui-checked": {
-                    color: "#ffcc01",
+                    color: "rgb(255, 31, 33)",
                   },
                 }}
               />
@@ -299,7 +299,7 @@ function CompleteProfileContent() {
               onClick={() => setShowLgpdDataProtectionModal(true)}
               sx={{
                 textTransform: "none",
-                color: "#ffcc01",
+                color: "rgb(255, 31, 33)",
                 fontSize: "0.7rem",
                 textDecoration: "underline",
                 padding: 0,
@@ -323,7 +323,7 @@ function CompleteProfileContent() {
                 sx={{
                   color: "rgba(255, 255, 255, 0.7)",
                   "&.Mui-checked": {
-                    color: "#ffcc01",
+                    color: "rgb(255, 31, 33)",
                   },
                 }}
               />
@@ -351,7 +351,7 @@ function CompleteProfileContent() {
               onClick={() => setShowMarketingConsentModal(true)}
               sx={{
                 textTransform: "none",
-                color: "#ffcc01",
+                color: "rgb(255, 31, 33)",
                 fontSize: "0.7rem",
                 textDecoration: "underline",
                 padding: 0,
@@ -371,7 +371,7 @@ function CompleteProfileContent() {
               onClick={() => setShowLgpdModal(true)}
               sx={{
                 textTransform: "none",
-                color: "#ffcc01",
+                color: "rgb(255, 31, 33)",
                 fontSize: "0.7rem",
                 textDecoration: "underline",
                 padding: 0,
@@ -392,16 +392,16 @@ function CompleteProfileContent() {
             onClick={handleSubmit}
             disabled={loading || !cpf || !gender || !lgpdAccepted}
             sx={{
-              backgroundColor: "#ffcc01",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 700,
               padding: "14px",
               borderRadius: "14px",
               "&:hover": {
-                backgroundColor: "#ffd633",
+                backgroundColor: "rgb(220, 20, 22)",
               },
               "&:disabled": {
-                backgroundColor: "rgba(255, 204, 1, 0.5)",
+                backgroundColor: "rgba(255, 31, 33, 0.5)",
               },
             }}
           >
@@ -449,4 +449,5 @@ export default function CompleteProfilePage() {
     </Suspense>
   );
 }
+
 

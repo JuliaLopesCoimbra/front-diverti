@@ -50,15 +50,15 @@ const LgpdDataProtectionModal: React.FC<LgpdDataProtectionModalProps> = ({ open,
               borderRadius: "4px",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "rgba(255, 204, 1, 0.5)",
+              background: "rgba(255, 31, 33, 0.5)",
               borderRadius: "4px",
               "&:hover": {
-                background: "rgba(255, 204, 1, 0.7)",
+                background: "rgba(255, 31, 33, 0.7)",
               },
             },
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: "#ffcc01" }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, mb: 2, color: "rgb(255, 120, 122)" }}>
             1. Aceite para Tratamento de Dados Pessoais
           </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 2 }}>
@@ -74,13 +74,13 @@ const LgpdDataProtectionModal: React.FC<LgpdDataProtectionModalProps> = ({ open,
           onClick={onClose}
           variant="contained"
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
           }}
         >
@@ -92,4 +92,5 @@ const LgpdDataProtectionModal: React.FC<LgpdDataProtectionModalProps> = ({ open,
 };
 
 export default LgpdDataProtectionModal;
+
 

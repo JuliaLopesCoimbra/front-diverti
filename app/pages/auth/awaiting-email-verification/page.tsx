@@ -123,8 +123,8 @@ function AwaitingEmailVerificationContent() {
             sx={{
               py: 1.5,
               borderRadius: "12px",
-              backgroundColor: "#ffcc01",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               fontSize: "16px",
               textTransform: "none",
@@ -138,7 +138,7 @@ function AwaitingEmailVerificationContent() {
             }}
           >
             {loading ? (
-              <CircularProgress size={24} sx={{ color: "#000" }} />
+              <CircularProgress size={24} sx={{ color: "#fff" }} />
             ) : cooldown > 0 ? (
               `Aguarde ${cooldown}s para reenviar`
             ) : (
@@ -169,4 +169,5 @@ export default function AwaitingEmailVerificationPage() {
     </Suspense>
   );
 }
+
 

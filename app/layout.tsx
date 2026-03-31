@@ -21,10 +21,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "N1 - Application Event",
+  title: "Rock In Rio - Application Event",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo/logo-n1.png", // Caminho do ícone
+    icon: "/logo/rockinrio.png", // Caminho do ícone
     apple: "/logo/logo-apple.png",
   },
   // define o nome curto que aparece abaixo do ícone na Home do iOS

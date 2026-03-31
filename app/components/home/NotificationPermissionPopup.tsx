@@ -75,14 +75,14 @@ const NotificationPermissionPopup: React.FC<NotificationPermissionPopupProps> = 
           variant="contained"
           fullWidth
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             py: 1.25,
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&:disabled": {
               backgroundColor: "rgba(255, 204, 1, 0.5)",
@@ -91,7 +91,7 @@ const NotificationPermissionPopup: React.FC<NotificationPermissionPopupProps> = 
           }}
         >
           {loading ? (
-            <CircularProgress size={24} sx={{ color: "#000" }} />
+            <CircularProgress size={24} sx={{ color: "#fff" }} />
           ) : (
             "Ativar notificações"
           )}
@@ -117,3 +117,4 @@ const NotificationPermissionPopup: React.FC<NotificationPermissionPopupProps> = 
 };
 
 export default NotificationPermissionPopup;
+

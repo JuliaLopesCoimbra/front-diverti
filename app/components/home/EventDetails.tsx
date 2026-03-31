@@ -32,7 +32,7 @@ export default function EventDetails({ event }: Props) {
     const cached = getCache(cacheKey);
     
     if (cached && cached.scrollPosition > 0) {
-      console.log('✅ [EventDetails] Cache encontrado! Scroll:', cached.scrollPosition);
+      console.log('âœ… [EventDetails] Cache encontrado! Scroll:', cached.scrollPosition);
       const targetPosition = cached.scrollPosition;
       
       if ('scrollRestoration' in history) {
@@ -54,12 +54,12 @@ export default function EventDetails({ event }: Props) {
         const diff = Math.abs(currentScroll - targetPosition);
         
         if (diff < 10) {
-          console.log(`✅ [EventDetails] SUCESSO! Scroll restaurado em ${attempts} tentativas: ${currentScroll}px`);
+          console.log(`âœ… [EventDetails] SUCESSO! Scroll restaurado em ${attempts} tentativas: ${currentScroll}px`);
         } else if (attempts < maxAttempts) {
           console.log(`⏳ [EventDetails] Tentativa ${attempts}: atual=${currentScroll}, target=${targetPosition}, diff=${diff}`);
           requestAnimationFrame(attemptRestore);
         } else {
-          console.log(`⚠️ [EventDetails] Máximo de tentativas. Posição final: ${currentScroll}px`);
+          console.log(`âš ï¸ [EventDetails] Máximo de tentativas. Posição final: ${currentScroll}px`);
         }
       };
       
@@ -74,14 +74,14 @@ export default function EventDetails({ event }: Props) {
         }, delay);
       });
     } else {
-      console.log('❌ [EventDetails] Sem cache ou scroll = 0');
+      console.log('âŒ [EventDetails] Sem cache ou scroll = 0');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event.id]);
   
   // Salva scroll ao rolar/sair
   useEffect(() => {
-    console.log('📌 [EventDetails] Iniciando listeners de scroll para:', cacheKey);
+    console.log('ðŸ“Œ [EventDetails] Iniciando listeners de scroll para:', cacheKey);
     let throttleTimeout: NodeJS.Timeout | null = null;
     const THROTTLE_MS = 400; // Otimizado para performance
     
@@ -90,7 +90,7 @@ export default function EventDetails({ event }: Props) {
       const docScroll = document.documentElement.scrollTop;
       const bodyScroll = document.body.scrollTop;
       
-      console.log(`📊 [EventDetails] SCROLL DETECTADO:`, {
+      console.log(`ðŸ“Š [EventDetails] SCROLL DETECTADO:`, {
         windowScrollY: window.scrollY,
         windowPageYOffset: window.pageYOffset,
         docScroll,
@@ -105,39 +105,39 @@ export default function EventDetails({ event }: Props) {
       
       throttleTimeout = setTimeout(() => {
         setCache(cacheKey, [], currentScroll);
-        console.log(`💾 [EventDetails] Cache atualizado (scroll): ${currentScroll}px`);
+        console.log(`ðŸ’¾ [EventDetails] Cache atualizado (scroll): ${currentScroll}px`);
       }, THROTTLE_MS);
     };
     
     const handleScroll = () => {
-      console.log('🔔 [EventDetails] Evento de scroll disparado!');
+      console.log('ðŸ”” [EventDetails] Evento de scroll disparado!');
       updateScrollPosition();
     };
     
     const handlePageHide = () => {
       const finalScroll = lastScrollPositionRef.current;
       setCache(cacheKey, [], finalScroll);
-      console.log(`💾 [EventDetails] Cache salvo (pagehide): ${finalScroll}px`);
+      console.log(`ðŸ’¾ [EventDetails] Cache salvo (pagehide): ${finalScroll}px`);
     };
     
     const handleBeforeUnload = () => {
       const finalScroll = lastScrollPositionRef.current;
       setCache(cacheKey, [], finalScroll);
-      console.log(`💾 [EventDetails] Cache salvo (beforeunload): ${finalScroll}px`);
+      console.log(`ðŸ’¾ [EventDetails] Cache salvo (beforeunload): ${finalScroll}px`);
     };
     
     const handleVisibilityChange = () => {
       if (document.hidden) {
         const finalScroll = lastScrollPositionRef.current;
         setCache(cacheKey, [], finalScroll);
-        console.log(`💾 [EventDetails] Cache salvo (visibilitychange): ${finalScroll}px`);
+        console.log(`ðŸ’¾ [EventDetails] Cache salvo (visibilitychange): ${finalScroll}px`);
       }
     };
     
     const handleBlur = () => {
       const finalScroll = lastScrollPositionRef.current;
       setCache(cacheKey, [], finalScroll);
-      console.log(`💾 [EventDetails] Cache salvo (blur): ${finalScroll}px`);
+      console.log(`ðŸ’¾ [EventDetails] Cache salvo (blur): ${finalScroll}px`);
     };
     
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -157,7 +157,7 @@ export default function EventDetails({ event }: Props) {
       
       const finalScroll = lastScrollPositionRef.current;
       setCache(cacheKey, [], finalScroll);
-      console.log(`💾 [EventDetails] Cache salvo (cleanup final): ${finalScroll}px`);
+      console.log(`ðŸ’¾ [EventDetails] Cache salvo (cleanup final): ${finalScroll}px`);
     };
   }, [cacheKey, setCache]);
   // ======================================================
@@ -345,8 +345,8 @@ const formatTime = (timeStr: string | undefined): string => {
                   margin: 0,
                   fontSize: "clamp(24px, 5vw, 42px)",
                   fontWeight: 800,
-                  color: "#FFD600",
-                  textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 214, 0, 0.3)",
+                  color: "rgb(255, 31, 33)",
+                  textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 31, 33, 0.3)",
                   letterSpacing: "0.5px",
                   lineHeight: 1.2,
                   textTransform: "uppercase",
@@ -393,13 +393,13 @@ const formatTime = (timeStr: string | undefined): string => {
               }}
             >
                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <FestivalIcon style={{ color: "yellow", fontSize: 28 }} />
-                <strong style={{ fontSize: 22, color: "white" }}>Informações do Evento</strong>
+                <FestivalIcon style={{ color: "rgb(255, 31, 33)", fontSize: 28 }} />
+                <strong style={{ fontSize: 22, color: "rgb(255, 31, 33)" }}>Informações do Evento</strong>
               </div>
               {/* DIAS DO EVENTO */}
               {event.event_dates && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <EventIcon style={{ color: "yellow" }} />
+                  <EventIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
                     {formatEventDates(event)}
                   </p>
@@ -409,7 +409,7 @@ const formatTime = (timeStr: string | undefined): string => {
               {/* DATA E HORÁRIO DE INÍCIO */}
               {event.starts_at && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <AccessTimeIcon style={{ color: "yellow" }} />
+                  <AccessTimeIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
                     Início: {new Date(event.starts_at).toLocaleString("pt-BR", {
                       day: "2-digit",
@@ -422,10 +422,10 @@ const formatTime = (timeStr: string | undefined): string => {
                 </Box>
               )}
 
-              {/* DATA E HORÁRIO DE TÉRMINO */}
+              {/* DATA E HORÁRIO DE TÃ‰RMINO */}
               {event.ends_at && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <AccessTimeIcon style={{ color: "yellow" }} />
+                  <AccessTimeIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
                     Término: {new Date(event.ends_at).toLocaleString("pt-BR", {
                       day: "2-digit",
@@ -441,7 +441,7 @@ const formatTime = (timeStr: string | undefined): string => {
               {/* HORÁRIO DE IDA DAS VANS */}
               {(event.van_arrival_time_start || event.van_arrival_time_end) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <DirectionsBusIcon style={{ color: "yellow" }} />
+                  <DirectionsBusIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
                     Ida das Vans: {event.van_arrival_time_start ? formatTime(event.van_arrival_time_start) : "?"} 
                     {event.van_arrival_time_start && event.van_arrival_time_end ? " às " : ""}
@@ -453,7 +453,7 @@ const formatTime = (timeStr: string | undefined): string => {
               {/* HORÁRIO DE VOLTA DAS VANS */}
               {(event.van_departure_time_start || event.van_departure_time_end) && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <DirectionsBusIcon style={{ color: "yellow" }} />
+                  <DirectionsBusIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>
                     Volta das Vans: {event.van_departure_time_start ? formatTime(event.van_departure_time_start) : "?"} 
                     {event.van_departure_time_start && event.van_departure_time_end ? " às " : ""}
@@ -465,7 +465,7 @@ const formatTime = (timeStr: string | undefined): string => {
               {/* LOCAL */}
               {event.location && (
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationOnIcon style={{ color: "yellow" }} />
+                  <LocationOnIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <p style={{ margin: 0, fontSize: 15 }}>{event.location}</p>
                 </Box>
               )}
@@ -491,15 +491,15 @@ const formatTime = (timeStr: string | undefined): string => {
                   }}
                 >
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, marginBottom: 2 }}>
-                  <MeetingRoomIcon style={{ color: "yellow" }} />
-                  <h3 style={{ margin: 0, color: "white", fontSize: 18, fontWeight: 600 }}>
+                  <MeetingRoomIcon style={{ color: "rgb(255, 31, 33)" }} />
+                  <h3 style={{ margin: 0, color: "rgb(255, 31, 33)", fontSize: 18, fontWeight: 600 }}>
                     Meeting Point
                   </h3>
                 </Box>
 
                 {event.meeting_point_location && (
                   <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, marginBottom: 2 }}>
-                    <LocationOnIcon style={{ color: "yellow" }} />
+                    <LocationOnIcon style={{ color: "rgb(255, 31, 33)" }} />
                     <Box component="p" sx={{ margin: 0, fontSize: 15, color: "white", textAlign: { xs: "left", md: "center" } }}>{event.meeting_point_location}</Box>
                   </Box>
                 )}
@@ -518,13 +518,13 @@ const formatTime = (timeStr: string | undefined): string => {
                         }}
                       >
                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, mb: 1 }}>
-                          <EventIcon style={{ color: "yellow", fontSize: 18 }} />
+                          <EventIcon style={{ color: "rgb(255, 31, 33)", fontSize: 18 }} />
                           <Typography sx={{ color: "white", fontSize: 14, fontWeight: 600, textAlign: { xs: "left", md: "center" } }}>
                             Dias {schedule.days.join(", ")} de fevereiro
                           </Typography>
                         </Box>
                         <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1 }}>
-                          <AccessTimeIcon style={{ color: "yellow", fontSize: 18 }} />
+                          <AccessTimeIcon style={{ color: "rgb(255, 31, 33)", fontSize: 18 }} />
                           <Typography sx={{ color: "white", fontSize: 14, textAlign: { xs: "left", md: "center" } }}>
                             Das {schedule.start_time} às {schedule.end_time}
                           </Typography>
@@ -537,7 +537,7 @@ const formatTime = (timeStr: string | undefined): string => {
             </Box>
           )}
 
-            {/* BOTÃO COMPRAR INGRESSOS */}
+            {/* BOTÃƒO COMPRAR INGRESSOS */}
             <Box
               sx={{
                 maxWidth: 700,
@@ -549,12 +549,12 @@ const formatTime = (timeStr: string | undefined): string => {
             >
               <Button
                 component="a"
-                href="https://www.ticketmaster.com.br/event/camaroten1"
+                href="https://www.viagogo.com/br/Ingressos-Festivais/Festivais-Internacionais/Rock-in-Rio-Ingressos?=&PCID=PSBRADWHOME54696850618318&MetroRegionID=&psc=&ps=&ps_p=0&ps_c=21105464540&ps_ag=183451881594&ps_tg=kwd-328362149941&ps_ad=788000627894&ps_adp=&ps_fi=&ps_li=&ps_lp=9100596&ps_n=g&ps_d=c&ps_ex=&pscpag=&gad_source=1&gad_campaignid=21105464540&gclid=Cj0KCQjw4a3OBhCHARIsAChaqJOxkA-81eoO01M1ZrHN6bUME0yTyflmH6Ym7JzmiwcuR0oSKTIk6SkaAjAVEALw_wcB"
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{
-                  backgroundColor: "#FFD600",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 700,
                   padding: "12px 32px",
                   borderRadius: "30px",
@@ -562,7 +562,7 @@ const formatTime = (timeStr: string | undefined): string => {
                   fontSize: 16,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   "&:hover": {
-                    backgroundColor: "#FFC400",
+                    backgroundColor: "rgb(220, 20, 22)",
                   },
                 }}
               >
@@ -575,3 +575,4 @@ const formatTime = (timeStr: string | undefined): string => {
         </div>
   );
 }
+

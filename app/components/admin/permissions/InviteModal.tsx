@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import {
   Box,
@@ -147,15 +147,15 @@ export default function InviteModal({
           onClick={onInvite}
           disabled={loading}
           variant="contained"
-          startIcon={loading ? <CircularProgress size={16} sx={{ color: "#000" }} /> : <PersonAdd />}
+          startIcon={loading ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <PersonAdd />}
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             textTransform: "none",
             px: 3,
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
             "&:disabled": {
               backgroundColor: "rgba(255, 204, 1, 0.5)",
@@ -168,6 +168,7 @@ export default function InviteModal({
     </Dialog>
   );
 }
+
 
 
 

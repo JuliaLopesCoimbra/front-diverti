@@ -1325,14 +1325,14 @@ export default function EditEventForm({
             disabled={loading || !title.trim() || !description.trim() || !location.trim() || !startDate || !endDate}
             sx={{
               flex: 1,
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 600,
               textTransform: "none",
               borderRadius: "14px",
               py: 1.5,
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "rgb(220, 20, 22)",
               },
               "&:disabled": {
                 backgroundColor: "rgba(255,201,31,0.3)",
@@ -1341,7 +1341,7 @@ export default function EditEventForm({
             }}
           >
             {loading ? (
-              <CircularProgress size={24} sx={{ color: "#000" }} />
+              <CircularProgress size={24} sx={{ color: "#fff" }} />
             ) : (
               "Salvar Alterações"
             )}
@@ -1351,4 +1351,5 @@ export default function EditEventForm({
     </Box>
   );
 }
+
 

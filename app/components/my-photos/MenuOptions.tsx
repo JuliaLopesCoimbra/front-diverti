@@ -78,7 +78,7 @@ export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
               "&:hover": {
                 backgroundColor: "rgba(255, 255, 255, 0.1)",
                 transform: "translateY(-2px)",
-                borderColor: "rgba(255, 214, 0, 0.5)",
+                borderColor: "rgba(255, 31, 33, 0.5)",
               },
             }}
           >
@@ -95,7 +95,7 @@ export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
             >
               <Box
                 sx={{
-                  color: "#FFD600",
+                  color: "rgb(255, 31, 33)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

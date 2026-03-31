@@ -294,23 +294,13 @@ export default function Roulette() {
             paddingTop: "40px",
             paddingX: { xs: "55px", md: "20px" },
             fontSize: { xs: "1.25rem", md: "1.75rem" },
+            fontFamily: '"Operator Mono", "Operant Mono", monospace',
           }}
         >
           Você desbloqueou um girou na roleta!
         </Typography>
 
-        <Typography
-          sx={{
-            color: "white",
-            paddingX: { xs: "72px", md: "20px" },
-            fontSize: { xs: "12px", md: "16px" },
-            maxWidth: 700,
-          }}
-          mb={4}
-        >
-          Cada compra aumenta suas chances de conquistar prêmios ainda melhores.
-        </Typography>
-
+  
         {/* ROLETA */}
         <Box
           sx={{
@@ -379,8 +369,8 @@ export default function Roulette() {
           onClick={handleSpin}
           disabled={spinning}
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+            color: "#fff",
             fontWeight: 600,
             marginTop: "10px",
             borderRadius: "14px",
@@ -389,7 +379,7 @@ export default function Roulette() {
             py: { xs: 0.5, md: 1 },
             fontSize: { xs: "1rem", md: "1.125rem" },
             "&:hover": {
-              backgroundColor: "#e6b800",
+              background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
             },
           }}
         >

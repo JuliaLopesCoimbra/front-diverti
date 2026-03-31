@@ -1,7 +1,7 @@
 import { Box, Button } from "@mui/material";
 import { useRef, useEffect, useCallback } from "react";
 
-type Tab = "home" | "eventos" | "mapa" | "lineup" | "foto" | "enredo";
+type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
 
 interface Props {
   active: Tab;
@@ -20,11 +20,12 @@ export default function HomeTabs({ active, onChange }: Props) {
 
   const tabs: { label: string; value: Tab }[] = [
     { label: "Home", value: "home" },
-    { label: "Eventos", value: "eventos" },
+    { label: "Evento", value: "eventos" },
+    { label: "Estandes", value: "estandes" },
+    { label: "Roleta", value: "roleta" },
     { label: "Mapa", value: "mapa" },
     { label: "Line Up", value: "lineup" },
     { label: "Photo Finder", value: "foto" },
-    { label: "Enredo", value: "enredo" },
   ];
 
   // Mesma largura e padding do conteúdo abaixo (ex.: lineup/datas) para alinhar início e fim
@@ -163,18 +164,18 @@ export default function HomeTabs({ active, onChange }: Props) {
                 fontSize: tab.value === "mapa" 
                   ? { xs: "0.75rem", md: "0.875rem", lg: "0.9375rem" }
                   : { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-                // Ativo
-                backgroundColor: isActive ? "#ffc91f" : "transparent",
-                color: isActive ? "#000" : "#fff",
+                // Ativo com o vermelho oficial do tema
+                backgroundColor: isActive ? "primary.main" : "transparent",
+                color: "#fff",
                 border: `1px solid ${
-                  isActive ? "#ffc91f" : "#fff"
+                  isActive ? "primary.main" : "#fff"
                 }`,
 
                 "&:hover": {
                   backgroundColor: isActive
-                    ? "#f5bf12"
+                    ? "primary.dark"
                     : "rgba(255,255,255,0.1)",
-                  borderColor: isActive ? "#f5bf12" : "#fff",
+                  borderColor: isActive ? "primary.dark" : "#fff",
                   fontWeight: 900,
                 },
               }}

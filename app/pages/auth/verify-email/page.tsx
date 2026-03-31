@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { verifyEmail } from "@/app/services/auth/authService";
@@ -131,13 +131,13 @@ function VerifyEmailContent() {
               fullWidth
               variant="contained"
               sx={{
-                backgroundColor: "#ffcc01",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 600,
                 borderRadius: "14px",
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "#e6b800",
+                  backgroundColor: "rgb(220, 20, 22)",
                 },
               }}
               onClick={() => {
@@ -163,7 +163,7 @@ function VerifyEmailContent() {
         {status === "error" && (
           <>
             <Typography variant="h6" fontWeight={600} mb={2}>
-              Erro na verificação ❌
+              Erro na verificação âŒ
             </Typography>
 
             <Typography variant="body2" sx={{ opacity: 0.85 }} mb={4}>
@@ -227,3 +227,4 @@ export default function VerifyEmailPage() {
     </Suspense>
   );
 }
+

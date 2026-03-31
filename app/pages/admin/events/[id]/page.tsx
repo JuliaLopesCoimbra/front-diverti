@@ -24,7 +24,6 @@ import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MusicNoteIcon from '@mui/icons-material/MusicNote';
-import SchoolIcon from '@mui/icons-material/School';
 import DirectionsBusIcon from '@mui/icons-material/DirectionsBus';
 import StoreIcon from '@mui/icons-material/Store';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -555,7 +554,7 @@ export default function EventDetailsPage() {
           justifyContent: "center",
         }}
       >
-        <CircularProgress sx={{ color: "#ffc91f" }} />
+        <CircularProgress sx={{ color: "primary.main" }} />
       </Box>
     );
   }
@@ -640,7 +639,7 @@ export default function EventDetailsPage() {
             <IconButton
               onClick={() => router.push(`/pages/admin/events/${eventId}/edit`)}
               sx={{ 
-                color: "#ffc91f",
+                color: "primary.main",
                 fontSize: { xs: "1.2rem", md: "1.5rem", lg: "1.8rem" },
                 "& svg": {
                   fontSize: { xs: "1.2rem", md: "1.5rem", lg: "1.8rem" }
@@ -687,7 +686,7 @@ export default function EventDetailsPage() {
               sx={{
                 width: 200,
                 height: 200,
-                border: "3px solid rgba(255, 201, 31, 0.3)",
+                border: "3px solid rgba(255, 31, 33, 0.35)",
                 flexShrink: 0,
               }}
             />
@@ -739,7 +738,7 @@ export default function EventDetailsPage() {
 
           {/* DESCRIÇÃO */}
           <Box sx={{ mb: 3 }}>
-            <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
               Descrição
             </Typography>
             <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
@@ -750,7 +749,7 @@ export default function EventDetailsPage() {
           {/* LOCALIZAÇÃO */}
           {event.location && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 Localização
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
@@ -762,7 +761,7 @@ export default function EventDetailsPage() {
           {/* DIAS DO EVENTO (event_dates) */}
           {event.event_dates && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 Dias do Evento
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: "1rem", lineHeight: 1.6 }}>
@@ -774,7 +773,7 @@ export default function EventDetailsPage() {
           {/* DATA E HORÁRIO DE INÍCIO */}
           {event.starts_at && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 Data e Horário de Início
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
@@ -792,7 +791,7 @@ export default function EventDetailsPage() {
           {/* DATA E HORÁRIO DE TÉRMINO */}
           {event.ends_at && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px" }}>
                 Data e Horário de Término
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.9)", lineHeight: 1.6 }}>
@@ -810,7 +809,7 @@ export default function EventDetailsPage() {
           {/* HORÁRIO DE IDA DAS VANS */}
           {(event.van_arrival_time_start || event.van_arrival_time_end) && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBusIcon sx={{ fontSize: "1rem" }} />
                 Horário de Ida das Vans
               </Typography>
@@ -825,7 +824,7 @@ export default function EventDetailsPage() {
           {/* HORÁRIO DE VOLTA DAS VANS */}
           {(event.van_departure_time_start || event.van_departure_time_end) && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
                 <DirectionsBusIcon sx={{ fontSize: "1rem" }} />
                 Horário de Volta das Vans
               </Typography>
@@ -840,7 +839,7 @@ export default function EventDetailsPage() {
           {/* MEETING POINT */}
           {(event.meeting_point_location || (event.meeting_point_schedule && event.meeting_point_schedule.length > 0)) && (
             <Box sx={{ mb: 3 }}>
-              <Typography fontWeight={600} mb={1.5} sx={{ color: "#ffc91f", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
+              <Typography fontWeight={600} mb={1.5} sx={{ color: "primary.main", fontSize: "0.875rem", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: 1 }}>
                 <MeetingRoomIcon sx={{ fontSize: "1rem" }} />
                 Meeting Point
               </Typography>
@@ -898,9 +897,9 @@ export default function EventDetailsPage() {
                     onChange={(e) => handleApprovalChange(!e.target.checked)}
                     disabled={updatingApproval}
                     sx={{
-                      color: "#ffc91f",
+                      color: "primary.main",
                       "&.Mui-checked": {
-                        color: "#ffc91f",
+                        color: "primary.main",
                       },
                     }}
                   />
@@ -932,7 +931,7 @@ export default function EventDetailsPage() {
                   variant="caption"
                   sx={{
                     display: "block",
-                    color: "rgba(255, 193, 7, 0.8)",
+                    color: "rgba(255, 31, 33, 0.85)",
                     mt: 1,
                     ml: 4.5,
                     fontSize: "0.8125rem",
@@ -963,14 +962,14 @@ export default function EventDetailsPage() {
               onClick={() => router.push(`/pages/admin/events/${eventId}/products`)}
               sx={{
                 flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 8px)" },
-                backgroundColor: "#ffc91f",
-                color: "#000",
+                backgroundColor: "primary.main",
+                color: "#fff",
                 fontWeight: 600,
                 py: 1.5,
                 borderRadius: "14px",
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "#e6b800",
+                  backgroundColor: "primary.dark",
                 },
               }}
             >
@@ -978,37 +977,56 @@ export default function EventDetailsPage() {
             </Button>
             <Button
               variant="contained"
-              startIcon={<SchoolIcon />}
-              onClick={() => router.push(`/pages/admin/samba-schools/create/${eventId}`)}
+              startIcon={<MeetingRoomIcon />}
+              onClick={() => router.push(`/pages/admin/live-stands?eventId=${eventId}`)}
               sx={{
                 flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 8px)" },
-                backgroundColor: "#ffc91f",
-                color: "#000",
+                backgroundColor: "primary.main",
+                color: "#fff",
                 fontWeight: 600,
                 py: 1.5,
                 borderRadius: "14px",
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "#e6b800",
+                  backgroundColor: "primary.dark",
+                },
+              }}
+            >
+              Estandes ao Vivo
+            </Button>
+            {/* <Button
+              variant="contained"
+              startIcon={<SchoolIcon />}
+              onClick={() => router.push(`/pages/admin/samba-schools/create/${eventId}`)}
+              sx={{
+                flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 8px)" },
+                backgroundColor: "primary.main",
+                color: "#fff",
+                fontWeight: 600,
+                py: 1.5,
+                borderRadius: "14px",
+                textTransform: "none",
+                "&:hover": {
+                  backgroundColor: "primary.dark",
                 },
               }}
             >
               Adicionar Escola de Samba
-            </Button>
+            </Button> */}
             <Button
               variant="contained"
               startIcon={<QueueMusicIcon />}
               onClick={() => router.push(`/pages/admin/events/${eventId}/lineup`)}
               sx={{
                 flex: { xs: "1 1 100%", sm: "1 1 calc(50% - 8px)" },
-                backgroundColor: "#ffc91f",
-                color: "#000",
+                backgroundColor: "primary.main",
+                color: "#fff",
                 fontWeight: 600,
                 py: 1.5,
                 borderRadius: "14px",
                 textTransform: "none",
                 "&:hover": {
-                  backgroundColor: "#e6b800",
+                  backgroundColor: "primary.dark",
                 },
               }}
             >
@@ -1037,7 +1055,7 @@ export default function EventDetailsPage() {
         )}
 
         {/* LISTA DE ESCOLAS DE SAMBA */}
-        <Box
+        {/* <Box
           sx={{
             maxWidth: 900,
             mx: "auto",
@@ -1060,18 +1078,18 @@ export default function EventDetailsPage() {
               onClick={refreshSchoolsAndMusics}
               disabled={refreshing || loadingSchools}
               sx={{
-                color: "#ffc91f",
+                color: "primary.main",
                 "&:hover": {
-                  backgroundColor: "rgba(255, 201, 31, 0.1)",
+                  backgroundColor: "rgba(255, 31, 33, 0.1)",
                 },
                 "&:disabled": {
-                  color: "rgba(255, 201, 31, 0.3)",
+                  color: "rgba(255, 31, 33, 0.35)",
                 },
               }}
               title="Atualizar lista de escolas"
             >
               {refreshing || loadingSchools ? (
-                <CircularProgress size={20} sx={{ color: "#ffc91f" }} />
+                <CircularProgress size={20} sx={{ color: "primary.main" }} />
               ) : (
                 <RefreshIcon />
               )}
@@ -1080,7 +1098,7 @@ export default function EventDetailsPage() {
 
           {loadingSchools ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-              <CircularProgress sx={{ color: "#ffc91f" }} />
+              <CircularProgress sx={{ color: "primary.main" }} />
             </Box>
           ) : schools.length === 0 ? (
             <Paper
@@ -1115,7 +1133,7 @@ export default function EventDetailsPage() {
                   "&:hover": {
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
                     transform: "translateY(-2px)",
-                    border: "1px solid rgba(255, 201, 31, 0.3)",
+                    border: "1px solid rgba(255, 31, 33, 0.35)",
                   },
                 }}
                 onClick={() =>
@@ -1166,7 +1184,7 @@ export default function EventDetailsPage() {
               </Paper>
             ))
           )}
-        </Box>
+        </Box> */}
 
         {/* LISTA DE MÚSICAS/LETRAS - COMENTADO/OCULTO */}
         {/* Seção de músicas/letras foi comentada e não será exibida na página */}
@@ -1195,7 +1213,7 @@ export default function EventDetailsPage() {
 
             {loadingSchools ? (
               <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-                <CircularProgress sx={{ color: "#ffc91f" }} />
+                <CircularProgress sx={{ color: "primary.main" }} />
               </Box>
             ) : musics.length === 0 ? (
               <Paper
@@ -1320,7 +1338,7 @@ export default function EventDetailsPage() {
                     >
                       {loadingMoreMusics ? (
                         <>
-                          <CircularProgress size={16} sx={{ color: "#ffc91f", mr: 1 }} />
+                          <CircularProgress size={16} sx={{ color: "primary.main", mr: 1 }} />
                           Carregando...
                         </>
                       ) : (
@@ -1355,11 +1373,11 @@ export default function EventDetailsPage() {
           sx: {
             backgroundColor: "rgba(0, 0, 0, 0.9)",
             color: "#fff",
-            border: "1px solid rgba(255, 201, 31, 0.3)",
+            border: "1px solid rgba(255, 31, 33, 0.35)",
           },
         }}
       >
-        <DialogTitle sx={{ color: "#ffc91f", fontWeight: 600 }}>
+        <DialogTitle sx={{ color: "primary.main", fontWeight: 600 }}>
           Confirmar Desativação de Aprovação
         </DialogTitle>
         <DialogContent>
@@ -1367,7 +1385,7 @@ export default function EventDetailsPage() {
             Ao desativar a aprovação de posts, todos os posts pendentes serão automaticamente aprovados e publicados no feed.
           </DialogContentText>
           {pendingCount !== null && pendingCount > 0 && (
-            <DialogContentText sx={{ color: "#ffc91f", fontWeight: 600 }}>
+            <DialogContentText sx={{ color: "primary.main", fontWeight: 600 }}>
               {pendingCount} {pendingCount === 1 ? "post pendente será aprovado" : "posts pendentes serão aprovados"}.
             </DialogContentText>
           )}
@@ -1387,17 +1405,17 @@ export default function EventDetailsPage() {
             onClick={() => updateApprovalRequirement(false)}
             variant="contained"
             sx={{
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "primary.main",
+              color: "#fff",
               fontWeight: 600,
               "&:hover": {
-                backgroundColor: "#e6b800",
+                backgroundColor: "primary.dark",
               },
             }}
             disabled={updatingApproval}
           >
             {updatingApproval ? (
-              <CircularProgress size={20} sx={{ color: "#000" }} />
+              <CircularProgress size={20} sx={{ color: "#fff" }} />
             ) : (
               "Confirmar"
             )}

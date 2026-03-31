@@ -52,13 +52,13 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ email }) => {
           fullWidth
           variant="contained"
           sx={{
-            backgroundColor: "#ffcc01",
-            color: "#000",
+            backgroundColor: "rgb(255, 31, 33)",
+            color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "#e6b800",
+              backgroundColor: "rgb(220, 20, 22)",
             },
           }}
           onClick={() => router.push("/pages/auth/login")}
@@ -71,3 +71,4 @@ const RegisterSuccess: React.FC<RegisterSuccessProps> = ({ email }) => {
 };
 
 export default RegisterSuccess;
+

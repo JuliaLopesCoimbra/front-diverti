@@ -174,23 +174,23 @@ export default function LineupView({ eventId }: LineupViewProps) {
             maxWidth: { xs: 200, md: 250 },
             fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
             // Ativo
-            backgroundColor: lineupType === 'shows' ? "#ffc91f" : "transparent",
-            color: lineupType === 'shows' ? "#000" : "#fff",
+            backgroundColor: lineupType === 'shows' ? "primary.main" : "transparent",
+            color: "#fff",
             border: `1px solid ${
-              lineupType === 'shows' ? "#ffc91f" : "#fff"
+              lineupType === 'shows' ? "primary.main" : "#fff"
             }`,
             "&:hover": {
               backgroundColor: lineupType === 'shows'
-                ? "#f5bf12"
+                ? "primary.dark"
                 : "rgba(255,255,255,0.1)",
-              borderColor: lineupType === 'shows' ? "#f5bf12" : "#fff",
+              borderColor: lineupType === 'shows' ? "primary.dark" : "#fff",
               fontWeight: 900,
             },
           }}
         >
           Line Up de Shows
         </Button>
-        <Button
+        {/* <Button
           onClick={() => setLineupType('parade')}
           sx={{
             borderRadius: "999px",
@@ -204,22 +204,22 @@ export default function LineupView({ eventId }: LineupViewProps) {
             maxWidth: { xs: 200, md: 250 },
             fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
             // Ativo
-            backgroundColor: lineupType === 'parade' ? "#ffc91f" : "transparent",
-            color: lineupType === 'parade' ? "#000" : "#fff",
+            backgroundColor: lineupType === 'parade' ? "primary.main" : "transparent",
+            color: "#fff",
             border: `1px solid ${
-              lineupType === 'parade' ? "#ffc91f" : "#fff"
+              lineupType === 'parade' ? "primary.main" : "#fff"
             }`,
             "&:hover": {
               backgroundColor: lineupType === 'parade'
-                ? "#f5bf12"
+                ? "primary.dark"
                 : "rgba(255,255,255,0.1)",
-              borderColor: lineupType === 'parade' ? "#f5bf12" : "#fff",
+              borderColor: lineupType === 'parade' ? "primary.dark" : "#fff",
               fontWeight: 900,
             },
           }}
         >
           Line Up de Desfile
-        </Button>
+        </Button> */}
       </Box>
 
       {loading ? (
@@ -232,7 +232,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
             py: 4,
           }}
         >
-          <CircularProgress sx={{ color: "#ffc91f" }} />
+          <CircularProgress sx={{ color: "primary.main" }} />
         </Box>
       ) : error ? (
         <Paper
@@ -282,7 +282,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
             minHeight: "200px",
           }}
         >
-          <CircularProgress sx={{ color: "#ffc91f" }} />
+          <CircularProgress sx={{ color: "primary.main" }} />
         </Box>
       ) : (
         <Box
@@ -325,12 +325,12 @@ export default function LineupView({ eventId }: LineupViewProps) {
                     flex: dates.length <= 5 ? "1 1 0" : undefined,
                     minWidth: dates.length <= 5 ? 0 : undefined,
                     "&.Mui-selected": {
-                      color: "#ffc91f",
+                      color: "primary.main",
                       fontWeight: 600,
                     },
                   },
                   "& .MuiTabs-indicator": {
-                    backgroundColor: "#ffc91f",
+                    backgroundColor: "rgb(255, 31, 33)",
                     height: 3,
                   },
                 }}
@@ -406,7 +406,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   aspectRatio: "1 / 1",
                   overflow: "hidden",
                   borderRadius: 2,
-                  backgroundColor: "rgba(255, 201, 31, 0.1)",
+                  backgroundColor: "rgba(255, 31, 33, 0.1)",
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
@@ -431,7 +431,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   <MusicNoteIcon
                     sx={{
                       fontSize: { xs: "2rem", md: "3rem" },
-                      color: "rgba(255, 201, 31, 0.3)",
+                      color: "rgba(255, 31, 33, 0.3)",
                     }}
                   />
                 )}
@@ -465,7 +465,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   {showItem.stage && (
                     <Typography
                       sx={{
-                        color: "#ffc91f",
+                        color: "primary.main",
                         fontSize: { xs: "0.9rem", md: "1rem" },
                         fontWeight: 600,
                         mb: 0.5,
@@ -552,7 +552,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   aspectRatio: "1 / 1",
                   overflow: "hidden",
                   borderRadius: 2,
-                  backgroundColor: "rgba(255, 201, 31, 0.1)",
+                  backgroundColor: "rgba(255, 31, 33, 0.1)",
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
@@ -577,7 +577,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   <MusicNoteIcon
                     sx={{
                       fontSize: { xs: "2rem", md: "3rem" },
-                      color: "rgba(255, 201, 31, 0.3)",
+                      color: "rgba(255, 31, 33, 0.3)",
                     }}
                   />
                 )}
@@ -671,4 +671,5 @@ export default function LineupView({ eventId }: LineupViewProps) {
     </Box>
   );
 }
+
 

@@ -4,6 +4,13 @@ import { ThemeProvider as MUIThemeProvider, createTheme } from "@mui/material/st
 import { ReactNode } from "react";
 
 const theme = createTheme({
+  palette: {
+    primary: {
+      main: "rgb(255, 31, 33)",
+      dark: "rgb(220, 20, 22)",
+      contrastText: "#fff",
+    },
+  },
   typography: {
     fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h1: {
@@ -55,6 +62,18 @@ const theme = createTheme({
       fontSize: "0.75rem",
       fontWeight: 400,
       lineHeight: 1.5,
+    },
+  },
+  components: {
+    MuiButton: {
+      defaultProps: {
+        color: "primary",
+      },
+      styleOverrides: {
+        contained: {
+          color: "#fff",
+        },
+      },
     },
   },
 });

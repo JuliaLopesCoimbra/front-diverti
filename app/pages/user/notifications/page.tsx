@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -399,7 +399,7 @@ const NotificationsPage: React.FC = () => {
                 fontSize: { xs: "0.875rem", sm: "1rem" },
               },
               "& .MuiTabs-indicator": {
-                backgroundColor: "#ffcc01",
+                backgroundColor: "rgb(255, 31, 33)",
               },
             }}
           >
@@ -413,8 +413,8 @@ const NotificationsPage: React.FC = () => {
                       label={unreadCount}
                       size="small"
                       sx={{
-                        backgroundColor: "#ffcc01",
-                        color: "#000",
+                        backgroundColor: "rgb(255, 31, 33)",
+                        color: "#fff",
                         fontWeight: 700,
                         height: 20,
                         minWidth: 20,
@@ -598,7 +598,7 @@ const NotificationsPage: React.FC = () => {
                                       width: 8,
                                       height: 8,
                                       borderRadius: "50%",
-                                      backgroundColor: "#ffcc01",
+                                      backgroundColor: "rgb(255, 31, 33)",
                                       flexShrink: 0,
                                       mt: 0.5,
                                     }}
@@ -956,22 +956,22 @@ const NotificationsPage: React.FC = () => {
             disabled={saving}
             sx={{
               borderRadius: "999px",
-              backgroundColor: "#ffc91f",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 700,
               fontSize: { xs: "0.875rem", sm: "1.1rem" },
               py: { xs: 1, sm: 1.5 },
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#ffd54f",
+                backgroundColor: "rgb(220, 20, 22)",
               },
               "&:disabled": {
-                backgroundColor: "rgba(255, 201, 31, 0.5)",
+                backgroundColor: "rgba(255, 31, 33, 0.5)",
                 color: "rgba(0, 0, 0, 0.3)",
               },
             }}
           >
-            {saving ? <CircularProgress size={24} sx={{ color: "#000" }} /> : "Salvar Preferências"}
+            {saving ? <CircularProgress size={24} sx={{ color: "#fff" }} /> : "Salvar Preferências"}
           </Button>
             </Box>
           )}
@@ -982,3 +982,4 @@ const NotificationsPage: React.FC = () => {
 };
 
 export default NotificationsPage;
+
