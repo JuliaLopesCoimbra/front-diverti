@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
@@ -28,7 +28,23 @@ import LiveStandFormDialog, {
   LiveStandFormValues,
 } from "@/app/components/admin/live-stands/LiveStandFormDialog";
 
-export default function LiveStandsPage() {
+function LiveStandsPageLoading() {
+  return (
+    <Box
+      sx={{
+        minHeight: "100vh",
+        ...dashboardBackgroundSx,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress sx={{ color: "#ffcc01" }} />
+    </Box>
+  );
+}
+
+function LiveStandsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const requestedEventId = Number(searchParams.get("eventId"));
@@ -122,17 +138,7 @@ export default function LiveStandsPage() {
 
   if (!authReady || loading) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          ...dashboardBackgroundSx,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress sx={{ color: "#ffcc01" }} />
-      </Box>
+      <LiveStandsPageLoading />
     );
   }
 
@@ -296,5 +302,13 @@ export default function LiveStandsPage() {
         onSubmit={handleSubmit}
       />
     </Box>
+  );
+}
+
+export default function LiveStandsPage() {
+  return (
+    <Suspense fallback={<LiveStandsPageLoading />}>
+      <LiveStandsPageContent />
+    </Suspense>
   );
 }

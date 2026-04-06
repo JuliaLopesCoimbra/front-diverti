@@ -15,6 +15,7 @@ import { getEvents, EventResponse } from "../../services/events/eventAppService"
 import { formatEventDates } from "../../utils/eventDateFormatter";
 import { useAuth } from "../../context/AuthContext";
 import EventIndisponivelPublic from "@/app/components/event/EventIndisponivelPublic";
+import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 export default function EventPage() {
   const router = useRouter();
@@ -213,7 +214,7 @@ export default function EventPage() {
 
   if (loading) {
     return (
-      <div className="dashboard-page-background" style={{ minHeight: "100vh" }}>
+      <Box sx={{ ...dashboardBackgroundSx, minHeight: "100vh" }}>
         {/* Header Skeleton */}
         <div
           style={{
@@ -379,7 +380,7 @@ export default function EventPage() {
             sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: "30px", mt: 3, mb: 3 }}
           />
         </main>
-      </div>
+      </Box>
     );
   }
 
@@ -397,9 +398,9 @@ export default function EventPage() {
   };
 
   return (
-    <div
-      className="dashboard-page-background"
-      style={{
+    <Box
+      sx={{
+        ...dashboardBackgroundSx,
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
@@ -424,15 +425,14 @@ export default function EventPage() {
             padding: "16px 32px",
           }}
         >
-          {/* LOGO + TEXTO */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <Image
-              src="/logo/logo-n1.png"
-              alt="Camarote N1"
-              width={60}
+              src="/logo/rockinrio.png"
+              alt="Rock in Rio"
+              width={180}
               height={60}
+              style={{ height: "auto", maxWidth: "100%" }}
             />
-            <strong style={{ fontSize: 22, color: "white" }}>Camarote N1</strong>
           </div>
           <Button
             onClick={() => router.push("/pages/auth/login")}
@@ -489,8 +489,8 @@ export default function EventPage() {
                   margin: 0,
                   fontSize: "clamp(24px, 5vw, 42px)",
                   fontWeight: 800,
-                  color: "#FFD600",
-                  textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 214, 0, 0.3)",
+                  color: "rgb(255, 31, 33)",
+                  textShadow: "2px 2px 8px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 31, 33, 0.3)",
                   letterSpacing: "0.5px",
                   lineHeight: 1.2,
                   textTransform: "uppercase",
@@ -539,7 +539,7 @@ export default function EventPage() {
             }}
           >
              <Box sx={{ display: "flex", alignItems: "center", gap: 1, marginBottom: 2 }}>
-                <FestivalIcon style={{ color: "yellow" }} />
+                <FestivalIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <h3 style={{ margin: 0, color: "white", fontSize: 20, fontWeight: 600 }}>
                   Informações do Evento
                 </h3>
@@ -547,7 +547,7 @@ export default function EventPage() {
             {/* DIAS DO EVENTO */}
             {event.event_dates && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <EventIcon style={{ color: "yellow" }} />
+                <EventIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
                   {formatEventDates(event)}
                 </p>
@@ -557,7 +557,7 @@ export default function EventPage() {
             {/* DATA E HORÁRIO DE INÍCIO */}
             {event.starts_at && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <AccessTimeIcon style={{ color: "yellow" }} />
+                <AccessTimeIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
                   Início: {new Date(event.starts_at).toLocaleString("pt-BR", {
                     day: "2-digit",
@@ -573,7 +573,7 @@ export default function EventPage() {
             {/* DATA E HORÁRIO DE TÉRMINO */}
             {event.ends_at && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <AccessTimeIcon style={{ color: "yellow" }} />
+                <AccessTimeIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
                   Término: {new Date(event.ends_at).toLocaleString("pt-BR", {
                     day: "2-digit",
@@ -589,7 +589,7 @@ export default function EventPage() {
             {/* HORÁRIO DE IDA DAS VANS */}
             {(event.van_arrival_time_start || event.van_arrival_time_end) && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <DirectionsBusIcon style={{ color: "yellow" }} />
+                <DirectionsBusIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
                   Ida das Vans: {event.van_arrival_time_start ? formatTime(event.van_arrival_time_start) : "?"} 
                   {event.van_arrival_time_start && event.van_arrival_time_end ? " às " : ""}
@@ -601,7 +601,7 @@ export default function EventPage() {
             {/* HORÁRIO DE VOLTA DAS VANS */}
             {(event.van_departure_time_start || event.van_departure_time_end) && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <DirectionsBusIcon style={{ color: "yellow" }} />
+                <DirectionsBusIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>
                   Volta das Vans: {event.van_departure_time_start ? formatTime(event.van_departure_time_start) : "?"} 
                   {event.van_departure_time_start && event.van_departure_time_end ? " às " : ""}
@@ -613,7 +613,7 @@ export default function EventPage() {
             {/* LOCAL */}
             {event.location && (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <LocationOnIcon style={{ color: "yellow" }} />
+                <LocationOnIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <p style={{ margin: 0, fontSize: 15 }}>{event.location}</p>
               </Box>
             )}
@@ -635,8 +635,8 @@ export default function EventPage() {
               onClick={() => router.push(`/pages/events/${event.id}/lineup`)}
               startIcon={<MusicNoteIcon />}
               sx={{
-                backgroundColor: "#FFD600",
-                color: "#000",
+                backgroundColor: "rgb(255, 31, 33)",
+                color: "#fff",
                 fontWeight: 700,
                 padding: "12px 32px",
                 borderRadius: "30px",
@@ -644,7 +644,7 @@ export default function EventPage() {
                 fontSize: 16,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                 "&:hover": {
-                  backgroundColor: "#FFC400",
+                  backgroundColor: "rgb(255, 31, 33)",
                 },
               }}
             >
@@ -673,7 +673,7 @@ export default function EventPage() {
                 }}
               >
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, marginBottom: 2 }}>
-                <MeetingRoomIcon style={{ color: "yellow" }} />
+                <MeetingRoomIcon style={{ color: "rgb(255, 31, 33)" }} />
                 <h3 style={{ margin: 0, color: "white", fontSize: 20, fontWeight: 600 }}>
                   Meeting Point
                 </h3>
@@ -681,7 +681,7 @@ export default function EventPage() {
 
               {event.meeting_point_location && (
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, marginBottom: 2 }}>
-                  <LocationOnIcon style={{ color: "yellow" }} />
+                  <LocationOnIcon style={{ color: "rgb(255, 31, 33)" }} />
                   <Box component="p" sx={{ margin: 0, fontSize: 15, color: "white", textAlign: { xs: "left", md: "center" } }}>{event.meeting_point_location}</Box>
                 </Box>
               )}
@@ -702,13 +702,13 @@ export default function EventPage() {
                       }}
                     >
                       <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1, marginBottom: 1 }}>
-                        <EventIcon style={{ color: "yellow", fontSize: 18 }} />
+                        <EventIcon style={{ color: "rgb(255, 31, 33)", fontSize: 18 }} />
                         <Box component="p" sx={{ margin: 0, color: "white", fontSize: 14, fontWeight: 600, textAlign: { xs: "left", md: "center" } }}>
                           Dias {schedule.days.join(", ")} de fevereiro
                         </Box>
                       </Box>
                       <Box sx={{ display: "flex", alignItems: "center", justifyContent: { xs: "flex-start", md: "center" }, gap: 1 }}>
-                        <AccessTimeIcon style={{ color: "yellow", fontSize: 18 }} />
+                        <AccessTimeIcon style={{ color: "rgb(255, 31, 33)", fontSize: 18 }} />
                         <Box component="p" sx={{ margin: 0, color: "white", fontSize: 14, textAlign: { xs: "left", md: "center" } }}>
                           Das {schedule.start_time} às {schedule.end_time}
                         </Box>
@@ -738,8 +738,8 @@ export default function EventPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{
-                  backgroundColor: "#FFD600",
-                  color: "#000",
+                  backgroundColor: "rgb(255, 31, 33)",
+                  color: "#fff",
                   fontWeight: 700,
                   padding: "12px 32px",
                   borderRadius: "30px",
@@ -747,7 +747,7 @@ export default function EventPage() {
                   fontSize: 16,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   "&:hover": {
-                    backgroundColor: "#FFC400",
+                    backgroundColor: "rgb(255, 31, 33)",
                   },
                 }}
               >
@@ -759,8 +759,8 @@ export default function EventPage() {
             onClick={() => router.push("/comprar")}
             sx={{
               marginTop: 3,
-              backgroundColor: "#FFD600",
-              color: "#000",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
               fontWeight: 700,
               padding: "12px 32px",
               borderRadius: "30px",
@@ -769,7 +769,7 @@ export default function EventPage() {
               marginBottom: 3,
               boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
               "&:hover": {
-                backgroundColor: "#FFC400",
+                backgroundColor: "rgb(255, 31, 33)",
               },
             }}
           >
@@ -777,6 +777,6 @@ export default function EventPage() {
           </Button> */}
         </main>
       </div>
-    </div>
+    </Box>
   );
 }

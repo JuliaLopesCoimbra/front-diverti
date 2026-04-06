@@ -6,6 +6,7 @@ import { Button, Box, Skeleton } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { getPublicEvents, EventResponse } from "@/app/services/events/eventAppService";
 import EventIndisponivelPublic from "@/app/components/event/EventIndisponivelPublic";
+import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 export default function EventsPage() {
   const [events, setEvents] = useState<EventResponse[]>([]);
@@ -54,7 +55,7 @@ export default function EventsPage() {
 
   if (loading) {
     return (
-      <div className="dashboard-page-background" style={{ minHeight: "100vh" }}>
+      <Box sx={{ ...dashboardBackgroundSx, minHeight: "100vh" }}>
         {/* Header Skeleton */}
         <div
           style={{
@@ -64,20 +65,12 @@ export default function EventsPage() {
             padding: "16px 32px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Skeleton
-              variant="rectangular"
-              width={60}
-              height={60}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 1 }}
-            />
-            <Skeleton
-              variant="text"
-              width={180}
-              height={32}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
-          </div>
+          <Skeleton
+            variant="rectangular"
+            width={180}
+            height={60}
+            sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 2 }}
+          />
           <Skeleton
             variant="rectangular"
             width={80}
@@ -161,7 +154,7 @@ export default function EventsPage() {
             ))}
           </Box>
         </main>
-      </div>
+      </Box>
     );
   }
 
@@ -171,7 +164,7 @@ export default function EventsPage() {
   }
 
   return (
-    <div className="dashboard-page-background" style={{ minHeight: "100vh" }}>
+    <Box sx={{ ...dashboardBackgroundSx, minHeight: "100vh" }}>
       <Box
         className={shouldAnimate ? "slide-up-animation" : ""}
         sx={{
@@ -181,15 +174,14 @@ export default function EventsPage() {
           padding: "16px 32px",
         }}
       >
-        {/* LOGO + TEXTO */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
           <Image
-            src="/logo/logo-n1.png"
-            alt="Camarote N1"
-            width={60}
+            src="/logo/rockinrio.png"
+            alt="Rock in Rio"
+            width={180}
             height={60}
+            style={{ height: "auto", maxWidth: "100%" }}
           />
-          <strong style={{ fontSize: 22, color: "white" }}>Camarote N1</strong>
         </div>
         <Button
           onClick={() => router.push("/")}
@@ -337,9 +329,9 @@ export default function EventsPage() {
                   boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   transition: "all 0.2s ease",
                   "&:hover": {
-                    backgroundColor: "#FFC400",
+                    backgroundColor: "rgb(255, 31, 33)",
                     transform: "scale(1.05)",
-                    boxShadow: "0 6px 16px rgba(255, 214, 0, 0.4)",
+                    boxShadow: "0 6px 16px rgba(255, 31, 33, 0.35)",
                   },
                 }}
               >
@@ -349,7 +341,7 @@ export default function EventsPage() {
           ))}
         </Box>
       </main>
-    </div>
+    </Box>
   );
 }
 

@@ -124,7 +124,6 @@ export default function LineupPage() {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#000",
         ...dashboardBackgroundSx,
         backgroundAttachment: "fixed",
         color: "#fff",

@@ -22,9 +22,6 @@ import ExpandMore from "@mui/icons-material/ExpandMore";
 import EventIcon from "@mui/icons-material/Event";
 import AddIcon from "@mui/icons-material/Add";
 import PersonIcon from "@mui/icons-material/Person";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import BlockIcon from "@mui/icons-material/Block";
@@ -472,6 +469,26 @@ export default function HamburgerMenu({
                  </ListItemButton>
                </ListItem>
                <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    router.push("/pages/admin/anuncios");
+                    setOpen(false);
+                  }}
+                >
+                  <CampaignIcon sx={{ mr: 2, color: "white" }} />
+
+                  <ListItemText
+                    primary="Anúncios"
+                    secondary="Inserir anúncios e ver analytics"
+                    primaryTypographyProps={{ fontWeight: 600 }}
+                    secondaryTypographyProps={{
+                      sx: { color: "rgba(255,255,255,0.6)" },
+                    }}
+                  />
+                </ListItemButton>
+              </ListItem>
+              <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
                <ListItem disablePadding>
                  <ListItemButton
                    onClick={() => {

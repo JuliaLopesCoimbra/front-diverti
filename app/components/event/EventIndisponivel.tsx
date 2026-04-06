@@ -11,7 +11,6 @@ export default function EventIndisponivel() {
     <Box
       sx={{
         minHeight: "100vh",
-        backgroundColor: "#f4f7fc",
         ...dashboardBackgroundSx,
         display: "flex",
         justifyContent: "center",

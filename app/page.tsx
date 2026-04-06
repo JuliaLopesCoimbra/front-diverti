@@ -24,10 +24,6 @@ import { loginUser, resendVerificationEmail } from "@/app/services/auth/authServ
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import {
-  initGoogleLogin,
-  initFacebookLogin,
-} from "@/app/services/auth/authService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 interface LoginData {
@@ -461,7 +457,7 @@ const LoginForm: React.FC = () => {
                 borderColor: "rgba(255, 255, 255, 0.5)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#ffcc01",
+                borderColor: "rgb(255, 31, 33)",
                 borderWidth: "2px",
               },
               "&.Mui-focused": {
@@ -534,7 +530,7 @@ const LoginForm: React.FC = () => {
                 borderColor: "rgba(255, 255, 255, 0.5)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "#ffcc01",
+                borderColor: "rgb(255, 31, 33)",
                 borderWidth: "2px",
               },
               "&.Mui-error fieldset": {
@@ -605,9 +601,13 @@ const LoginForm: React.FC = () => {
               transform: "translateY(-2px)",
               boxShadow: "0 6px 16px rgba(255, 204, 1, 0.4)",
             },
+            "&:active": {
+              backgroundColor: "rgb(220, 20, 22)",
+            },
             "&.Mui-disabled": {
-              backgroundColor: "rgba(255, 204, 1, 0.4)",
-              color: "rgba(0,0,0,0.6)",
+              backgroundColor: "rgb(255, 31, 33)",
+              color: "#fff",
+              opacity: 0.85,
             },
           }}
           onClick={handleLogin}
@@ -780,14 +780,7 @@ const LoginForm: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<Google />}
-            onClick={async () => {
-              try {
-                const url = await initGoogleLogin();
-                window.location.href = url;
-              } catch {
-                showToast("Erro ao iniciar login com Google", "error");
-              }
-            }}
+            disabled
             sx={{
               flex: 1,
               color: "#fff",
@@ -806,6 +799,11 @@ const LoginForm: React.FC = () => {
                 backgroundColor: "rgba(255,255,255,0.12)",
                 borderColor: "rgba(255, 255, 255, 0.5)",
                 transform: "translateY(-2px)",
+              },
+              "&.Mui-disabled": {
+                color: "rgba(255, 255, 255, 0.45)",
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                backgroundColor: "rgba(255, 255, 255, 0.03)",
               },
             }}
           >
@@ -815,14 +813,7 @@ const LoginForm: React.FC = () => {
           <Button
             variant="outlined"
             startIcon={<Facebook />}
-            onClick={async () => {
-              try {
-                const url = await initFacebookLogin();
-                window.location.href = url;
-              } catch {
-                showToast("Erro ao iniciar login com Facebook", "error");
-              }
-            }}
+            disabled
             sx={{
               flex: 1,
               color: "#fff",
@@ -841,6 +832,11 @@ const LoginForm: React.FC = () => {
                 backgroundColor: "rgba(255,255,255,0.12)",
                 borderColor: "rgba(255, 255, 255, 0.5)",
                 transform: "translateY(-2px)",
+              },
+              "&.Mui-disabled": {
+                color: "rgba(255, 255, 255, 0.45)",
+                borderColor: "rgba(255, 255, 255, 0.2)",
+                backgroundColor: "rgba(255, 255, 255, 0.03)",
               },
             }}
           >
@@ -859,25 +855,16 @@ const LoginForm: React.FC = () => {
           }}
         >
           Não tem uma conta?{" "}
-          <a
-            href="/pages/auth/register"
-            style={{
-              textDecoration: "none",
-              color: "rgb(255, 31, 33)",
+          <Box
+            component="span"
+            sx={{
+              color: "rgba(255, 31, 33, 0.55)",
               fontWeight: 600,
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "rgb(220, 20, 22)";
-              e.currentTarget.style.textDecoration = "underline";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "rgb(255, 31, 33)";
-              e.currentTarget.style.textDecoration = "none";
+              cursor: "default",
             }}
           >
-            Cadastre-se aqui 
-          </a>
+            Cadastre-se aqui
+          </Box>
         </Typography>
       </Box>
     </Box>

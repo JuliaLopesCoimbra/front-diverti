@@ -89,10 +89,10 @@ export default function UserStandBookingsPage() {
           startIcon={<ArrowBackIcon />}
           onClick={() => router.push("/pages/user/home?tab=estandes")}
           sx={{
-            color: "#fff",
+            color: "#ff1f21",
             textTransform: "none",
             mb: 2,
-            "&:hover": { backgroundColor: "rgba(255,255,255,0.06)" },
+            "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" },
           }}
         >
           Voltar
@@ -157,11 +157,11 @@ export default function UserStandBookingsPage() {
                         sx={{
                           mr: 1.5,
                           mb: { xs: 1.5, sm: 0 },
-                          backgroundColor: "#ffc91f",
-                          color: "#000",
+                          backgroundColor: "#ff1f21",
+                          color: "#fff",
                           textTransform: "none",
                           "&:hover": {
-                            backgroundColor: "#e6b800",
+                            backgroundColor: "#dc1416",
                           },
                         }}
                       >
@@ -172,12 +172,12 @@ export default function UserStandBookingsPage() {
                       variant="outlined"
                       onClick={() => setBookingToCancel(booking)}
                       sx={{
-                        color: "#fff",
-                        borderColor: "rgba(255,255,255,0.3)",
+                        color: "#ff1f21",
+                        borderColor: "#ff1f21",
                         textTransform: "none",
                         "&:hover": {
-                          borderColor: "#ff6b6b",
-                          backgroundColor: "rgba(255,107,107,0.06)",
+                          borderColor: "#dc1416",
+                          backgroundColor: "rgba(255,31,33,0.08)",
                         },
                       }}
                     >
@@ -209,7 +209,11 @@ export default function UserStandBookingsPage() {
           </DialogContentText>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={() => setBookingToCancel(null)} disabled={cancelling} sx={{ color: "#fff" }}>
+          <Button
+            onClick={() => setBookingToCancel(null)}
+            disabled={cancelling}
+            sx={{ color: "#ff1f21", "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" } }}
+          >
             Voltar
           </Button>
           <Button
@@ -256,7 +260,10 @@ export default function UserStandBookingsPage() {
           ) : null}
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button onClick={() => setBookingToShowQr(null)} sx={{ color: "#fff" }}>
+          <Button
+            onClick={() => setBookingToShowQr(null)}
+            sx={{ color: "#ff1f21", "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" } }}
+          >
             Fechar
           </Button>
         </DialogActions>
