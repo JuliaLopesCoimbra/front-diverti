@@ -11,7 +11,7 @@ import { Skeleton } from "@mui/material";
 import NewsFeed from "@/app/components/home/NewsFeed";
 import AdBanner from "@/app/components/ads/AdBanner";
 import EventDetails from "@/app/components/home/EventDetails";
-import EventStands from "@/app/components/home/EventStands";
+import InteractiveStandMap from "@/app/components/home/InteractiveStandMap";
 import { useAuth } from "@/app/context/AuthContext";
 import PhotoAI from "@/app/components/home/PhotoAI";
 import EventMap from "@/app/components/home/EventMap";
@@ -650,7 +650,7 @@ const HomeContent: React.FC = () => {
         )}
         {activeTab === "estandes" && currentEvent && (
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-            <EventStands eventId={currentEvent.id} />
+            <InteractiveStandMap eventId={currentEvent.id} />
           </Box>
         )}
   {activeTab === "roleta" && currentEvent && (

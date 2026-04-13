@@ -28,7 +28,11 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
+import QrCodeScannerIcon from "@mui/icons-material/QrCodeScanner";
+import FormatListNumberedIcon from "@mui/icons-material/FormatListNumbered";
 
+import CheckInScanner from "@/app/components/admin/live-stands/CheckInScanner";
+import QueueDisplay from "@/app/components/admin/live-stands/QueueDisplay";
 import LiveStandSessionFormDialog, {
   LiveStandSessionFormValues,
 } from "@/app/components/admin/live-stands/LiveStandSessionFormDialog";
@@ -102,6 +106,8 @@ export default function LiveStandSessionsPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<LiveStandSessionResponse | null>(null);
   const [sessionToDelete, setSessionToDelete] = useState<LiveStandSessionResponse | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [queueSession, setQueueSession] = useState<LiveStandSessionResponse | null>(null);
   const [sessionBookings, setSessionBookings] = useState<AdminStandSessionBooking[]>([]);
   const [loadingBookings, setLoadingBookings] = useState(false);
   const [checkingInBookingId, setCheckingInBookingId] = useState<number | null>(null);
@@ -112,6 +118,12 @@ export default function LiveStandSessionsPage() {
   const [participantSearch, setParticipantSearch] = useState("");
 
   const canAccess = role === "admin_master" || role === "admin";
+
+  const isQueueStand = (name: string) => {
+    const lower = name.toLowerCase();
+    return ["tic tac", "tictac", "bauducco"].some((k) => lower.includes(k));
+  };
+  const showQueue = !!stand && isQueueStand(stand.name);
   const todayIso = useMemo(() => getTodayIso(), []);
 
   const loadData = useCallback(async () => {
@@ -376,13 +388,13 @@ export default function LiveStandSessionsPage() {
   if (!canAccess) return null;
 
   return (
-    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, py: { xs: 3, md: 5 }, px: 2 }}>
-      <Container maxWidth="lg">
+    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, py: { xs: 2, md: 5 }, px: { xs: 1.5, md: 2 } }}>
+      <Container maxWidth="lg" disableGutters>
         <Paper
           sx={{
-            p: { xs: 3, md: 4 },
+            p: { xs: 2, md: 4 },
             backgroundColor: "rgba(26,26,26,0.95)",
-            borderRadius: 4,
+            borderRadius: { xs: 3, md: 4 },
             border: "1px solid rgba(255,255,255,0.1)",
           }}
         >
@@ -393,45 +405,64 @@ export default function LiveStandSessionsPage() {
                 eventId ? `/pages/admin/live-stands?eventId=${eventId}` : "/pages/admin/live-stands"
               )
             }
-            sx={{ color: "#fff", mb: 3, textTransform: "none" }}
+            sx={{ color: "#fff", mb: 2.5, textTransform: "none" }}
           >
             Voltar para estandes
           </Button>
 
-          <Box
-            sx={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 2,
-              flexWrap: "wrap",
-              mb: 3,
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h4"
-                sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.4rem", md: "2rem" } }}
-              >
-                Sessões do estande
-              </Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.65)", mt: 0.5 }}>
-                {stand
-                  ? `${stand.name}${event ? ` • ${event.title}` : ""}`
-                  : "Gerencie os horarios deste estande"}
-              </Typography>
+          {/* Header */}
+          <Box sx={{ mb: 3 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1.5, flexWrap: "wrap", mb: { xs: 2, md: 0 } }}>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
+                  variant="h4"
+                  sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.25rem", md: "2rem" } }}
+                >
+                  Sessões do estande
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.65)", mt: 0.5, fontSize: { xs: "0.85rem", md: "1rem" } }}>
+                  {stand
+                    ? `${stand.name}${event ? ` • ${event.title}` : ""}`
+                    : "Gerencie os horarios deste estande"}
+                </Typography>
+              </Box>
             </Box>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => {
-                setEditingSession(null);
-                setFormOpen(true);
-              }}
-              sx={{ backgroundColor: "#ff1f21", textTransform: "none", fontWeight: 700 }}
-            >
-              Nova sessão
-            </Button>
+            <Box sx={{ display: "flex", gap: 1, mt: 1.5, flexDirection: { xs: "column", sm: "row" }, flexWrap: "wrap" }}>
+              <Button
+                variant="outlined"
+                startIcon={<QrCodeScannerIcon />}
+                onClick={() => setScannerOpen(true)}
+                fullWidth={false}
+                sx={{
+                  color: "#fff",
+                  borderColor: "rgba(255,255,255,0.35)",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  flex: { xs: 1, sm: "none" },
+                  "&:hover": { borderColor: "#fff", backgroundColor: "rgba(255,255,255,0.06)" },
+                }}
+              >
+                Validar entrada
+              </Button>
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => {
+                  setEditingSession(null);
+                  setFormOpen(true);
+                }}
+                sx={{
+                  backgroundColor: "#ff1f21",
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  flex: { xs: 1, sm: "none" },
+                }}
+              >
+                Nova sessão
+              </Button>
+            </Box>
           </Box>
 
           {!!dateTabs.length && (
@@ -508,90 +539,219 @@ export default function LiveStandSessionsPage() {
               </Typography>
             </Paper>
           ) : (
-            <TableContainer
-              component={Paper}
-              sx={{
-                backgroundColor: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 3,
-              }}
-            >
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Horario</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Reservas</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Sobra</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Entradas</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Faltantes</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Vagas remanescentes</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Status</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Ações</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {sessionsOfDay.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        <Typography sx={{ fontWeight: 700 }}>
+            <>
+              {/* ── Mobile session cards ─────────────────────── */}
+              <Box sx={{ display: { xs: "flex", md: "none" }, flexDirection: "column", gap: 1.5 }}>
+                {sessionsOfDay.map((session) => (
+                  <Box
+                    key={session.id}
+                    sx={{
+                      backgroundColor: "rgba(255,255,255,0.04)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                      borderRadius: 2.5,
+                      p: 2,
+                    }}
+                  >
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 1.5 }}>
+                      <Box>
+                        <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "1.05rem" }}>
                           {session.start_time.substring(0, 5)}
-                          {session.end_time ? ` - ${session.end_time.substring(0, 5)}` : ""}
+                          {session.end_time ? ` – ${session.end_time.substring(0, 5)}` : ""}
                         </Typography>
-                        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
+                        <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mt: 0.25 }}>
                           {session.booking_open_time
                             ? `lista abre ${session.booking_open_time.substring(0, 5)}`
                             : "sem abertura definida"}
                         </Typography>
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.quantity_bookings}/{session.capacity}
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.quantity_remaining_slots}
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.quantity_entries}
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.quantity_missing_checkins}
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.quantity_remaining_slots + session.quantity_missing_checkins}
-                      </TableCell>
-                      <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                        {session.status === "active" ? "Disponivel" : "Nao disponivel"}
-                      </TableCell>
-                      <TableCell sx={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                      </Box>
+                      <Box sx={{ display: "flex", gap: 0.5 }}>
                         <IconButton
-                          onClick={() => {
-                            setEditingSession(session);
-                            setFormOpen(true);
-                          }}
+                          size="small"
+                          onClick={() => { setEditingSession(session); setFormOpen(true); }}
                           sx={{ color: "#ffc91f" }}
                         >
-                          <EditIcon />
+                          <EditIcon fontSize="small" />
                         </IconButton>
-                        <IconButton onClick={() => setSessionToDelete(session)} sx={{ color: "#ff6b6b" }}>
-                          <DeleteIcon />
+                        <IconButton size="small" onClick={() => setSessionToDelete(session)} sx={{ color: "#ff6b6b" }}>
+                          <DeleteIcon fontSize="small" />
                         </IconButton>
-                      </TableCell>
+                      </Box>
+                    </Box>
+
+                    <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mb: 1.5 }}>
+                      {[
+                        { label: "Reservas", value: `${session.quantity_bookings}/${session.capacity}`, color: "#fff" },
+                        { label: "Entradas", value: session.quantity_entries, color: "#4caf50" },
+                        { label: "Faltantes", value: session.quantity_missing_checkins, color: session.quantity_missing_checkins > 0 ? "#ff6b6b" : "#fff" },
+                      ].map(({ label, value, color }) => (
+                        <Box key={label} sx={{ textAlign: "center", backgroundColor: "rgba(255,255,255,0.04)", borderRadius: 1.5, py: 0.75, px: 0.5 }}>
+                          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.62rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                            {label}
+                          </Typography>
+                          <Typography sx={{ color, fontWeight: 700, fontSize: "1rem" }}>{value}</Typography>
+                        </Box>
+                      ))}
+                    </Box>
+
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>
+                        {session.quantity_remaining_slots + session.quantity_missing_checkins} vagas rem.
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          px: 1, py: 0.25,
+                          borderRadius: 1,
+                          backgroundColor: session.status === "active" ? "rgba(76,175,80,0.15)" : "rgba(255,255,255,0.06)",
+                          color: session.status === "active" ? "#4caf50" : "rgba(255,255,255,0.45)",
+                        }}
+                      >
+                        {session.status === "active" ? "Disponivel" : "Inativo"}
+                      </Typography>
+                    </Box>
+
+                    {showQueue && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<FormatListNumberedIcon fontSize="small" />}
+                        onClick={() => setQueueSession(session)}
+                        fullWidth
+                        sx={{
+                          mt: 0.5,
+                          color: "#ffc91f",
+                          borderColor: "rgba(255,193,7,0.35)",
+                          textTransform: "none",
+                          fontWeight: 600,
+                          fontSize: "0.8rem",
+                          borderRadius: 1.5,
+                          "&:hover": { borderColor: "#ffc91f", backgroundColor: "rgba(255,193,7,0.06)" },
+                        }}
+                      >
+                        Visualizar fila
+                      </Button>
+                    )}
+                  </Box>
+                ))}
+
+                {/* Totals summary card */}
+                <Box
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.12)",
+                    borderRadius: 2.5,
+                    p: 2,
+                  }}
+                >
+                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", mb: 1.25, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Totais do dia
+                  </Typography>
+                  <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1 }}>
+                    {[
+                      { label: "Reservas", value: `${totals.bookings}/${totals.capacity}`, color: "#fff" },
+                      { label: "Entradas", value: totals.entries, color: "#4caf50" },
+                      { label: "Faltantes", value: totals.missing, color: totals.missing > 0 ? "#ff6b6b" : "#fff" },
+                    ].map(({ label, value, color }) => (
+                      <Box key={label} sx={{ textAlign: "center" }}>
+                        <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.62rem", textTransform: "uppercase" }}>{label}</Typography>
+                        <Typography sx={{ color, fontWeight: 700, fontSize: "1rem" }}>{value}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* ── Desktop table ────────────────────────────── */}
+              <TableContainer
+                component={Paper}
+                sx={{
+                  display: { xs: "none", md: "block" },
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 3,
+                }}
+              >
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Horario</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Reservas</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Sobra</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Entradas</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Faltantes</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Vagas rem.</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Status</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Ações</TableCell>
                     </TableRow>
-                  ))}
-                  <TableRow sx={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Totais do dia</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>
-                      {totals.bookings}/{totals.capacity}
-                    </TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.remaining}</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.entries}</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.missing}</TableCell>
-                    <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.liveRemaining}</TableCell>
-                    <TableCell />
-                    <TableCell />
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {sessionsOfDay.map((session) => (
+                      <TableRow key={session.id}>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          <Typography sx={{ fontWeight: 700 }}>
+                            {session.start_time.substring(0, 5)}
+                            {session.end_time ? ` - ${session.end_time.substring(0, 5)}` : ""}
+                          </Typography>
+                          <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 12 }}>
+                            {session.booking_open_time
+                              ? `lista abre ${session.booking_open_time.substring(0, 5)}`
+                              : "sem abertura definida"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.quantity_bookings}/{session.capacity}
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.quantity_remaining_slots}
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.quantity_entries}
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.quantity_missing_checkins}
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.quantity_remaining_slots + session.quantity_missing_checkins}
+                        </TableCell>
+                        <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          {session.status === "active" ? "Disponivel" : "Nao disponivel"}
+                        </TableCell>
+                        <TableCell sx={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                          {showQueue && (
+                            <IconButton
+                              onClick={() => setQueueSession(session)}
+                              title="Visualizar fila"
+                              sx={{ color: "#ffc91f" }}
+                            >
+                              <FormatListNumberedIcon />
+                            </IconButton>
+                          )}
+                          <IconButton
+                            onClick={() => { setEditingSession(session); setFormOpen(true); }}
+                            sx={{ color: "#ffc91f" }}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton onClick={() => setSessionToDelete(session)} sx={{ color: "#ff6b6b" }}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow sx={{ backgroundColor: "rgba(255,255,255,0.05)" }}>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Totais do dia</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.bookings}/{totals.capacity}</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.remaining}</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.entries}</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.missing}</TableCell>
+                      <TableCell sx={{ color: "#fff", fontWeight: 700 }}>{totals.liveRemaining}</TableCell>
+                      <TableCell /><TableCell />
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
           )}
 
           {!!sessions.length && (
@@ -720,65 +880,164 @@ export default function LiveStandSessionsPage() {
                   </Typography>
                 </Paper>
               ) : (
-                <TableContainer
-                  component={Paper}
-                  sx={{
-                    backgroundColor: "rgba(255,255,255,0.03)",
-                    border: "1px solid rgba(255,255,255,0.06)",
-                    borderRadius: 2,
-                  }}
-                >
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Nome</TableCell>
-                        <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Email</TableCell>
-                        <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Situacao</TableCell>
-                        <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Entrada</TableCell>
-                        <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Acao</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {filteredBookings.map((booking) => (
-                        <TableRow key={booking.id}>
-                          <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                <>
+                  {/* ── Mobile participant cards ─────────────── */}
+                  <Box sx={{ display: { xs: "flex", md: "none" }, flexDirection: "column", gap: 1 }}>
+                    {filteredBookings.map((booking) => (
+                      <Box
+                        key={booking.id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          gap: 1.5,
+                          backgroundColor: booking.checked_in_at
+                            ? "rgba(76,175,80,0.07)"
+                            : "rgba(255,255,255,0.03)",
+                          border: `1px solid ${booking.checked_in_at ? "rgba(76,175,80,0.2)" : "rgba(255,255,255,0.07)"}`,
+                          borderRadius: 2,
+                          p: 1.75,
+                        }}
+                      >
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                          <Typography
+                            sx={{
+                              color: "#fff",
+                              fontWeight: 700,
+                              fontSize: "0.9rem",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {booking.user_name || "Usuario"}
-                          </TableCell>
-                          <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                          </Typography>
+                          <Typography
+                            sx={{
+                              color: "rgba(255,255,255,0.5)",
+                              fontSize: "0.75rem",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
                             {booking.user_email || "-"}
-                          </TableCell>
-                          <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                            {booking.checked_in_at ? "Entrada realizada" : "Aguardando entrada"}
-                          </TableCell>
-                          <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
-                            {booking.checked_in_at
-                              ? new Date(booking.checked_in_at).toLocaleString("pt-BR")
-                              : "Pendente"}
-                          </TableCell>
-                          <TableCell sx={{ borderColor: "rgba(255,255,255,0.08)" }}>
-                            <Button
-                              size="small"
-                              variant={booking.checked_in_at ? "outlined" : "contained"}
-                              disabled={Boolean(booking.checked_in_at) || checkingInBookingId === booking.id}
-                              onClick={() => handleCheckInBooking(booking.id)}
-                            >
-                              {booking.checked_in_at
-                                ? "Confirmado"
-                                : checkingInBookingId === booking.id
-                                  ? "Validando..."
-                                  : "Dar entrada"}
-                            </Button>
-                          </TableCell>
+                          </Typography>
+                          {booking.checked_in_at && (
+                            <Typography sx={{ color: "#4caf50", fontSize: "0.7rem", mt: 0.25 }}>
+                              ✓ {new Date(booking.checked_in_at).toLocaleString("pt-BR")}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Button
+                          size="small"
+                          variant={booking.checked_in_at ? "outlined" : "contained"}
+                          disabled={Boolean(booking.checked_in_at) || checkingInBookingId === booking.id}
+                          onClick={() => handleCheckInBooking(booking.id)}
+                          sx={{
+                            flexShrink: 0,
+                            minWidth: 80,
+                            fontSize: "0.75rem",
+                            textTransform: "none",
+                            fontWeight: 700,
+                            backgroundColor: booking.checked_in_at ? "transparent" : "#4caf50",
+                            borderColor: booking.checked_in_at ? "#4caf50" : undefined,
+                            color: "#fff",
+                            "&:hover": {
+                              backgroundColor: booking.checked_in_at ? "rgba(76,175,80,0.1)" : "#388e3c",
+                            },
+                            "&.Mui-disabled": {
+                              color: "rgba(255,255,255,0.4)",
+                              borderColor: "rgba(255,255,255,0.15)",
+                              backgroundColor: booking.checked_in_at ? "transparent" : undefined,
+                            },
+                          }}
+                        >
+                          {booking.checked_in_at
+                            ? "Confirmado"
+                            : checkingInBookingId === booking.id
+                              ? "..."
+                              : "Dar entrada"}
+                        </Button>
+                      </Box>
+                    ))}
+                  </Box>
+
+                  {/* ── Desktop participant table ─────────────── */}
+                  <TableContainer
+                    component={Paper}
+                    sx={{
+                      display: { xs: "none", md: "block" },
+                      backgroundColor: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.06)",
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Nome</TableCell>
+                          <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Email</TableCell>
+                          <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Situacao</TableCell>
+                          <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Entrada</TableCell>
+                          <TableCell sx={{ color: "#fff", fontWeight: 700 }}>Acao</TableCell>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
+                      </TableHead>
+                      <TableBody>
+                        {filteredBookings.map((booking) => (
+                          <TableRow key={booking.id}>
+                            <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                              {booking.user_name || "Usuario"}
+                            </TableCell>
+                            <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                              {booking.user_email || "-"}
+                            </TableCell>
+                            <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                              {booking.checked_in_at ? "Entrada realizada" : "Aguardando entrada"}
+                            </TableCell>
+                            <TableCell sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.08)" }}>
+                              {booking.checked_in_at
+                                ? new Date(booking.checked_in_at).toLocaleString("pt-BR")
+                                : "Pendente"}
+                            </TableCell>
+                            <TableCell sx={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                              <Button
+                                size="small"
+                                variant={booking.checked_in_at ? "outlined" : "contained"}
+                                disabled={Boolean(booking.checked_in_at) || checkingInBookingId === booking.id}
+                                onClick={() => handleCheckInBooking(booking.id)}
+                              >
+                                {booking.checked_in_at
+                                  ? "Confirmado"
+                                  : checkingInBookingId === booking.id
+                                    ? "Validando..."
+                                    : "Dar entrada"}
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </>
               )}
             </Paper>
           )}
         </Paper>
       </Container>
+
+      <CheckInScanner
+        open={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        sessions={sessions}
+        onCheckedIn={loadData}
+      />
+
+      <QueueDisplay
+        open={!!queueSession}
+        onClose={() => setQueueSession(null)}
+        session={queueSession}
+      />
 
       <LiveStandSessionFormDialog
         open={formOpen}

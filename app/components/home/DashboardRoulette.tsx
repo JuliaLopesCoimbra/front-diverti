@@ -5,71 +5,26 @@ import { useRouter } from "next/navigation";
 import { Box, Button, Card, CardContent, Skeleton, Typography } from "@mui/material";
 import AdBanner from "@/app/components/ads/AdBanner";
 import { getPrizesByEvent, PrizeResponse } from "@/app/services/roulette/rouletteService";
+import VideoModal from "@/app/components/home/VideoModal";
 
 interface Props {
   eventId: number;
 }
 
-const RESET_INTERVAL_MS = 3 * 60 * 60 * 1000;
-
-const formatTimeLeft = (milliseconds: number) => {
-  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-  const seconds = String(totalSeconds % 60).padStart(2, "0");
-
-  return `${hours}:${minutes}:${seconds}`;
-};
-
-const getInitialResetAt = (storageKey: string) => {
-  const now = Date.now();
-  const storedValue = typeof window !== "undefined" ? Number(localStorage.getItem(storageKey)) : NaN;
-
-  if (Number.isFinite(storedValue) && storedValue > now) {
-    return storedValue;
-  }
-
-  const nextResetAt = now + RESET_INTERVAL_MS;
-
-  if (typeof window !== "undefined") {
-    localStorage.setItem(storageKey, String(nextResetAt));
-  }
-
-  return nextResetAt;
-};
+const MAX_SPINS = 3;
 
 const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
   const router = useRouter();
-  const storageKey = `roulette-dashboard-reset-at-${eventId}`;
-  const [resetAt, setResetAt] = useState<number | null>(null);
-  const [now, setNow] = useState(Date.now());
+  const [spinCount, setSpinCount] = useState<number | null>(null);
   const [prizes, setPrizes] = useState<PrizeResponse[]>([]);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
+  const [showVideo, setShowVideo] = useState(false);
 
   useEffect(() => {
-    setResetAt(getInitialResetAt(storageKey));
-    setNow(Date.now());
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (!resetAt) return;
-
-    const interval = window.setInterval(() => {
-      const currentTime = Date.now();
-
-      if (currentTime >= resetAt) {
-        const nextResetAt = currentTime + RESET_INTERVAL_MS;
-        localStorage.setItem(storageKey, String(nextResetAt));
-        setResetAt(nextResetAt);
-        setNow(currentTime);
-        return;
-      }
-
-      setNow(currentTime);
-    }, 1000);
-
-    return () => window.clearInterval(interval);
-  }, [resetAt, storageKey]);
+    const key = `roulette-spin-count-${eventId}`;
+    const stored = typeof window !== "undefined" ? Number(sessionStorage.getItem(key) ?? "0") : 0;
+    setSpinCount(Number.isFinite(stored) ? stored : 0);
+  }, [eventId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -79,41 +34,49 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
       try {
         const data = await getPrizesByEvent(eventId);
         if (!isMounted) return;
-        setPrizes(
-          data
-            .filter(
-              (prize) =>
-                prize.is_active &&
-                prize.name.trim().toLowerCase() !== "não foi dessa vez" &&
-                prize.name.trim().toLowerCase() !== "nao foi dessa vez"
-            )
-            .sort((a, b) => a.position - b.position)
-        );
+
+        const filtered = data
+          .filter(
+            (prize) =>
+              prize.is_active &&
+              prize.name.trim().toLowerCase() !== "não foi dessa vez" &&
+              prize.name.trim().toLowerCase() !== "nao foi dessa vez"
+          )
+          .sort((a, b) => a.position - b.position);
+
+        // Deduplica por image_url (cada marca tem 2 prêmios com a mesma imagem)
+        const seen = new Set<string>();
+        const unique = filtered.filter((prize) => {
+          const key = prize.image_url ?? `name:${prize.name}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        setPrizes(unique);
       } catch (error) {
         console.error("Erro ao carregar brindes da roleta:", error);
-        if (isMounted) {
-          setPrizes([]);
-        }
+        if (isMounted) setPrizes([]);
       } finally {
-        if (isMounted) {
-          setLoadingPrizes(false);
-        }
+        if (isMounted) setLoadingPrizes(false);
       }
     };
 
     loadPrizes();
 
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [eventId]);
 
-  const countdownLabel = useMemo(() => {
-    if (!resetAt) return "03:00:00";
-    return formatTimeLeft(resetAt - now);
-  }, [now, resetAt]);
+  const spinsUsed = spinCount ?? 0;
+
+  const midnightLabel = useMemo(() => {
+    const midnight = new Date();
+    midnight.setHours(23, 59, 0, 0);
+    return midnight.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }, []);
 
   return (
+    <>
     <Box
       sx={{
         width: "100%",
@@ -150,66 +113,129 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
             <AdBanner isFirst={true} eventId={eventId} />
           </Box>
 
-          <Box>
+          <Box sx={{ textAlign: "center", py: 1 }}>
             <Typography
-              variant="h5"
               sx={{
-                color: "#fff",
+                fontSize: { xs: "0.7rem", md: "0.75rem" },
                 fontWeight: 700,
+                letterSpacing: "0.18em",
+                textTransform: "uppercase",
+                color: "rgba(255, 80, 82, 0.9)",
+                mb: 0.75,
+              }}
+            >
+              Exclusivo para voce
+            </Typography>
+
+            <Typography
+              sx={{
+                fontSize: { xs: "1.75rem", md: "2.1rem" },
+                fontWeight: 900,
+                lineHeight: 1.1,
+                background: "linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.75) 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
                 mb: 1,
               }}
             >
-              Roleta de brindes
+              Ganhe cupons e<br />brindes das marcas!
             </Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.82)", fontSize: { xs: "0.95rem", md: "1rem" } }}>
-              Voce tem 3 tentativas de girar e ganhar brindes.
-            </Typography>
+
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 1,
+                background: "rgba(255, 31, 33, 0.15)",
+                border: "1px solid rgba(255, 31, 33, 0.35)",
+                borderRadius: "999px",
+                px: 2,
+                py: 0.6,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 7,
+                  height: 7,
+                  borderRadius: "50%",
+                  background: "#ff2e30",
+                  boxShadow: "0 0 6px #ff2e30",
+                  flexShrink: 0,
+                }}
+              />
+              <Typography
+                sx={{
+                  color: "rgba(255,255,255,0.85)",
+                  fontSize: "0.82rem",
+                  fontWeight: 600,
+                }}
+              >
+                {MAX_SPINS} giros disponiveis hoje
+              </Typography>
+            </Box>
           </Box>
 
+          {/* Contador de tentativas */}
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              borderRadius: 3,
+              p: 2.5,
+              background: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              display: "flex",
+              alignItems: "center",
               gap: 2,
             }}
           >
-            <Box
-              sx={{
-                borderRadius: 3,
-                p: 2.5,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 1 }}>
-                Tentativas por ciclo
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 0.5, fontSize: "0.9rem" }}>
+                Tentativas usadas
               </Typography>
-              <Typography sx={{ color: "#fff", fontSize: { xs: "2rem", md: "2.4rem" }, fontWeight: 800 }}>
-                3
-              </Typography>
-            </Box>
-
-            <Box
-              sx={{
-                borderRadius: 3,
-                p: 2.5,
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 1 }}>
-                Novo ciclo em
-              </Typography>
-              <Typography sx={{ color: "#fff", fontSize: { xs: "2rem", md: "2.4rem" }, fontWeight: 800 }}>
-                {countdownLabel}
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontSize: { xs: "2.6rem", md: "3rem" },
+                  fontWeight: 800,
+                  lineHeight: 1,
+                }}
+              >
+                {spinCount === null ? (
+                  <Skeleton sx={{ bgcolor: "rgba(255,255,255,0.12)", width: 80, height: 48 }} />
+                ) : (
+                  `${spinsUsed}/${MAX_SPINS}`
+                )}
               </Typography>
             </Box>
           </Box>
 
-          <Typography sx={{ color: "rgba(255,255,255,0.7)" }}>
-            A cada 3 horas suas tentativas sao renovadas para voce continuar concorrendo aos brindes.
+          <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.82rem", mt: -1.5 }}>
+            Voce tem ate as {midnightLabel} para girar suas {MAX_SPINS} tentativas.
           </Typography>
 
+          {/* Botão girar - acima dos brindes para ficar visível sem scroll */}
+          <Button
+            variant="contained"
+            onClick={() => setShowVideo(true)}
+            sx={{
+              alignSelf: "stretch",
+              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              color: "#fff",
+              fontWeight: 700,
+              borderRadius: "14px",
+              textTransform: "none",
+              px: 4,
+              py: 1.6,
+              fontSize: { xs: "1.05rem", md: "1.1rem" },
+              "&:hover": {
+                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+              },
+            }}
+          >
+            Girar roleta
+          </Button>
+
+          {/* Brindes disponíveis */}
           <Box
             sx={{
               borderRadius: 3,
@@ -349,30 +375,19 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
               </Typography>
             )}
           </Box>
-
-          <Button
-            variant="contained"
-            onClick={() => router.push(`/pages/user/roulette/${eventId}`)}
-            sx={{
-              alignSelf: { xs: "stretch", md: "flex-start" },
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              borderRadius: "14px",
-              textTransform: "none",
-              px: 4,
-              py: 1.2,
-              fontSize: { xs: "1rem", md: "1.05rem" },
-              "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
-              },
-            }}
-          >
-            Girar agora
-          </Button>
         </CardContent>
       </Card>
     </Box>
+
+      {showVideo && (
+        <VideoModal
+          src="/video/coca.mp4"
+          onComplete={() => {
+            router.push(`/pages/user/roulette/${eventId}`);
+          }}
+        />
+      )}
+    </>
   );
 };
 

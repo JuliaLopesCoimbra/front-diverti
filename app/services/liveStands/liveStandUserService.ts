@@ -42,6 +42,7 @@ export interface UserStandBooking {
   booking_open_time?: string | null;
   status: string;
   qr_token?: string | null;
+  queue_position?: number | null;
 }
 
 export const getUserEventStands = async (eventId: number): Promise<UserEventStand[]> => {

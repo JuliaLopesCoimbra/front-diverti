@@ -30,6 +30,17 @@ import {
   UserStandBooking,
 } from "@/app/services/liveStands/liveStandUserService";
 
+const QUEUE_STAND_KEYS = ["tic tac", "tictac", "bauducco"];
+function isQueueStand(name: string) {
+  const lower = name.toLowerCase();
+  return QUEUE_STAND_KEYS.some((k) => lower.includes(k));
+}
+function getStoredQueuePos(bookingId: number): number | null {
+  if (typeof window === "undefined") return null;
+  const v = localStorage.getItem(`stand_queue_pos_${bookingId}`);
+  return v ? parseInt(v, 10) : null;
+}
+
 export default function UserStandBookingsPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -44,7 +55,15 @@ export default function UserStandBookingsPage() {
     try {
       setLoading(true);
       const data = await getMyStandBookings();
-      setBookings(data);
+      // Enrich queue-type bookings with locally stored position
+      const enriched = data.map((b) => {
+        if (isQueueStand(b.stand_name) && b.queue_position == null) {
+          const pos = getStoredQueuePos(b.id);
+          if (pos != null) return { ...b, queue_position: pos };
+        }
+        return b;
+      });
+      setBookings(enriched);
     } catch (error: any) {
       console.error("Erro ao carregar meus agendamentos", error);
       showToast(error?.response?.data?.detail || "Erro ao carregar seus agendamentos", "error");
@@ -148,6 +167,33 @@ export default function UserStandBookingsPage() {
                     </Typography>
                   ) : null}
 
+                  {/* Queue position badge */}
+                  {isQueueStand(booking.stand_name) && booking.queue_position != null && (
+                    <Box
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 1,
+                        mt: 1.5,
+                        backgroundColor: "rgba(255,193,7,0.1)",
+                        border: "1px solid rgba(255,193,7,0.35)",
+                        borderRadius: 2,
+                        px: 1.5,
+                        py: 0.75,
+                      }}
+                    >
+                      <Typography sx={{ fontSize: "1rem" }}>🎟️</Typography>
+                      <Box>
+                        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1 }}>
+                          Posição na fila
+                        </Typography>
+                        <Typography sx={{ color: "#ffc91f", fontWeight: 900, fontSize: "1.2rem", lineHeight: 1.2 }}>
+                          #{booking.queue_position}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  )}
+
                   <Box sx={{ mt: 2 }}>
                     {booking.qr_token ? (
                       <Button
@@ -242,6 +288,34 @@ export default function UserStandBookingsPage() {
         <DialogContent sx={{ textAlign: "center" }}>
           {bookingToShowQr?.qr_token ? (
             <>
+              {/* Queue position — only for queue-type stands */}
+              {bookingToShowQr && isQueueStand(bookingToShowQr.stand_name) && bookingToShowQr.queue_position != null && (
+                <Box
+                  sx={{
+                    display: "inline-flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    backgroundColor: "rgba(255,193,7,0.1)",
+                    border: "1.5px solid rgba(255,193,7,0.5)",
+                    borderRadius: 2.5,
+                    px: 3,
+                    py: 1.5,
+                    mb: 2.5,
+                    minWidth: 160,
+                  }}
+                >
+                  <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.25 }}>
+                    Sua posição na fila
+                  </Typography>
+                  <Typography sx={{ color: "#ffc91f", fontSize: "2.6rem", fontWeight: 900, lineHeight: 1 }}>
+                    #{bookingToShowQr.queue_position}
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", mt: 0.5 }}>
+                    Entrada de 3 em 3 pessoas
+                  </Typography>
+                </Box>
+              )}
+
               <Box
                 sx={{
                   backgroundColor: "#fff",

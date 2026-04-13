@@ -61,3 +61,13 @@ export const getPrizesByEvent = async (
   return res.data;
 };
 
+export const getUserSpinCount = async (
+  eventId: number
+): Promise<number> => {
+  const res = await api.get<{ count: number }>(
+    `/roulette/events/${eventId}/spins/count`
+  );
+
+  return res.data.count;
+};
+

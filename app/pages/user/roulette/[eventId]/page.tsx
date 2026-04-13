@@ -26,23 +26,12 @@ export default function Roulette() {
 
   const spinToPosition = (position: number | string) => {
     const pos = Number(position);
-
-    if (Number.isNaN(pos)) {
-      console.error("Position inválida:", position);
-      return;
-    }
-
-    const spins = 6; // voltas completas
-    // Offset para corrigir o alinhamento quando o ponteiro cair no prêmio
-    // Se a roleta começa na metade do primeiro prêmio, precisamos compensar
+    if (Number.isNaN(pos)) return;
     const alignmentOffset = SLICE_ANGLE / 2;
     const finalAngle =
-      spins * 360 + (360 - pos * SLICE_ANGLE - SLICE_ANGLE / 2) + alignmentOffset;
-
+      6 * 360 + (360 - pos * SLICE_ANGLE - SLICE_ANGLE / 2) + alignmentOffset;
     setRotation(finalAngle);
   };
-
-  console.log("Rotação atual:", rotation);
 
   const handleSpin = async () => {
     if (spinning || !roulette) return;
@@ -54,25 +43,23 @@ export default function Roulette() {
     try {
       const result = await spinRoulette(eventId);
 
+      const countKey = `roulette-spin-count-${eventId}`;
+      const current = Number(sessionStorage.getItem(countKey) ?? "0");
+      sessionStorage.setItem(countKey, String(current + 1));
+
       spinToPosition(result.prize.position);
 
-      // Após a roleta parar (4 segundos), ativar animação do ponteiro caindo
       setTimeout(() => {
         setPointerFalling(true);
 
-        // Após a animação do ponteiro (1.5 segundos), navegar para a página de prêmio
         setTimeout(() => {
-          const params = new URLSearchParams({
+          const p = new URLSearchParams({
             prize_id: result.prize.id.toString(),
             prize_name: result.prize.name,
             prize_position: result.prize.position.toString(),
           });
-
-          if (result.prize.image_url) {
-            params.append("prize_image", result.prize.image_url);
-          }
-
-          router.push(`/pages/user/roulette/prize/prize-win?${params.toString()}`);
+          if (result.prize.image_url) p.append("prize_image", result.prize.image_url);
+          router.push(`/pages/user/roulette/prize/prize-win?${p.toString()}`);
         }, 1500);
       }, 4000);
     } catch (err) {
@@ -81,28 +68,26 @@ export default function Roulette() {
       setPointerFalling(false);
     }
   };
+
   useEffect(() => {
     if (!eventId) return;
-
-    const loadRoulette = async () => {
+    const load = async () => {
       setLoading(true);
       setError(null);
       try {
         const data = await getRouletteByEvent(eventId);
         setRoulette(data);
       } catch (err: any) {
-        console.error("Erro ao carregar roleta", err);
-        if (err?.response?.status === 404) {
-          setError("Roleta não encontrada ou inativa para este evento.");
-        } else {
-          setError("Erro ao carregar roleta. Tente novamente mais tarde.");
-        }
+        setError(
+          err?.response?.status === 404
+            ? "Roleta não encontrada ou inativa para este evento."
+            : "Erro ao carregar roleta. Tente novamente mais tarde."
+        );
       } finally {
         setLoading(false);
       }
     };
-
-    loadRoulette();
+    load();
   }, [eventId]);
 
   if (loading) {
@@ -110,100 +95,42 @@ export default function Roulette() {
       <Box
         sx={{
           ...dashboardBackgroundSx,
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {/* Container centralizado para desktop */}
         <Box
           sx={{
-            width: "100%",
-            maxWidth: "1200px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            textAlign: "center",
+            gap: 3,
             px: 2,
           }}
         >
-          {/* Title Skeleton */}
-          <Skeleton
-            variant="text"
-            height={40}
-            sx={{
-              width: { xs: 300, md: 500 },
-              bgcolor: "rgba(255,255,255,0.1)",
-              mt: 5,
-              mb: 1,
-              borderRadius: 1,
-            }}
-          />
-
-          {/* Subtitle Skeleton */}
-          <Skeleton
-            variant="text"
-            height={20}
-            sx={{
-              width: { xs: 400, md: 600 },
-              bgcolor: "rgba(255,255,255,0.1)",
-              mb: 4,
-              borderRadius: 1,
-            }}
-          />
-
-          {/* Roulette Skeleton - Circular */}
-          <Box
-            sx={{
-              position: "relative",
-              width: { xs: 380, md: 600 },
-              height: { xs: 380, md: 600 },
-              mb: 3,
-              mt: 8,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {/* Pointer Skeleton */}
+          <Skeleton variant="text" width={220} height={28} sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
+          <Box sx={{ position: "relative", width: { xs: 300, md: 480 }, height: { xs: 300, md: 480 } }}>
             <Skeleton
               variant="rectangular"
               sx={{
-                width: { xs: 90, md: 140 },
-                height: { xs: 60, md: 90 },
+                width: { xs: 80, md: 120 },
+                height: { xs: 52, md: 80 },
                 position: "absolute",
-                top: { xs: -30, md: -45 },
+                top: { xs: -26, md: -40 },
                 left: "50%",
                 transform: "translateX(-50%)",
                 bgcolor: "rgba(255,255,255,0.1)",
                 borderRadius: 2,
-                zIndex: 2,
               }}
             />
-
-            {/* Circular Roulette Skeleton */}
             <Skeleton
               variant="circular"
-              sx={{
-                width: { xs: 380, md: 600 },
-                height: { xs: 380, md: 600 },
-                bgcolor: "rgba(255,255,255,0.1)",
-              }}
+              sx={{ width: "100%", height: "100%", bgcolor: "rgba(255,255,255,0.1)" }}
             />
           </Box>
-
-          {/* Button Skeleton */}
-          <Skeleton
-            variant="rectangular"
-            width={180}
-            height={48}
-            sx={{
-              bgcolor: "rgba(255,255,255,0.1)",
-              borderRadius: "14px",
-              mt: 1,
-            }}
-          />
+          <Skeleton variant="rectangular" width={200} height={56} sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: "999px" }} />
         </Box>
       </Box>
     );
@@ -214,43 +141,28 @@ export default function Roulette() {
       <Box
         sx={{
           ...dashboardBackgroundSx,
-          minHeight: "100vh",
+          minHeight: "100dvh",
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          px: 2,
         }}
       >
-        {/* Container centralizado para desktop */}
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: "1200px",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            px: 2,
-          }}
-        >
-          <Typography 
-            variant="h6" 
-            color="white" 
-            sx={{ mb: 2, textAlign: "center" }}
-          >
+        <Box sx={{ textAlign: "center" }}>
+          <Typography variant="h6" color="white" sx={{ mb: 3 }}>
             {error || "Roleta não encontrada"}
           </Typography>
           <Button
             variant="contained"
             onClick={() => window.history.back()}
             sx={{
-              backgroundColor: "#ffcc01",
-              color: "#000",
-              fontWeight: 600,
-              borderRadius: "14px",
+              background: "linear-gradient(180deg, #ff2e30, #ff1f21)",
+              color: "#fff",
+              fontWeight: 700,
+              borderRadius: "999px",
               textTransform: "none",
-              "&:hover": {
-                backgroundColor: "#e6b800",
-              },
+              px: 4,
+              py: 1.4,
             }}
           >
             Voltar
@@ -259,133 +171,176 @@ export default function Roulette() {
       </Box>
     );
   }
-  if (!eventId) {
-    return <div>Evento inválido</div>;
-  }
+
+  if (!eventId) return <div>Evento inválido</div>;
+
+  const wheelSize = { xs: "min(82vw, 340px)", md: "480px" };
+  const pointerWidth = { xs: "min(22vw, 88px)", md: "120px" };
 
   return (
     <Box
       sx={{
         ...dashboardBackgroundSx,
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        justifyContent: "center",
+        px: 2,
+        py: 4,
       }}
     >
-      {/* Container centralizado para desktop */}
-      <Box
+      {/* Label topo */}
+      <Typography
         sx={{
-          width: "100%",
-          maxWidth: "1200px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          textAlign: "center",
-          px: 2,
+          fontSize: "0.72rem",
+          fontWeight: 700,
+          letterSpacing: "0.2em",
+          textTransform: "uppercase",
+          color: "rgba(255, 80, 82, 0.9)",
+          mb: 2,
         }}
       >
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          mb={1}
-          sx={{
-            color: "white",
-            paddingTop: "40px",
-            paddingX: { xs: "55px", md: "20px" },
-            fontSize: { xs: "1.25rem", md: "1.75rem" },
-            fontFamily: '"Operator Mono", "Operant Mono", monospace',
-          }}
-        >
-          Você desbloqueou um girou na roleta!
-        </Typography>
+        Boa sorte!
+      </Typography>
 
-  
-        {/* ROLETA */}
+      {/* Título */}
+      <Typography
+        sx={{
+          color: "#fff",
+          fontWeight: 900,
+          fontSize: { xs: "1.5rem", md: "2rem" },
+          lineHeight: 1.15,
+          textAlign: "center",
+          mb: { xs: 4, md: 5 },
+          px: { xs: 3, md: 0 },
+        }}
+      >
+        Gire e ganhe um<br />brinde exclusivo!
+      </Typography>
+
+      {/* Roleta + ponteiro */}
+      <Box
+        sx={{
+          position: "relative",
+          width: wheelSize,
+          height: wheelSize,
+          mb: { xs: 5, md: 6 },
+          flexShrink: 0,
+        }}
+      >
+        {/* Glow ambiente */}
         <Box
           sx={{
-            position: "relative",
-            width: { xs: 380, md: 600 },
-            height: { xs: 380, md: 600 },
-            mb: 3,
-            mt: { xs: 8, md: 4 },
+            position: "absolute",
+            inset: "-25%",
+            background: spinning
+              ? "radial-gradient(circle, rgba(255,46,48,0.25) 0%, transparent 70%)"
+              : "radial-gradient(circle, rgba(255,46,48,0.12) 0%, transparent 70%)",
+            transition: "background 0.6s ease",
+            pointerEvents: "none",
+            zIndex: 0,
           }}
-        >
-          {/* PONTEIRO */}
-          <Box
-            component="img"
-            src={roulette.pointer_image_url}
-            alt="Ponteiro"
-            sx={{
-              position: "absolute",
-              top: { xs: -30, md: -45 },
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: { xs: 90, md: 140 },
-              zIndex: 2,
-              transition: pointerFalling
-                ? "top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)"
-                : "none",
-              ...(pointerFalling && {
-                top: { xs: 20, md: 30 },
-                animation: "pointerBounce 1.5s ease-in-out",
-                "@keyframes pointerBounce": {
-                  "0%": {
-                    transform: "translateX(-50%) rotate(0deg)",
-                  },
-                  "50%": {
-                    transform: "translateX(-50%) rotate(-5deg)",
-                  },
-                  "70%": {
-                    transform: "translateX(-50%) rotate(2deg)",
-                  },
-                  "100%": {
-                    transform: "translateX(-50%) rotate(0deg)",
-                  },
-                },
-              }),
-            }}
-          />
+        />
 
-          {/* IMAGEM DA ROLETA */}
-          <Box
-            component="img"
-            src={roulette.roulette_image_url}
-            alt="Roleta"
-            sx={{
-              width: "100%",
-              height: "100%",
-              transformOrigin: "50% 50%",
-              transition: "transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)",
-              transform: `rotate(${rotation}deg)`,
-            }}
-          />
-        </Box>
-
-        {/* BOTÃO */}
-        <Button
-          variant="contained"
-          size="large"
-          onClick={handleSpin}
-          disabled={spinning}
+        {/* Ponteiro */}
+        <Box
+          component="img"
+          src={roulette.pointer_image_url}
+          alt="Ponteiro"
           sx={{
-            background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-            color: "#fff",
-            fontWeight: 600,
-            marginTop: "10px",
-            borderRadius: "14px",
-            textTransform: "none",
-            px: { xs: 4, md: 6 },
-            py: { xs: 0.5, md: 1 },
-            fontSize: { xs: "1rem", md: "1.125rem" },
-            "&:hover": {
-              background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
-            },
+            position: "absolute",
+            top: { xs: "-8%", md: "-9%" },
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: pointerWidth,
+            zIndex: 2,
+            transition: pointerFalling
+              ? "top 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)"
+              : "none",
+            ...(pointerFalling && {
+              top: "5%",
+              animation: "pointerBounce 1.5s ease-in-out",
+              "@keyframes pointerBounce": {
+                "0%":   { transform: "translateX(-50%) rotate(0deg)" },
+                "50%":  { transform: "translateX(-50%) rotate(-5deg)" },
+                "70%":  { transform: "translateX(-50%) rotate(2deg)" },
+                "100%": { transform: "translateX(-50%) rotate(0deg)" },
+              },
+            }),
+          }}
+        />
+
+        {/* Roda */}
+        <Box
+          component="img"
+          src={roulette.roulette_image_url}
+          alt="Roleta"
+          sx={{
+            width: "100%",
+            height: "100%",
+            transformOrigin: "50% 50%",
+            transition: "transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)",
+            transform: `rotate(${rotation}deg)`,
+            position: "relative",
+            zIndex: 1,
+          }}
+        />
+      </Box>
+
+      {/* Botão */}
+      <Button
+        variant="contained"
+        size="large"
+        onClick={handleSpin}
+        disabled={spinning}
+        sx={{
+          background: "linear-gradient(135deg, #ff2e30 0%, #ff6162 50%, #ff1f21 100%)",
+          backgroundSize: "200% 200%",
+          animation: spinning ? "none" : "shimmer 2.5s ease-in-out infinite",
+          "@keyframes shimmer": {
+            "0%":   { backgroundPosition: "0% 50%" },
+            "50%":  { backgroundPosition: "100% 50%" },
+            "100%": { backgroundPosition: "0% 50%" },
+          },
+          color: "#fff",
+          fontWeight: 800,
+          borderRadius: "999px",
+          textTransform: "none",
+          px: { xs: 6, md: 8 },
+          py: { xs: 1.6, md: 1.8 },
+          fontSize: { xs: "1.05rem", md: "1.15rem" },
+          letterSpacing: "0.05em",
+          boxShadow: "0 0 36px rgba(255,46,48,0.55), 0 8px 28px rgba(0,0,0,0.45)",
+          transition: "transform 0.2s ease, box-shadow 0.2s ease",
+          "&:hover": {
+            background: "linear-gradient(135deg, #ff4547 0%, #ff7476 50%, #ff3436 100%)",
+            transform: "scale(1.05)",
+            boxShadow: "0 0 52px rgba(255,46,48,0.75), 0 12px 32px rgba(0,0,0,0.5)",
+          },
+          "&:disabled": {
+            background: "rgba(255,255,255,0.08)",
+            color: "rgba(255,255,255,0.35)",
+            boxShadow: "none",
+            animation: "none",
+          },
+        }}
+      >
+        {spinning ? "Girando..." : "Girar roleta"}
+      </Button>
+
+      {spinning && (
+        <Typography
+          sx={{
+            mt: 2,
+            color: "rgba(255,255,255,0.45)",
+            fontSize: "0.8rem",
+            letterSpacing: "0.06em",
           }}
         >
-          {spinning ? "Girando..." : "Girar roleta"}
-        </Button>
-      </Box>
+          Aguarde o resultado...
+        </Typography>
+      )}
     </Box>
   );
 }

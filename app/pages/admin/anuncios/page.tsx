@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import {
-  Alert,
   Autocomplete,
   Box,
   Button,
@@ -20,14 +19,6 @@ import {
   StepLabel,
   Stepper,
   Slider,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tabs,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -59,7 +50,7 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 import { EventResponse } from "@/app/services/events/eventAppService";
 import GoogleMapsRadiusPicker from "@/app/components/admin/anuncios/GoogleMapsRadiusPicker";
 
-type TabValue = "create" | "dashboard" | "charts";
+type TabValue = "create" | "dashboard";
 type BudgetType = "diario" | "total";
 type AdType = "CPC" | "CPV";
 
@@ -583,31 +574,19 @@ export default function AdminAdsPage() {
   const uploadedCreativeUrlRef = useRef<string | null>(null);
 
   const [tab, setTab] = useState<TabValue>("dashboard");
-  const [selectedEventId, setSelectedEventId] = useState("all");
+  const selectedEventId = "all";
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<AdDraft>(initialDraft);
   const [integrationNotice, setIntegrationNotice] = useState(false);
 
   const events = mockEvents;
   const eventsLoading = false;
-  const statsLoading = false;
 
   useEffect(() => {
     if (authReady && !isAdmin) {
       router.push("/pages/user/home");
     }
   }, [authReady, isAdmin, router]);
-
-  const selectedEventName = useMemo(() => {
-    if (selectedEventId === "all") {
-      return "Todos os eventos";
-    }
-
-    return (
-      events.find((event) => String(event.id) === selectedEventId)?.title ||
-      "Evento filtrado"
-    );
-  }, [events, selectedEventId]);
 
   const mergedRows = useMemo<MockDashboardAd[]>(() => {
     const filteredRows =
@@ -720,10 +699,27 @@ export default function AdminAdsPage() {
     [selectedEventId]
   );
 
-  const unitPrice = draft.adType === "CPC" ? 14 : 0.1;
+  const unitPrice = draft.adType === "CPC" ? 0.14 : 0.10;
   const parsedTargetUnits = Number(draft.targetUnits) || 0;
   const parsedDurationDays = Math.max(1, Number(draft.durationDays) || 1);
-  const estimatedTotal = parsedTargetUnits * unitPrice;
+
+  const baseTotal = parsedTargetUnits * unitPrice;
+
+  // Segmentação: cobrança adicional sobre a base
+  // Até 3 hobbies, 3 profissões e 18 km = incluso no preço base
+  // Cada hobby além de 3: +1% da base
+  // Cada profissão além de 3: +1% da base
+  // Cada km além de 18: +0,3% da base
+  const extraHobbies    = Math.max(0, draft.hobbies.length - 3);
+  const extraProfessions = Math.max(0, draft.professions.length - 3);
+  const extraKm          = Math.max(0, draft.radiusKm - 18);
+
+  const extraHobbiesValue      = baseTotal * extraHobbies * 0.01;
+  const extraProfessionsValue  = baseTotal * extraProfessions * 0.01;
+  const extraKmValue           = baseTotal * extraKm * 0.003;
+  const segmentationExtra      = extraHobbiesValue + extraProfessionsValue + extraKmValue;
+
+  const estimatedTotal = baseTotal + segmentationExtra;
   const estimatedDaily = estimatedTotal / parsedDurationDays;
 
   const isCurrentStepValid = useMemo(() => {
@@ -745,7 +741,7 @@ export default function AdminAdsPage() {
     }
 
     if (step === 2) {
-      return Boolean(draft.eventId && draft.address.trim());
+      return Boolean(draft.address.trim());
     }
 
     return true;
@@ -808,6 +804,10 @@ export default function AdminAdsPage() {
     };
   }, []);
 
+  // 5 imagens em /public/ads + 1 vídeo em /public/video
+  const ADS_IMAGE_COUNT = 5;
+  const ADS_VIDEO_COUNT = 1;
+
   if (!authReady) {
     return (
       <Box
@@ -848,6 +848,7 @@ export default function AdminAdsPage() {
             boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
           }}
         >
+          {/* Header */}
           <Box
             sx={{
               display: "flex",
@@ -855,18 +856,13 @@ export default function AdminAdsPage() {
               justifyContent: "space-between",
               gap: 2,
               flexWrap: "wrap",
-              mb: 3,
+              mb: 4,
             }}
           >
             <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
               <IconButton
-                onClick={() => router.back()}
-                sx={{
-                  color: "#fff",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.08)",
-                  },
-                }}
+                onClick={tab === "create" ? () => setTab("dashboard") : () => router.back()}
+                sx={{ color: "#fff", "&:hover": { backgroundColor: "rgba(255,255,255,0.08)" } }}
               >
                 <ArrowBackIcon />
               </IconButton>
@@ -876,86 +872,49 @@ export default function AdminAdsPage() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 56,
-                  height: 56,
+                  width: 52,
+                  height: 52,
                   borderRadius: "50%",
                   backgroundColor: "rgba(255, 31, 33, 0.15)",
+                  flexShrink: 0,
                 }}
               >
-                <CampaignIcon sx={{ color: "rgb(255, 31, 33)", fontSize: 30 }} />
+                <CampaignIcon sx={{ color: "rgb(255, 31, 33)", fontSize: 28 }} />
               </Box>
 
               <Box>
-                <Typography
-                  variant="h4"
-                  sx={{
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: { xs: "1.6rem", md: "2rem" },
-                  }}
-                >
-                  Anúncios
+                <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.5rem", md: "1.9rem" } }}>
+                  {tab === "create" ? "Inserir anúncio" : "Anúncios"}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.65)", mt: 0.5 }}
-                >
-                  Adaptação inicial do fluxo do roulette com dashboard real do rockworld
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.55)", mt: 0.25 }}>
+                  Rock in Rio
                 </Typography>
               </Box>
             </Box>
 
-            <Chip
-              label={selectedEventName}
-              sx={{
-                color: "#fff",
-                backgroundColor: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}
-            />
+            {tab === "dashboard" && (
+              <Button
+                variant="contained"
+                onClick={() => setTab("create")}
+                sx={{
+                  background: "linear-gradient(180deg, #ff2e30, #ff1f21)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  borderRadius: "12px",
+                  textTransform: "none",
+                  px: 3,
+                  py: 1.1,
+                  fontSize: "0.95rem",
+                  "&:hover": { background: "linear-gradient(180deg, #ff4547, #dc1416)" },
+                }}
+              >
+                + Inserir anúncio
+              </Button>
+            )}
           </Box>
-
-          <Tabs
-            value={tab}
-            onChange={(_, value: TabValue) => setTab(value)}
-            variant="scrollable"
-            scrollButtons="auto"
-            allowScrollButtonsMobile
-            sx={{
-              mb: 3,
-              "& .MuiTab-root": {
-                minWidth: { xs: 120, sm: 160 },
-              },
-              "& .MuiTabs-indicator": {
-                backgroundColor: "rgb(255, 31, 33)",
-                height: 3,
-              },
-            }}
-            textColor="inherit"
-          >
-            <Tab
-              label="Dashboard"
-              value="dashboard"
-              sx={{ color: "#fff", textTransform: "none", fontWeight: 600 }}
-            />
-            <Tab
-              label="Gráficos"
-              value="charts"
-              sx={{ color: "#fff", textTransform: "none", fontWeight: 600 }}
-            />
-            <Tab
-              label="Inserir anúncio"
-              value="create"
-              sx={{ color: "#fff", textTransform: "none", fontWeight: 600 }}
-            />
-          </Tabs>
 
           {tab === "create" ? (
             <Box>
-        
-
-          
-
               <Box sx={{ mb: 4, overflowX: "auto", pb: 1 }}>
                 <Stepper
                   activeStep={step}
@@ -1159,28 +1118,8 @@ export default function AdminAdsPage() {
                   {step === 2 ? (
                     <Box sx={{ display: "grid", gap: 2 }}>
                       <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700 }}>
-                        Segmentação e evento
+                        Segmentação
                       </Typography>
-                      <TextField
-                        select
-                        label="Evento"
-                        value={draft.eventId}
-                        onChange={(e) =>
-                          setDraft((current) => ({
-                            ...current,
-                            eventId: e.target.value,
-                          }))
-                        }
-                        fullWidth
-                        disabled={eventsLoading}
-                        sx={textFieldSx}
-                      >
-                        {events.map((event) => (
-                          <MenuItem key={event.id} value={String(event.id)}>
-                            {event.title}
-                          </MenuItem>
-                        ))}
-                      </TextField>
                       <AudienceMultiSelect
                         label="Hobbies"
                         placeholder="Digite ou clique para adicionar hobbies"
@@ -1256,13 +1195,7 @@ export default function AdminAdsPage() {
                       </Typography>
                       <ReviewRow label="Campanha" value={draft.campaignName || "-"} />
                       <ReviewRow label="Tipo" value={draft.adType} />
-                      <ReviewRow
-                        label="Evento"
-                        value={
-                          events.find((event) => String(event.id) === draft.eventId)?.title ||
-                          "-"
-                        }
-                      />
+                      <ReviewRow label="Evento" value="Rock in Rio" />
                       <ReviewRow label="Criativo" value={draft.creativeName || "-"} />
                       <ReviewRow label="Destino" value={draft.redirectUrl || "-"} />
                       <ReviewRow
@@ -1341,442 +1274,229 @@ export default function AdminAdsPage() {
                     borderRadius: 3,
                   }}
                 >
-                  <CardContent>
-                    <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2 }}>
+                  <CardContent sx={{ display: "grid", gap: 0 }}>
+                    <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2.5 }}>
                       Resumo rápido
                     </Typography>
 
-                    <Box sx={{ display: "grid", gap: 1.5 }}>
-                      <SummaryMetric
+                    {/* Bloco base */}
+                    <Box sx={{ display: "grid", gap: 1.25, mb: 2 }}>
+                      <BudgetRow
+                        label="Tipo de anúncio"
+                        value={draft.adType === "CPC" ? "CPC — por clique" : "CPV — por view"}
+                      />
+                      <BudgetRow
                         label="Preço unitário"
-                        value={formatCurrency(unitPrice)}
-                        icon={<CampaignIcon sx={{ color: "#fff" }} />}
+                        value={`${formatCurrency(unitPrice)} / ${draft.adType === "CPC" ? "clique" : "view"}`}
                       />
-                      <SummaryMetric
-                        label="Investimento estimado"
-                        value={formatCurrency(estimatedTotal)}
-                        icon={<TouchAppIcon sx={{ color: "#fff" }} />}
+                      <BudgetRow
+                        label={`Meta de ${draft.adType === "CPC" ? "cliques" : "views"}`}
+                        value={parsedTargetUnits > 0 ? parsedTargetUnits.toLocaleString("pt-BR") : "—"}
                       />
-                      <SummaryMetric
-                        label="Média diária"
-                        value={formatCurrency(estimatedDaily)}
-                        icon={<VisibilityIcon sx={{ color: "#fff" }} />}
+                      <BudgetRow
+                        label="Duração"
+                        value={`${parsedDurationDays} ${parsedDurationDays === 1 ? "dia" : "dias"}`}
+                      />
+                      <BudgetRow
+                        label="Base (unidades × preço)"
+                        value={formatCurrency(baseTotal)}
+                        highlight
                       />
                     </Box>
 
-                    <Divider sx={{ my: 2, borderColor: "rgba(255,255,255,0.08)" }} />
+                    {/* Segmentação */}
+                    <Box
+                      sx={{
+                        borderRadius: 2,
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        p: 1.5,
+                        mb: 2,
+                        background: "rgba(255,255,255,0.03)",
+                      }}
+                    >
+                      <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", mb: 1.25 }}>
+                        Segmentação
+                      </Typography>
 
-                
+                      <Box sx={{ display: "grid", gap: 1 }}>
+                        <BudgetRow
+                          label={`Hobbies (${draft.hobbies.length}/3 incluso)`}
+                          value={extraHobbies > 0 ? `+${extraHobbies} extra${extraHobbies > 1 ? "s" : ""} → +${formatCurrency(extraHobbiesValue)}` : "Incluso"}
+                          extra={extraHobbies > 0}
+                        />
+                        <BudgetRow
+                          label={`Profissões (${draft.professions.length}/3 incluso)`}
+                          value={extraProfessions > 0 ? `+${extraProfessions} extra${extraProfessions > 1 ? "s" : ""} → +${formatCurrency(extraProfessionsValue)}` : "Incluso"}
+                          extra={extraProfessions > 0}
+                        />
+                        <BudgetRow
+                          label={`Raio (${draft.radiusKm} km / 18 km incluso)`}
+                          value={extraKm > 0 ? `+${extraKm} km → +${formatCurrency(extraKmValue)}` : "Incluso"}
+                          extra={extraKm > 0}
+                        />
+                        {segmentationExtra > 0 && (
+                          <BudgetRow
+                            label="Subtotal segmentação"
+                            value={`+${formatCurrency(segmentationExtra)}`}
+                            extra
+                          />
+                        )}
+                      </Box>
+                    </Box>
+
+                    <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 2 }} />
+
+                    {/* Totais */}
+                    <Box sx={{ display: "grid", gap: 1.25 }}>
+                      <BudgetRow
+                        label="Total estimado"
+                        value={formatCurrency(estimatedTotal)}
+                        highlight
+                        large
+                      />
+                      <BudgetRow
+                        label="Média diária"
+                        value={formatCurrency(estimatedDaily)}
+                      />
+                    </Box>
                   </CardContent>
                 </Card>
               </Box>
             </Box>
-          ) : tab === "dashboard" ? (
-            <Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: { xs: "stretch", md: "center" },
-                  flexDirection: { xs: "column", md: "row" },
-                  gap: 2,
-                  mb: 3,
-                }}
-              >
-              
+          ) : (
+            /* ── DASHBOARD ── */
+            <Box sx={{ display: "grid", gap: 3 }}>
 
-                <TextField
-                  select
-                  label="Evento"
-                  value={selectedEventId}
-                  onChange={(e) => setSelectedEventId(e.target.value)}
-                  sx={{ ...textFieldSx, width: { xs: "100%", md: "auto" }, minWidth: { xs: "100%", md: 260 } }}
-                >
-                  <MenuItem value="all">Todos os eventos</MenuItem>
-                  {events.map((event) => (
-                    <MenuItem key={event.id} value={String(event.id)}>
-                      {event.title}
-                    </MenuItem>
-                  ))}
-                </TextField>
+              {/* Cards de resumo */}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 2 }}>
+
+                {/* Views + Cliques fundidos */}
+                <Card sx={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                  <CardContent sx={{ display: "flex", gap: 0, p: "20px !important" }}>
+                    <Box sx={{ flex: 1, pr: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <Box sx={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "rgba(255,31,33,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <VisibilityIcon sx={{ color: "#fff", fontSize: 16 }} />
+                        </Box>
+                        <Typography sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.82rem" }}>Views</Typography>
+                      </Box>
+                      <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.3rem", sm: "1.55rem" } }}>
+                        {totals.totalViews.toLocaleString("pt-BR")}
+                      </Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem sx={{ borderColor: "rgba(255,255,255,0.08)" }} />
+                    <Box sx={{ flex: 1, pl: 2 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                        <Box sx={{ width: 32, height: 32, borderRadius: "50%", backgroundColor: "rgba(255,31,33,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <TouchAppIcon sx={{ color: "#fff", fontSize: 16 }} />
+                        </Box>
+                        <Typography sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.82rem" }}>Cliques</Typography>
+                      </Box>
+                      <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.3rem", sm: "1.55rem" } }}>
+                        {totals.totalClicks.toLocaleString("pt-BR")}
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
+
+                <StatsCard
+                  label="CTR médio"
+                  value={`${totals.ctr.toFixed(2)}%`}
+                  icon={<CampaignIcon sx={{ color: "#fff" }} />}
+                />
+
+                {/* Anúncios monitorados */}
+                <Card sx={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                  <CardContent sx={{ p: "20px !important" }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <Box>
+                        <Typography sx={{ color: "rgba(255,255,255,0.7)", mb: 1 }}>Anúncios monitorados</Typography>
+                        <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.3rem", sm: "1.55rem" } }}>
+                          {ADS_IMAGE_COUNT + ADS_VIDEO_COUNT}
+                        </Typography>
+                        <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem", mt: 0.5 }}>
+                          {ADS_IMAGE_COUNT} imagens · {ADS_VIDEO_COUNT} vídeo
+                        </Typography>
+                      </Box>
+                      <Box sx={{ width: 42, height: 42, borderRadius: "50%", backgroundColor: "rgba(255,31,33,0.2)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        <CampaignIcon sx={{ color: "#fff" }} />
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
               </Box>
 
-              {statsLoading ? (
-                <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
-                  <CircularProgress sx={{ color: "#ffcc01" }} />
-                </Box>
-              ) : (
-                <>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {
-                        xs: "1fr",
-                        sm: "repeat(2, 1fr)",
-                        lg: "repeat(4, 1fr)",
-                      },
-                      gap: 2,
-                      mb: 3,
-                    }}
-                  >
-                    <StatsCard
-                      label="Total de views"
-                      value={totals.totalViews.toLocaleString("pt-BR")}
-                      icon={<VisibilityIcon sx={{ color: "#fff" }} />}
-                    />
-                    <StatsCard
-                      label="Total de cliques"
-                      value={totals.totalClicks.toLocaleString("pt-BR")}
-                      icon={<TouchAppIcon sx={{ color: "#fff" }} />}
-                    />
-                    <StatsCard
-                      label="CTR médio"
-                      value={`${totals.ctr.toFixed(2)}%`}
-                      icon={<CampaignIcon sx={{ color: "#fff" }} />}
-                    />
-                    <StatsCard
-                      label="Anúncios monitorados"
-                      value={String(totals.totalAds)}
-                      icon={<CampaignIcon sx={{ color: "#fff" }} />}
-                    />
-                  </Box>
-
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: { xs: "1fr", lg: "1.5fr 0.9fr" },
-                      gap: 3,
-                    }}
-                  >
-                    <Paper
-                      sx={{
-                        p: 2,
-                        backgroundColor: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 3,
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2 }}>
-                        Desempenho por anúncio
-                      </Typography>
-
-                      {mergedRows.length === 0 ? (
-                        <Alert
-                          severity="info"
-                          sx={{
-                            backgroundColor: "rgba(33,150,243,0.08)",
-                            color: "#fff",
-                            border: "1px solid rgba(33,150,243,0.2)",
-                          }}
-                        >
-                          Ainda não existem views ou cliques para o filtro selecionado.
-                        </Alert>
+              {/* Desempenho por anúncio — cards com imagem/vídeo */}
+              <Paper sx={{ p: 2.5, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2.5 }}>
+                  Desempenho por anúncio
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" }, gap: 2 }}>
+                  {mergedRows.map((ad) => (
+                    <Card key={ad.id} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
+                      {/* Imagem ou vídeo do anúncio */}
+                      {ad.imageUrl.endsWith(".mp4") ? (
+                        <Box component="video" src={ad.imageUrl} muted playsInline
+                          sx={{ width: "100%", height: 180, objectFit: "cover", display: "block", backgroundColor: "#000" }} />
                       ) : (
-                        <>
-                          <Box sx={{ display: { xs: "grid", sm: "none" }, gap: 1.5 }}>
-                            {mergedRows.map((row) => (
-                              <Card
-                                key={row.adIdentifier}
-                                sx={{
-                                  backgroundColor: "rgba(255,255,255,0.03)",
-                                  border: "1px solid rgba(255,255,255,0.08)",
-                                  borderRadius: 2.5,
-                                }}
-                              >
-                                <CardContent sx={{ display: "grid", gap: 1.2 }}>
-                                  <Box
-                                    sx={{
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      alignItems: "center",
-                                      gap: 1.5,
-                                    }}
-                                  >
-                                    <Typography sx={{ color: "#fff", fontWeight: 700 }}>
-                                      Anúncio {row.adIdentifier}
-                                    </Typography>
-                                    <Chip
-                                      label={`${row.ctr.toFixed(2)}% CTR`}
-                                      size="small"
-                                      sx={{
-                                        color: "#fff",
-                                        backgroundColor: "rgba(255, 31, 33, 0.16)",
-                                        border: "1px solid rgba(255, 31, 33, 0.3)",
-                                      }}
-                                    />
-                                  </Box>
-                                  <ReviewRow label="Views" value={row.views.toLocaleString("pt-BR")} />
-                                  <ReviewRow label="Cliques" value={row.clicks.toLocaleString("pt-BR")} />
-                                  <ReviewRow
-                                    label="Última atividade"
-                                    value={formatOptionalDate(row.lastActivity)}
-                                  />
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </Box>
-
-                          <TableContainer sx={{ display: { xs: "none", sm: "block" }, overflowX: "auto" }}>
-                            <Table sx={{ minWidth: 620 }}>
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell sx={tableHeadSx}>Anúncio</TableCell>
-                                  <TableCell sx={tableHeadSx} align="right">
-                                    Views
-                                  </TableCell>
-                                  <TableCell sx={tableHeadSx} align="right">
-                                    Cliques
-                                  </TableCell>
-                                  <TableCell sx={tableHeadSx} align="right">
-                                    CTR
-                                  </TableCell>
-                                  <TableCell sx={tableHeadSx}>Última atividade</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {mergedRows.map((row) => (
-                                  <TableRow key={row.adIdentifier}>
-                                    <TableCell sx={tableBodySx}>{row.adIdentifier}</TableCell>
-                                    <TableCell sx={tableBodySx} align="right">
-                                      {row.views.toLocaleString("pt-BR")}
-                                    </TableCell>
-                                    <TableCell sx={tableBodySx} align="right">
-                                      {row.clicks.toLocaleString("pt-BR")}
-                                    </TableCell>
-                                    <TableCell sx={tableBodySx} align="right">
-                                      {row.ctr.toFixed(2)}%
-                                    </TableCell>
-                                    <TableCell sx={tableBodySx}>
-                                      {formatOptionalDate(row.lastActivity)}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </TableContainer>
-                        </>
+                        <Box component="img" src={ad.imageUrl} alt={ad.name}
+                          sx={{ width: "100%", height: 180, objectFit: "cover", display: "block", backgroundColor: "rgba(255,255,255,0.04)" }} />
                       )}
-                    </Paper>
-
-                    <Paper
-                      sx={{
-                        p: 2,
-                        backgroundColor: "rgba(255,255,255,0.03)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        borderRadius: 3,
-                      }}
-                    >
-                      <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2 }}>
-                        Horários com mais atividade
-                      </Typography>
-
-                      {topHours.length === 0 ? (
-                        <Typography sx={{ color: "rgba(255,255,255,0.65)" }}>
-                          Sem atividade suficiente para montar ranking por hora.
-                        </Typography>
-                      ) : (
-                        <Box sx={{ display: "grid", gap: 2 }}>
-                          {topHours.map((item) => (
-                            <Box key={item.hour}>
-                              <Box
-                                sx={{
-                                  display: "flex",
-                                  flexDirection: { xs: "column", sm: "row" },
-                                  justifyContent: "space-between",
-                                  alignItems: { xs: "flex-start", sm: "center" },
-                                  gap: 0.6,
-                                  mb: 0.8,
-                                }}
-                              >
-                                <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: { xs: "0.95rem", sm: "1rem" } }}>
-                                  {String(item.hour).padStart(2, "0")}:00
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    color: "rgba(255,255,255,0.7)",
-                                    fontSize: { xs: "0.82rem", sm: "0.95rem" },
-                                    overflowWrap: "anywhere",
-                                  }}
-                                >
-                                  {item.views} views / {item.clicks} cliques
-                                </Typography>
-                              </Box>
-                              <LinearProgress
-                                variant="determinate"
-                                value={item.percentage}
-                                sx={{
-                                  height: 10,
-                                  borderRadius: 999,
-                                  backgroundColor: "rgba(255,255,255,0.08)",
-                                  "& .MuiLinearProgress-bar": {
-                                    backgroundColor: "rgb(255, 31, 33)",
-                                  },
-                                }}
-                              />
+                      <CardContent sx={{ p: "14px !important" }}>
+                        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 1, mb: 1.5 }}>
+                          <Box>
+                            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem", lineHeight: 1.3 }}>{ad.name}</Typography>
+                            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>{ad.advertiser}</Typography>
+                          </Box>
+                          <Chip label={`${ad.ctr.toFixed(2)}% CTR`} size="small"
+                            sx={{ color: "#fff", backgroundColor: "rgba(255,31,33,0.16)", border: "1px solid rgba(255,31,33,0.3)", fontSize: "0.7rem", flexShrink: 0 }} />
+                        </Box>
+                        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mb: 1.5 }}>
+                          {[
+                            { label: "Views", value: ad.views.toLocaleString("pt-BR") },
+                            { label: "Cliques", value: ad.clicks.toLocaleString("pt-BR") },
+                            { label: "CTR", value: `${ad.ctr.toFixed(2)}%` },
+                          ].map((m) => (
+                            <Box key={m.label} sx={{ background: "rgba(255,255,255,0.04)", borderRadius: 2, p: 1, textAlign: "center" }}>
+                              <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.68rem" }}>{m.label}</Typography>
+                              <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem" }}>{m.value}</Typography>
                             </Box>
                           ))}
                         </Box>
-                      )}
-                    </Paper>
-                  </Box>
-
-                  <Paper
-                    sx={{
-                      mt: 3,
-                      p: 2,
-                      backgroundColor: "rgba(255,255,255,0.03)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                      borderRadius: 3,
-                    }}
-                  >
-                    <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 1 }}>
-                      Anúncios listados
-                    </Typography>
-                
-
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: {
-                          xs: "1fr",
-                          sm: "repeat(2, 1fr)",
-                          xl: "repeat(3, 1fr)",
-                        },
-                        gap: 2,
-                      }}
-                    >
-                      {mergedRows.map((ad) => (
-                        <Card
-                          key={ad.id}
-                          sx={{
-                            backgroundColor: "rgba(255,255,255,0.03)",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            borderRadius: 3,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <Box
-                            component="img"
-                            src={ad.imageUrl}
-                            alt={ad.name}
-                            sx={{
-                              width: "100%",
-                              height: 220,
-                              objectFit: "cover",
-                              display: "block",
-                              backgroundColor: "rgba(255,255,255,0.04)",
-                            }}
-                          />
-
-                          <CardContent>
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "flex-start",
-                                gap: 1.5,
-                                mb: 1,
-                              }}
-                            >
-                              <Box>
-                                <Typography sx={{ color: "#fff", fontWeight: 700 }}>
-                                  {ad.name}
-                                </Typography>
-                                <Typography sx={{ color: "rgba(255,255,255,0.65)" }}>
-                                  {ad.advertiser}
-                                </Typography>
-                              </Box>
-
-                              <Chip
-                                label={`ID ${ad.adIdentifier}`}
-                                size="small"
-                                sx={{
-                                  color: "#fff",
-                                  backgroundColor: "rgba(255, 31, 33, 0.16)",
-                                  border: "1px solid rgba(255, 31, 33, 0.3)",
-                                }}
-                              />
-                            </Box>
-
-                            <Box
-                              sx={{
-                                display: "grid",
-                                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
-                                gap: 1,
-                                mb: 2,
-                              }}
-                            >
-                              <SummaryMetric
-                                label="Views"
-                                value={ad.views.toLocaleString("pt-BR")}
-                                icon={<VisibilityIcon sx={{ color: "#fff" }} />}
-                              />
-                              <SummaryMetric
-                                label="Cliques"
-                                value={ad.clicks.toLocaleString("pt-BR")}
-                                icon={<TouchAppIcon sx={{ color: "#fff" }} />}
-                              />
-                              <SummaryMetric
-                                label="CTR"
-                                value={`${ad.ctr.toFixed(2)}%`}
-                                icon={<CampaignIcon sx={{ color: "#fff" }} />}
-                              />
-                            </Box>
-
-                            <Typography
-                              sx={{
-                                color: "rgba(255,255,255,0.55)",
-                                fontSize: "0.85rem",
-                                overflowWrap: "anywhere",
-                              }}
-                            >
-                              Link destino: {ad.redirectUrl}
-                            </Typography>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </Box>
-                  </Paper>
-                </>
-              )}
-            </Box>
-          ) : (
-            <Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: { xs: "stretch", md: "center" },
-                  flexDirection: { xs: "column", md: "row" },
-                  gap: 2,
-                  mb: 3,
-                }}
-              >
-               
-
-                <TextField
-                  select
-                  label="Evento"
-                  value={selectedEventId}
-                  onChange={(e) => setSelectedEventId(e.target.value)}
-                  sx={{ ...textFieldSx, width: { xs: "100%", md: "auto" }, minWidth: { xs: "100%", md: 260 } }}
-                >
-                  <MenuItem value="all">Todos os eventos</MenuItem>
-                  {events.map((event) => (
-                    <MenuItem key={event.id} value={String(event.id)}>
-                      {event.title}
-                    </MenuItem>
+                        <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>
+                          Última atividade: {formatOptionalDate(ad.lastActivity)}
+                        </Typography>
+                      </CardContent>
+                    </Card>
                   ))}
-                </TextField>
-              </Box>
+                </Box>
+              </Paper>
 
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-                  gap: 3,
-                }}
-              >
+              {/* Horários com mais atividade */}
+              <Paper sx={{ p: 2.5, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2 }}>
+                  Horários com mais atividade
+                </Typography>
+                <Box sx={{ display: "grid", gap: 2 }}>
+                  {topHours.map((item) => (
+                    <Box key={item.hour}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.8 }}>
+                        <Typography sx={{ color: "#fff", fontWeight: 600 }}>
+                          {String(item.hour).padStart(2, "0")}:00
+                        </Typography>
+                        <Typography sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.88rem" }}>
+                          {item.views.toLocaleString("pt-BR")} views · {item.clicks.toLocaleString("pt-BR")} cliques
+                        </Typography>
+                      </Box>
+                      <LinearProgress variant="determinate" value={item.percentage}
+                        sx={{ height: 10, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.08)", "& .MuiLinearProgress-bar": { backgroundColor: "rgb(255, 31, 33)" } }} />
+                    </Box>
+                  ))}
+                </Box>
+              </Paper>
+
+              {/* ── Gráficos ── */}
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 3 }}>
                 <ChartPanel title="Visualizações por dia">
                   <ResponsiveContainer width="100%" height={280}>
                     <LineChart data={viewsChartData}>
@@ -1784,13 +1504,7 @@ export default function AdminAdsPage() {
                       <XAxis dataKey="day" tick={{ fill: "#d1d5db" }} />
                       <YAxis tick={{ fill: "#d1d5db" }} />
                       <Tooltip contentStyle={chartTooltipSx} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#ffcc01"
-                        strokeWidth={3}
-                        dot={{ fill: "#ffcc01", strokeWidth: 0 }}
-                      />
+                      <Line type="monotone" dataKey="value" stroke="#ffcc01" strokeWidth={3} dot={{ fill: "#ffcc01", strokeWidth: 0 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartPanel>
@@ -1802,13 +1516,7 @@ export default function AdminAdsPage() {
                       <XAxis dataKey="day" tick={{ fill: "#d1d5db" }} />
                       <YAxis tick={{ fill: "#d1d5db" }} />
                       <Tooltip contentStyle={chartTooltipSx} />
-                      <Line
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#4fc3f7"
-                        strokeWidth={3}
-                        dot={{ fill: "#4fc3f7", strokeWidth: 0 }}
-                      />
+                      <Line type="monotone" dataKey="value" stroke="#4fc3f7" strokeWidth={3} dot={{ fill: "#4fc3f7", strokeWidth: 0 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </ChartPanel>
@@ -1816,14 +1524,7 @@ export default function AdminAdsPage() {
                 <ChartPanel title="Distribuição de anúncios">
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
-                      <Pie
-                        data={adTypeChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={90}
-                        innerRadius={48}
-                        label
-                      >
+                      <Pie data={adTypeChartData} dataKey="value" nameKey="name" outerRadius={90} innerRadius={48} label>
                         {adTypeChartData.map((entry, index) => (
                           <Cell key={`${entry.name}-${index}`} fill={chartPalette[index % chartPalette.length]} />
                         ))}
@@ -1850,14 +1551,7 @@ export default function AdminAdsPage() {
                 <ChartPanel title="Gênero do público">
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
-                      <Pie
-                        data={genderChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={90}
-                        innerRadius={46}
-                        label
-                      >
+                      <Pie data={genderChartData} dataKey="value" nameKey="name" outerRadius={90} innerRadius={46} label>
                         {genderChartData.map((entry, index) => (
                           <Cell key={`${entry.name}-${index}`} fill={chartPalette[index % chartPalette.length]} />
                         ))}
@@ -1894,13 +1588,7 @@ export default function AdminAdsPage() {
                 <ChartPanel title="Profissões">
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
-                      <Pie
-                        data={jobsChartData}
-                        dataKey="value"
-                        nameKey="name"
-                        outerRadius={90}
-                        label
-                      >
+                      <Pie data={jobsChartData} dataKey="value" nameKey="name" outerRadius={90} label>
                         {jobsChartData.map((entry, index) => (
                           <Cell key={`${entry.name}-${index}`} fill={chartPalette[index % chartPalette.length]} />
                         ))}
@@ -1935,10 +1623,49 @@ export default function AdminAdsPage() {
                   </ResponsiveContainer>
                 </ChartPanel>
               </Box>
+
             </Box>
           )}
         </Paper>
       </Container>
+    </Box>
+  );
+}
+
+function BudgetRow({
+  label,
+  value,
+  highlight = false,
+  large = false,
+  extra = false,
+}: {
+  label: string;
+  value: string;
+  highlight?: boolean;
+  large?: boolean;
+  extra?: boolean;
+}) {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
+      <Typography
+        sx={{
+          color: "rgba(255,255,255,0.6)",
+          fontSize: large ? "0.9rem" : "0.82rem",
+          lineHeight: 1.4,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        sx={{
+          color: highlight ? "#fff" : extra ? "#ffcc01" : "rgba(255,255,255,0.9)",
+          fontWeight: highlight || large ? 700 : 500,
+          fontSize: large ? "1.05rem" : "0.85rem",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {value}
+      </Typography>
     </Box>
   );
 }

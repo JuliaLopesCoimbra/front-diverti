@@ -5,6 +5,7 @@ export interface AdminStandSessionBooking {
   user_id: number;
   user_name: string;
   user_email: string;
+  user_phone?: string | null;
   created_at: string;
   checked_in_at?: string | null;
   checked_in_by_admin_id?: number | null;

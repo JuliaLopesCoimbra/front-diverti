@@ -29,6 +29,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CampaignIcon from "@mui/icons-material/Campaign";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { EventResponse } from "@/app/services/events/eventAppService";
@@ -485,6 +486,23 @@ export default function HamburgerMenu({
                     secondaryTypographyProps={{
                       sx: { color: "rgba(255,255,255,0.6)" },
                     }}
+                  />
+                </ListItemButton>
+              </ListItem>
+              <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    router.push("/pages/admin/brindes");
+                    setOpen(false);
+                  }}
+                >
+                  <CardGiftcardIcon sx={{ mr: 2, color: "white" }} />
+                  <ListItemText
+                    primary="Brindes"
+                    secondary="Analytics de brindes por estande"
+                    primaryTypographyProps={{ fontWeight: 600 }}
+                    secondaryTypographyProps={{ sx: { color: "rgba(255,255,255,0.6)" } }}
                   />
                 </ListItemButton>
               </ListItem>
