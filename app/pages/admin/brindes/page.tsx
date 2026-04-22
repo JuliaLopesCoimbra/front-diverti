@@ -73,10 +73,10 @@ interface StandAnalytics {
   recentActivity: {
     time: string;
     type: "entrada" | "saida";
-    source: "manual" | "roleta";
+    source?: "manual" | "roleta";
     quantity: number;
     description: string;
-    prize: string;
+    prize?: string;
     user?: {
       name: string;
       email: string;
