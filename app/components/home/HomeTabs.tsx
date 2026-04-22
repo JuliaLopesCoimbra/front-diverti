@@ -22,7 +22,7 @@ export default function HomeTabs({ active, onChange }: Props) {
     { label: "Home", value: "home" },
     { label: "Evento", value: "eventos" },
     { label: "Estandes", value: "estandes" },
-    { label: "Roleta", value: "roleta" },
+    { label: "Brindes", value: "roleta" },
     { label: "Mapa", value: "mapa" },
     { label: "Line Up", value: "lineup" },
     { label: "Photo Finder", value: "foto" },

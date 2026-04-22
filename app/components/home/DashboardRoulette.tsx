@@ -232,7 +232,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
               },
             }}
           >
-            Girar roleta
+            Ganhar brinde
           </Button>
 
           {/* Brindes disponíveis */}

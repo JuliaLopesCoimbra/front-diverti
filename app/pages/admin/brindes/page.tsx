@@ -57,6 +57,11 @@ interface HistoryEntry {
   prize: string;
   operator: string;
   notes?: string;
+  user?: {
+    name: string;
+    email: string;
+    cpf: string;
+  };
 }
 
 interface StandAnalytics {
@@ -65,9 +70,43 @@ interface StandAnalytics {
   entradas: number;
   saidas: number;
   dailyActivity: { day: string; entradas: number; saidas: number }[];
-  recentActivity: { time: string; type: "entrada" | "saida"; quantity: number; description: string }[];
+  recentActivity: {
+    time: string;
+    type: "entrada" | "saida";
+    source: "manual" | "roleta";
+    quantity: number;
+    description: string;
+    prize: string;
+    user?: {
+      name: string;
+      email: string;
+      cpf: string;
+    };
+  }[];
   hourActivity: { hour: string; count: number }[];
   history: HistoryEntry[];
+}
+
+const rouletteUsers = [
+  { name: "Julia Costa", email: "julia.costa@email.com", cpf: "123.456.789-10" },
+  { name: "Marcos Lima", email: "marcos.lima@email.com", cpf: "234.567.890-11" },
+  { name: "Renata Souza", email: "renata.souza@email.com", cpf: "345.678.901-22" },
+  { name: "Thiago Alves", email: "thiago.alves@email.com", cpf: "456.789.012-33" },
+  { name: "Camila Rocha", email: "camila.rocha@email.com", cpf: "567.890.123-44" },
+  { name: "Bruno Nunes", email: "bruno.nunes@email.com", cpf: "678.901.234-55" },
+  { name: "Amanda Pereira", email: "amanda.pereira@email.com", cpf: "789.012.345-66" },
+];
+
+function normalizeRouletteEntry(entry: HistoryEntry): HistoryEntry {
+  if (entry.source !== "roleta" || entry.type !== "saida") {
+    return entry;
+  }
+  const user = rouletteUsers[Math.abs(entry.id) % rouletteUsers.length];
+  return {
+    ...entry,
+    quantity: 1,
+    user: entry.user ?? user,
+  };
 }
 
 // ─── Mock data ─────────────────────────────────────────────────────────────────
@@ -323,6 +362,11 @@ function HistoryRow({ entry, color }: { entry: HistoryEntry; color: string }) {
           <Typography sx={{ color: "#fff", fontSize: "0.88rem", fontWeight: 600, lineHeight: 1.3 }}>
             {entry.prize}
           </Typography>
+          {entry.user && (
+            <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.75rem", mt: 0.35, lineHeight: 1.45 }}>
+              {entry.user.name} · {entry.user.email} · CPF {entry.user.cpf}
+            </Typography>
+          )}
           {entry.notes && (
             <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mt: 0.25 }}>
               {entry.notes}
@@ -429,7 +473,17 @@ export default function BrindesPage() {
     : "0";
 
   // All history: newly added first, then mock
-  const allHistory = [...addedEntries, ...baseAnalytics.history];
+  const allHistory = [...addedEntries, ...baseAnalytics.history].map(normalizeRouletteEntry);
+  const recentHistory = allHistory.slice(0, 5);
+  const recentActivity = recentHistory.map((entry) => ({
+    time: entry.date === new Date().toLocaleDateString("pt-BR") ? `Hoje ${entry.time}` : `${entry.date} ${entry.time}`,
+    type: entry.type,
+    source: entry.source,
+    quantity: entry.quantity,
+    description: entry.source === "roleta" ? "Resgate via roleta" : "Movimentacao manual",
+    prize: entry.prize,
+    user: entry.user,
+  }));
   const filteredHistory = allHistory
     .filter(e => typeFilter   === "all" || e.type   === typeFilter)
     .filter(e => sourceFilter === "all" || e.source === sourceFilter);
@@ -696,7 +750,7 @@ export default function BrindesPage() {
                   <Paper sx={{ p: 2.5, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
                     <Typography variant="h6" sx={{ color: "#fff", fontWeight: 700, mb: 2 }}>Atividade recente</Typography>
                     <Box sx={{ display: "grid", gap: 1.5 }}>
-                      {analytics.recentActivity.map((item, i) => (
+                      {recentActivity.map((item, i) => (
                         <Box key={i}>
                           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -705,12 +759,19 @@ export default function BrindesPage() {
                                 <Typography sx={{ color: "#fff", fontSize: "0.88rem", fontWeight: 600 }}>
                                   {item.type === "entrada" ? `+${item.quantity} entrada` : `-${item.quantity} saida`}{item.quantity !== 1 ? "s" : ""}
                                 </Typography>
-                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>{item.description}</Typography>
+                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>
+                                  {item.description} · {item.prize}
+                                </Typography>
+                                {item.user && (
+                                  <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.74rem" }}>
+                                    {item.user.name} · {item.user.email} · CPF {item.user.cpf}
+                                  </Typography>
+                                )}
                               </Box>
                             </Box>
                             <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", whiteSpace: "nowrap" }}>{item.time}</Typography>
                           </Box>
-                          {i < analytics.recentActivity.length - 1 && (
+                          {i < recentActivity.length - 1 && (
                             <Divider sx={{ borderColor: "rgba(255,255,255,0.06)", mt: 1.5 }} />
                           )}
                         </Box>

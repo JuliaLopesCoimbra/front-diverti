@@ -326,7 +326,7 @@ export default function Roulette() {
           },
         }}
       >
-        {spinning ? "Girando..." : "Girar roleta"}
+        {spinning ? "Girando..." : "Girar"}
       </Button>
 
       {spinning && (

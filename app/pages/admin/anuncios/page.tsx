@@ -145,8 +145,8 @@ const professionOptions = [
 const initialDraft: AdDraft = {
   campaignName: "Brahma Open Bar - Sunset Premium",
   adType: "CPC",
-  creativeUrl: "/ads/3.png",
-  creativeName: "3.png",
+  creativeUrl: "/ads/brahma.png",
+  creativeName: "brahma.png",
   redirectUrl: "https://www.rockworld.com.br/anuncios/brahma-open-bar",
   eventId: "103",
   targetUnits: "8500",
@@ -1432,7 +1432,7 @@ export default function AdminAdsPage() {
                   Desempenho por anúncio
                 </Typography>
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" }, gap: 2 }}>
-                  {mergedRows.map((ad) => (
+                  {mergedRows.slice(0, 4).map((ad) => (
                     <Card key={ad.id} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
                       {/* Imagem ou vídeo do anúncio */}
                       {ad.imageUrl.endsWith(".mp4") ? (

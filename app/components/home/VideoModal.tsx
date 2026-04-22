@@ -9,37 +9,19 @@ interface Props {
 }
 
 const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTimeRef = useRef(0);
   const videoEndedRef = useRef(false);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Fullscreen + esconde BottomNav
+  // Esconde BottomNav enquanto o modal de video estiver aberto
   useEffect(() => {
-    const container = containerRef.current;
-
     // Esconde a barra de navegação inferior
     const bottomNav = document.querySelector("[data-fixed-bottom='true']") as HTMLElement | null;
     if (bottomNav) bottomNav.style.display = "none";
 
-    // Fullscreen (desktop / Android)
-    container?.requestFullscreen?.().catch(() => {});
-
-    const onFullscreenChange = () => {
-      if (!document.fullscreenElement && !videoEndedRef.current) {
-        container?.requestFullscreen?.().catch(() => {});
-      }
-    };
-
-    document.addEventListener("fullscreenchange", onFullscreenChange);
-
     return () => {
-      document.removeEventListener("fullscreenchange", onFullscreenChange);
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
       // Restaura a barra de navegação
       if (bottomNav) bottomNav.style.display = "";
     };
@@ -97,7 +79,6 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
 
   return (
     <Box
-      ref={containerRef}
       sx={{
         position: "fixed",
         inset: 0,
