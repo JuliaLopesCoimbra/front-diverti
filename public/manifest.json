@@ -8,15 +8,15 @@
     "theme_color": "#000000",
     "icons": [
       {
-        "src": "/logo/logo-android.png",
+        "src": "/logo/logo-rockinrio.jpg",
         "sizes": "192x192",
-        "type": "image/png",
+        "type": "image/jpeg",
         "purpose": "any"
       },
       {
-        "src": "/logo/logo-androidG.png",
+        "src": "/logo/logo-rockinrio.jpg",
         "sizes": "512x512",
-        "type": "image/png",
+        "type": "image/jpeg",
         "purpose": "maskable"
       }
     ]

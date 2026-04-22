@@ -24,8 +24,8 @@ export const metadata: Metadata = {
   title: "Rock In Rio - Application Event",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo/rockinrio.png", // Caminho do ícone
-    apple: "/logo/logo-apple.png",
+    icon: "/logo/logo-rockinrio.jpg", // Caminho do ícone
+    apple: "/logo/logo-rockinrio.jpg",
   },
   // define o nome curto que aparece abaixo do ícone na Home do iOS
   appleWebApp: {
