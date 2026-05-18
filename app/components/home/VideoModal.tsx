@@ -12,27 +12,36 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastTimeRef = useRef(0);
   const videoEndedRef = useRef(false);
+  const onCompleteRef = useRef(onComplete);
   const [paused, setPaused] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Mantém a ref do onComplete sempre atualizada sem re-executar o useEffect
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Esconde BottomNav enquanto o modal de video estiver aberto
   useEffect(() => {
-    // Esconde a barra de navegação inferior
     const bottomNav = document.querySelector("[data-fixed-bottom='true']") as HTMLElement | null;
     if (bottomNav) bottomNav.style.display = "none";
 
     return () => {
-      // Restaura a barra de navegação
       if (bottomNav) bottomNav.style.display = "";
     };
   }, []);
 
-  // Controles do vídeo
+  // Controles do vídeo — roda apenas na montagem
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    video.play().catch(() => {});
+    video.play().catch(() => {
+      // Autoplay bloqueado pelo browser (comum em mobile sem gesto direto)
+      setAutoplayBlocked(true);
+      setPaused(true);
+    });
 
     const onTimeUpdate = () => {
       if (video.currentTime > lastTimeRef.current) {
@@ -51,7 +60,7 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     const onEnded = () => {
       videoEndedRef.current = true;
       setProgress(100);
-      onComplete();
+      onCompleteRef.current();
     };
 
     video.addEventListener("timeupdate", onTimeUpdate);
@@ -63,7 +72,8 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("ended", onEnded);
     };
-  }, [onComplete]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleClick = () => {
     const video = videoRef.current;
@@ -71,6 +81,7 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     if (video.paused) {
       video.play();
       setPaused(false);
+      setAutoplayBlocked(false);
     } else {
       video.pause();
       setPaused(true);
@@ -131,37 +142,62 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
           ref={videoRef}
           src={src}
           playsInline
+          autoPlay
           disablePictureInPicture
           controlsList="nodownload nofullscreen noremoteplayback"
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
 
-        {/* Ícone de play quando pausado */}
-        {paused && (
+        {/* Overlay de play quando pausado ou autoplay bloqueado */}
+        {(paused || autoplayBlocked) && (
           <Box
             sx={{
               position: "absolute",
-              width: 72,
-              height: 72,
-              borderRadius: "50%",
-              background: "rgba(0,0,0,0.6)",
-              backdropFilter: "blur(4px)",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              justifyContent: "center",
+              gap: 1.5,
               pointerEvents: "none",
             }}
           >
             <Box
               sx={{
-                width: 0,
-                height: 0,
-                borderStyle: "solid",
-                borderWidth: "13px 0 13px 24px",
-                borderColor: "transparent transparent transparent #fff",
-                ml: "5px",
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                background: "rgba(0,0,0,0.6)",
+                backdropFilter: "blur(4px)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
-            />
+            >
+              <Box
+                sx={{
+                  width: 0,
+                  height: 0,
+                  borderStyle: "solid",
+                  borderWidth: "13px 0 13px 24px",
+                  borderColor: "transparent transparent transparent #fff",
+                  ml: "5px",
+                }}
+              />
+            </Box>
+            {autoplayBlocked && (
+              <Typography
+                sx={{
+                  color: "#fff",
+                  fontSize: "0.9rem",
+                  fontWeight: 600,
+                  background: "rgba(0,0,0,0.55)",
+                  px: 2,
+                  py: 0.5,
+                  borderRadius: 2,
+                }}
+              >
+                Toque para iniciar o vídeo
+              </Typography>
+            )}
           </Box>
         )}
       </Box>

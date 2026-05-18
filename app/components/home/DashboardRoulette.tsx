@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Button, Card, CardContent, Skeleton, Typography } from "@mui/material";
 import AdBanner from "@/app/components/ads/AdBanner";
@@ -68,6 +68,10 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
   }, [eventId]);
 
   const spinsUsed = spinCount ?? 0;
+
+  const handleVideoComplete = useCallback(() => {
+    router.push(`/pages/user/roulette/${eventId}`);
+  }, [router, eventId]);
 
   const midnightLabel = useMemo(() => {
     const midnight = new Date();
@@ -382,9 +386,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
       {showVideo && (
         <VideoModal
           src="/video/coca.mp4"
-          onComplete={() => {
-            router.push(`/pages/user/roulette/${eventId}`);
-          }}
+          onComplete={handleVideoComplete}
         />
       )}
     </>

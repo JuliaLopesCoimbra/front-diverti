@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Roboto, Inter } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from './context/ToastContext';
@@ -24,21 +24,21 @@ export const metadata: Metadata = {
   title: "Rock In Rio - Application Event",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo/logo-rockinrio.jpg", // Caminho do ícone
+    icon: "/logo/logo-rockinrio.jpg",
     apple: "/logo/logo-rockinrio.jpg",
   },
-  // define o nome curto que aparece abaixo do ícone na Home do iOS
   appleWebApp: {
     title: "N1 App",
     statusBarStyle: "default",
     capable: true,
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -48,9 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-      </head>
+      <head />
       <body
         className={`${roboto.variable} ${inter.variable} antialiased`}
         style={{ fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
