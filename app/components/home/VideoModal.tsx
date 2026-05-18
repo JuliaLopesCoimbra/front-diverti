@@ -13,6 +13,7 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
   const lastTimeRef = useRef(0);
   const videoEndedRef = useRef(false);
   const onCompleteRef = useRef(onComplete);
+  const playStartedRef = useRef(false); // true após o vídeo realmente começar a tocar
   const [paused, setPaused] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -22,13 +23,32 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     onCompleteRef.current = onComplete;
   }, [onComplete]);
 
-  // Esconde BottomNav enquanto o modal de video estiver aberto
+  // Trava scroll do body e esconde BottomNav enquanto o modal de video estiver aberto
   useEffect(() => {
     const bottomNav = document.querySelector("[data-fixed-bottom='true']") as HTMLElement | null;
     if (bottomNav) bottomNav.style.display = "none";
 
+    // Salva posição atual do scroll e trava o body (fix para iOS Safari)
+    const scrollY = window.scrollY;
+    const body = document.body;
+    body.style.position = "fixed";
+    body.style.top = `-${scrollY}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.overflow = "hidden";
+    body.style.touchAction = "none";
+
     return () => {
       if (bottomNav) bottomNav.style.display = "";
+
+      // Restaura scroll do body na posição exata que estava
+      body.style.position = "";
+      body.style.top = "";
+      body.style.left = "";
+      body.style.right = "";
+      body.style.overflow = "";
+      body.style.touchAction = "";
+      window.scrollTo(0, scrollY);
     };
   }, []);
 
@@ -37,11 +57,11 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     const video = videoRef.current;
     if (!video) return;
 
-    video.play().catch(() => {
-      // Autoplay bloqueado pelo browser (comum em mobile sem gesto direto)
-      setAutoplayBlocked(true);
-      setPaused(true);
-    });
+    const onPlay = () => {
+      playStartedRef.current = true;
+      setPaused(false);
+      setAutoplayBlocked(false);
+    };
 
     const onTimeUpdate = () => {
       if (video.currentTime > lastTimeRef.current) {
@@ -58,19 +78,41 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     };
 
     const onEnded = () => {
+      // Guard: só chama onComplete se o vídeo realmente tocou por pelo menos 1 segundo
+      // Previne navegação prematura por ended disparado antes do vídeo carregar
+      if (!playStartedRef.current || video.currentTime < 1) return;
       videoEndedRef.current = true;
       setProgress(100);
       onCompleteRef.current();
     };
 
+    const onError = () => {
+      // Vídeo falhou ao carregar — mostra opção de tocar manualmente
+      setAutoplayBlocked(true);
+      setPaused(true);
+    };
+
+    video.addEventListener("play", onPlay);
     video.addEventListener("timeupdate", onTimeUpdate);
     video.addEventListener("seeking", onSeeking);
     video.addEventListener("ended", onEnded);
+    video.addEventListener("error", onError);
+
+    // Tenta iniciar o vídeo (único ponto de play — sem autoPlay no atributo)
+    const playPromise = video.play();
+    if (playPromise) {
+      playPromise.catch(() => {
+        setAutoplayBlocked(true);
+        setPaused(true);
+      });
+    }
 
     return () => {
+      video.removeEventListener("play", onPlay);
       video.removeEventListener("timeupdate", onTimeUpdate);
       video.removeEventListener("seeking", onSeeking);
       video.removeEventListener("ended", onEnded);
+      video.removeEventListener("error", onError);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -79,7 +121,7 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
-      video.play();
+      video.play().catch(() => {});
       setPaused(false);
       setAutoplayBlocked(false);
     } else {
@@ -142,7 +184,6 @@ const VideoModal: React.FC<Props> = ({ src, onComplete }) => {
           ref={videoRef}
           src={src}
           playsInline
-          autoPlay
           disablePictureInPicture
           controlsList="nodownload nofullscreen noremoteplayback"
           style={{ width: "100%", height: "100%", objectFit: "cover" }}
