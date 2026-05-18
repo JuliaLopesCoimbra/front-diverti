@@ -407,7 +407,6 @@ const HomeContent: React.FC = () => {
         }
       } catch {
         setEventsLoaded(true);
-        router.push("/");
       }
     };
 
@@ -436,7 +435,7 @@ const HomeContent: React.FC = () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [router, isAdmin, authReady, checkAndUpdateEvents, activeTab]);
+  }, [router, isAdmin, authReady, checkAndUpdateEvents]);
 
   // Popup de permissão de notificações na tela inicial (uma vez por período ou até ativar)
   useEffect(() => {

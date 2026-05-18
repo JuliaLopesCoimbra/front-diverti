@@ -336,10 +336,20 @@ export default function NewsFeed({ eventId, event }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, offset]);
 
+  // Prefetch das páginas de news visíveis no feed
+  useEffect(() => {
+    news.forEach((item) => {
+      router.prefetch(`/pages/news/${item.id}?eventId=${eventId}`);
+    });
+  }, [news, eventId, router]);
+
   const [featured, ...others] = news;
 
-  const handleNewsClick = (newsId: number) => {
-    router.push(`/pages/news/${newsId}?eventId=${eventId}`);
+  const handleNewsClick = (newsItem: NewsResponse) => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem(`news-preview-${newsItem.id}`, JSON.stringify(newsItem));
+    }
+    router.push(`/pages/news/${newsItem.id}?eventId=${eventId}`);
   };
 
   const handleUpdate = () => {
@@ -407,7 +417,7 @@ export default function NewsFeed({ eventId, event }: Props) {
         <>
           {featured && (
             <Card
-              onClick={() => handleNewsClick(featured.id)}
+              onClick={() => handleNewsClick(featured)}
               sx={{
                 backgroundColor: "transparent",
                 boxShadow: "none",
@@ -493,7 +503,7 @@ export default function NewsFeed({ eventId, event }: Props) {
             {others.map((item, index) => (
               <Box key={item.id}>
                 <Card
-                  onClick={() => handleNewsClick(item.id)}
+                  onClick={() => handleNewsClick(item)}
                   sx={{
                     display: "flex",
                     gap: 2,

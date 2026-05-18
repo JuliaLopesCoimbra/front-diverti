@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   Box,
@@ -61,6 +61,7 @@ export default function NewsDetailPage() {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
+  const hasPreviewRef = useRef(false);
   const [commentText, setCommentText] = useState("");
   const [submittingComment, setSubmittingComment] = useState(false);
   const [liking, setLiking] = useState(false);
@@ -95,7 +96,8 @@ export default function NewsDetailPage() {
   const loadNewsDetails = async () => {
     if (!newsId) return;
 
-    setLoading(true);
+    // Só mostra skeleton se não temos preview do feed
+    if (!hasPreviewRef.current) setLoading(true);
     try {
       let data: NewsDetailsResponse;
       
@@ -193,6 +195,27 @@ export default function NewsDetailPage() {
       setLoading(false);
     }
   };
+
+  // Carrega preview do feed imediatamente (sem skeleton)
+  useEffect(() => {
+    if (!newsId || typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem(`news-preview-${newsId}`);
+      if (raw) {
+        const preview = JSON.parse(raw);
+        setNews({
+          ...preview,
+          likes: { count: 0, user_liked: false },
+          comments: [],
+          comments_count: 0,
+        } as NewsDetailsResponse);
+        setLoading(false);
+        hasPreviewRef.current = true;
+        sessionStorage.removeItem(`news-preview-${newsId}`);
+      }
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newsId]);
 
   useEffect(() => {
     if (newsId) {
