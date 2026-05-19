@@ -1,12 +1,12 @@
 "use client";
-import { useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import React, {
   createContext,
   useContext,
   useState,
   ReactNode,
   useEffect,
+  useCallback,
+  useMemo,
 } from "react";
 import { jwtDecode } from "jwt-decode";
 interface TokenPayload {
@@ -69,7 +69,6 @@ function getInitialAuthState() {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const router = useRouter();
   const initialState = getInitialAuthState();
 
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -103,11 +102,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       setIsAuthenticated(false);
       setRole(null);
       setAuthVersion((v) => v + 1);
-      router.replace("/");
+      // Não usa router.replace aqui — pages protegidas detectam isAuthenticated=false e redirecionam
     };
     window.addEventListener("auth:force-logout", handleForceLogout);
     return () => window.removeEventListener("auth:force-logout", handleForceLogout);
-  }, [router]);
+  }, []);
   
 const login = useCallback(
   (accessToken: string, refreshToken: string) => {
@@ -134,7 +133,7 @@ const login = useCallback(
   []
 );
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("access_token");
     document.cookie =
       "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
@@ -143,7 +142,7 @@ const login = useCallback(
     setRole(null);
 
     setAuthVersion((v) => v + 1);
-  };
+  }, []);
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
@@ -169,26 +168,42 @@ const login = useCallback(
 
   
 
+  const contextValue = useMemo(() => ({
+    isAuthenticated,
+    role,
+    isAdminMaster,
+    isSubadmin,
+    isColunista,
+    isAdmin,
+    canCreatePost,
+    canApprovePost,
+    canCreateEvent,
+    canInviteSubadmin,
+    canInviteColunista,
+    authReady,
+    authVersion,
+    login,
+    logout,
+  }), [
+    isAuthenticated,
+    role,
+    isAdminMaster,
+    isSubadmin,
+    isColunista,
+    isAdmin,
+    canCreatePost,
+    canApprovePost,
+    canCreateEvent,
+    canInviteSubadmin,
+    canInviteColunista,
+    authReady,
+    authVersion,
+    login,
+    logout,
+  ]);
+
   return (
-    <AuthContext.Provider
-      value={{
-        isAuthenticated,
-        role,
-        isAdminMaster,
-        isSubadmin,
-        isColunista,
-        isAdmin,
-        canCreatePost,
-        canApprovePost,
-        canCreateEvent,
-        canInviteSubadmin,
-        canInviteColunista,
-        authReady,
-        authVersion,
-        login,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
