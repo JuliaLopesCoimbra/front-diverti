@@ -191,7 +191,7 @@ export const deleteNews = async (
 // Endpoints para posts pendentes
 export const getPendingPosts = async (eventId?: number): Promise<NewsResponse[]> => {
   const params = eventId ? { event_id: eventId } : {};
-  const response = await api.get("/admin/events/news/pending", { params });
+  const response = await api.get("/admin/events/news/pending", { params, _background: true } as any);
   return response.data as NewsResponse[];
 };
 

@@ -45,7 +45,9 @@ export const getNotifications = async (
 };
 
 export const getUnreadCount = async (): Promise<number> => {
-  const response = await api.get<UnreadCountResponse>("/notifications/unread/count");
+  const response = await api.get<UnreadCountResponse>("/notifications/unread/count", {
+    _background: true,
+  } as any);
   return response.data.unread_count;
 };
 

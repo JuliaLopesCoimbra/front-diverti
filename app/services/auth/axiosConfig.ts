@@ -84,7 +84,9 @@ api.interceptors.response.use(
 
       if (!refreshToken) {
         localStorage.removeItem("access_token");
-        window.dispatchEvent(new CustomEvent("auth:force-logout"));
+        if (!originalRequest._background) {
+          window.dispatchEvent(new CustomEvent("auth:force-logout"));
+        }
         return Promise.reject(error);
       }
 
@@ -127,7 +129,9 @@ api.interceptors.response.use(
         document.cookie =
           "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
-        window.dispatchEvent(new CustomEvent("auth:force-logout"));
+        if (!originalRequest._background) {
+          window.dispatchEvent(new CustomEvent("auth:force-logout"));
+        }
         return Promise.reject(err);
       } finally {
         isRefreshing = false;
