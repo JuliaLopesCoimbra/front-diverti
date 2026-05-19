@@ -516,7 +516,7 @@ const HomeContent: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...pageBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header Skeleton */}
@@ -618,7 +618,7 @@ const HomeContent: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...pageBackgroundSx,
-          paddingBottom: "72px", // espaço pro rodapé
+          paddingBottom: "88px", // espaço pro rodapé
         }}
       >
         {/* Header com nome, foto e data */}
@@ -710,7 +710,7 @@ const Home: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         <Box

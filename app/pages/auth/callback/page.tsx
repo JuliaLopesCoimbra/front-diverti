@@ -38,7 +38,7 @@ function AuthCallbackContent() {
       className="dashboard-page-background"
       style={{
         minHeight: "100vh",
-        paddingBottom: "72px",
+        paddingBottom: "88px",
       }}
     >
       {/* Header Skeleton */}
@@ -142,7 +142,7 @@ export default function AuthCallbackPage() {
           className="dashboard-page-background"
           style={{
             minHeight: "100vh",
-            paddingBottom: "72px",
+            paddingBottom: "88px",
           }}
         >
           {/* Header Skeleton */}

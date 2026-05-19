@@ -154,7 +154,7 @@ export default function ProductDetailsPage() {
           color: "#fff",
           display: "flex",
           flexDirection: "column",
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header */}

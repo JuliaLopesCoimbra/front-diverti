@@ -339,7 +339,7 @@ export default function MyPhotosPage() {
         sx={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header Skeleton */}
@@ -433,7 +433,7 @@ export default function MyPhotosPage() {
         sx={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header Skeleton */}
@@ -527,7 +527,7 @@ export default function MyPhotosPage() {
         sx={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header com nome, foto e data */}

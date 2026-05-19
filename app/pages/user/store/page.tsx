@@ -104,44 +104,52 @@ export default function StorePage() {
     }
   }, [showToast]);
 
-  // Função para verificar e atualizar eventos
+  const currentEventRef = useRef<EventResponse | null>(null);
+  const lastCheckTimeRef = useRef(0);
+  const isCheckingRef = useRef(false);
+
+  // Função para verificar e atualizar eventos — sem currentEvent como dependência
   const checkAndUpdateEvents = useCallback(async () => {
+    const now = Date.now();
+    if (isCheckingRef.current || now - lastCheckTimeRef.current < 30_000) return;
+    isCheckingRef.current = true;
+    lastCheckTimeRef.current = now;
     try {
       const data = await getEvents();
       setEvents(data);
-      
-      if (currentEvent?.id) {
-        const updatedEvent = data.find((event) => event.id === currentEvent.id);
-        
-        // Se o evento não foi encontrado (foi deletado), troca para um ativo
+
+      const cur = currentEventRef.current;
+      if (cur?.id) {
+        const updatedEvent = data.find((e) => e.id === cur.id);
         if (!updatedEvent) {
-          const activeEvent = data.find((event) => event.is_active);
-          if (activeEvent) {
-            setCurrentEvent(activeEvent);
-            localStorage.setItem(STORAGE_KEY, activeEvent.id.toString());
-          } else if (data.length > 0) {
-            setCurrentEvent(data[0]);
-            localStorage.setItem(STORAGE_KEY, data[0].id.toString());
-          } else {
-            setCurrentEvent(null);
-            localStorage.removeItem(STORAGE_KEY);
-          }
-        }
-        // Se o evento atual foi desativado e o usuário NÃO é admin/subadmin, troca para um ativo
-        else if (!updatedEvent.is_active && !isAdmin) {
-          const activeEvent = data.find((event) => event.is_active);
+          const activeEvent = data.find((e) => e.is_active);
+          const next = activeEvent || (data.length > 0 ? data[0] : null);
+          setCurrentEvent(next);
+          if (next) localStorage.setItem(STORAGE_KEY, next.id.toString());
+          else localStorage.removeItem(STORAGE_KEY);
+        } else if (!updatedEvent.is_active && !isAdmin) {
+          const activeEvent = data.find((e) => e.is_active);
           if (activeEvent) {
             setCurrentEvent(activeEvent);
             localStorage.setItem(STORAGE_KEY, activeEvent.id.toString());
           }
-        } else if (updatedEvent) {
-          setCurrentEvent(updatedEvent);
+        } else {
+          setCurrentEvent((prev) =>
+            prev && prev.id === updatedEvent.id && prev.is_active === updatedEvent.is_active
+              ? prev
+              : updatedEvent
+          );
         }
       }
     } catch (error) {
       console.error("Erro ao verificar eventos:", error);
+    } finally {
+      isCheckingRef.current = false;
     }
-  }, [currentEvent, isAdmin]);
+  }, [isAdmin]);
+
+  // Mantém a ref sincronizada com o state para uso dentro de callbacks
+  useEffect(() => { currentEventRef.current = currentEvent; }, [currentEvent]);
 
   // Função para lidar com seleção de evento
   const handleSelectEvent = useCallback((event: EventResponse) => {
@@ -168,7 +176,8 @@ export default function StorePage() {
       .finally(() => {
         setLoadingEvents(false);
       });
-  }, [isAuthenticated, router, updateCurrentEventFromStorage]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   // Carrega produtos quando o evento atual muda
   useEffect(() => {
@@ -207,46 +216,33 @@ export default function StorePage() {
     };
   }, [loadingMore, loadingProducts, hasMore, products.length, currentEvent?.id, loadProducts]);
 
-  // Escuta mudanças no localStorage (quando o evento é alterado em outra aba/componente)
+  // Escuta mudanças no localStorage vindas de outras abas
   useEffect(() => {
     const handleStorageChange = () => {
       const savedEventId = localStorage.getItem(STORAGE_KEY);
-      if (savedEventId) {
-        const savedId = parseInt(savedEventId, 10);
-        if (currentEvent?.id !== savedId) {
-          const event = events.find((e) => e.id === savedId);
-          if (event) {
-            setCurrentEvent(event);
-          }
-        }
+      if (!savedEventId) return;
+      const savedId = parseInt(savedEventId, 10);
+      if (currentEventRef.current?.id !== savedId) {
+        setEvents((prev) => {
+          const event = prev.find((e) => e.id === savedId);
+          if (event) setCurrentEvent(event);
+          return prev;
+        });
       }
     };
-
     window.addEventListener("storage", handleStorageChange);
-    // Também verifica periodicamente (para mudanças na mesma aba)
-    const interval = setInterval(handleStorageChange, 1000);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
-  }, [currentEvent, events]);
-
-  // Verifica eventos quando a página fica visível
+  // Verifica eventos quando a página fica visível (throttle 30s)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        checkAndUpdateEvents();
-      }
+      if (document.visibilityState === "visible") checkAndUpdateEvents();
     };
-
-    const handleFocus = () => {
-      checkAndUpdateEvents();
-    };
+    const handleFocus = () => checkAndUpdateEvents();
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", handleFocus);
-
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleFocus);
@@ -288,7 +284,7 @@ export default function StorePage() {
         sx={{
           ...dashboardBackgroundSx,
           minHeight: "100vh",
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header */}

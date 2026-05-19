@@ -1,5 +1,6 @@
 "use client";
 import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import React, {
   createContext,
   useContext,
@@ -68,6 +69,7 @@ function getInitialAuthState() {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const router = useRouter();
   const initialState = getInitialAuthState();
 
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -92,6 +94,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     setAuthReady(true);
   }, []);
+
+  /* Escuta evento do interceptor axios para logout sem hard reload */
+  useEffect(() => {
+    const handleForceLogout = () => {
+      localStorage.removeItem("access_token");
+      document.cookie = "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+      setIsAuthenticated(false);
+      setRole(null);
+      setAuthVersion((v) => v + 1);
+      router.replace("/");
+    };
+    window.addEventListener("auth:force-logout", handleForceLogout);
+    return () => window.removeEventListener("auth:force-logout", handleForceLogout);
+  }, [router]);
   
 const login = useCallback(
   (accessToken: string, refreshToken: string) => {

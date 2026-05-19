@@ -550,7 +550,7 @@ export default function LikedPostsPage() {
           style={{
             minHeight: "100vh",
             ...dashboardBackgroundSx,
-            paddingBottom: "72px",
+            paddingBottom: "88px",
           }}
         >
           <Box
@@ -601,7 +601,7 @@ export default function LikedPostsPage() {
         style={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "72px",
+          paddingBottom: "88px",
         }}
       >
         {/* Header com nome, foto e data */}

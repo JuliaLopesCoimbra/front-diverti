@@ -315,7 +315,7 @@ const NotificationsPage: React.FC = () => {
       sx={{
         minHeight: "100vh",
         ...dashboardBackgroundSx,
-        paddingBottom: "72px",
+        paddingBottom: "88px",
       }}
     >
       <Container maxWidth="md" sx={{ paddingTop: { xs: 1, sm: 2 }, paddingBottom: 4, width: "100%", maxWidth: "100%", px: { xs: 1, sm: 2 } }}>

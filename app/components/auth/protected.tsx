@@ -29,7 +29,8 @@ const ProtectedPage: React.FC = () => {
       console.error('Erro ao decodificar o token:', err); // Logando o erro para depuração
       router.push('/');
     }
-  }, [isAuthenticated, router]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   if (!isAuthenticated) {
     return null; // ou um carregando
