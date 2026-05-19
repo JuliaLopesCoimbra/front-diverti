@@ -89,9 +89,8 @@ export default function HomeHeader({
     };
 
     fetchUnreadCount();
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(fetchUnreadCount, 30000);
-    
+    // Sem polling periódico — busca apenas uma vez ao montar
+
     // Escuta evento de remoção de notificação
     const handleNotificationRemoved = (event: CustomEvent) => {
       const { commentId, type } = event.detail;
@@ -166,9 +165,8 @@ export default function HomeHeader({
     };
     
     window.addEventListener('notificationRemoved', handleNotificationRemoved as EventListener);
-    
+
     return () => {
-      clearInterval(interval);
       window.removeEventListener('notificationRemoved', handleNotificationRemoved as EventListener);
     };
   }, [isAuthenticated]);

@@ -418,39 +418,11 @@ const HomeContent: React.FC = () => {
     // Carrega eventos e perfil em paralelo
     Promise.all([fetchEvents(), fetchProfile()]);
 
-    const MIN_CHECK_INTERVAL = 30_000;
-
-    // Verifica quando a página/aba fica visível
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        const now = Date.now();
-        if (now - lastCheckTimeRef.current > MIN_CHECK_INTERVAL) {
-          lastCheckTimeRef.current = now;
-          checkAndUpdateEvents();
-        }
-      }
-    };
-
-    // Verifica quando a janela ganha foco
-    const handleFocus = () => {
-      const now = Date.now();
-      if (now - lastCheckTimeRef.current > MIN_CHECK_INTERVAL) {
-        lastCheckTimeRef.current = now;
-        checkAndUpdateEvents();
-      }
-    };
-
-    // Adiciona listeners
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
     // Cleanup
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
       window.removeEventListener("scroll", onScroll);
     };
-  }, [router, isAdmin, authReady, checkAndUpdateEvents]);
+  }, [router, isAdmin, authReady]);
 
   // Popup de permissão de notificações na tela inicial (uma vez por período ou até ativar)
   useEffect(() => {

@@ -357,9 +357,8 @@ export default function NewsFeed({ eventId, event }: Props) {
   };
 
   return (
-    <Box 
+    <Box
       padding={{ xs: 2, md: 3, lg: 4 }}
-      key={authVersion}
       sx={{
         maxWidth: { xs: "100%", md: "800px", lg: "900px" },
         margin: { xs: 0, md: "0 auto" },

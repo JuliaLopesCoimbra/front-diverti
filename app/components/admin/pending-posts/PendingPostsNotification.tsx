@@ -29,9 +29,7 @@ export default function PendingPostsNotification({ eventId }: Props) {
 
   useEffect(() => {
     loadPendingCount();
-    // Atualiza a cada 30 segundos
-    const interval = setInterval(loadPendingCount, 30000);
-    return () => clearInterval(interval);
+    // Sem polling periódico — busca apenas uma vez ao montar
   }, [eventId]);
 
   const handleClick = async () => {

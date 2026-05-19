@@ -139,50 +139,10 @@ export default function MyPhotosPage() {
     // Escuta mudanças no localStorage de outras abas/janelas
     window.addEventListener("storage", handleStorageChange);
 
-    // Também verifica mudanças na mesma aba (polling mais eficiente)
-    const checkInterval = setInterval(() => {
-      const savedEventId = localStorage.getItem(STORAGE_KEY);
-      if (savedEventId) {
-        const savedId = parseInt(savedEventId, 10);
-        if (currentEvent?.id !== savedId) {
-          const savedEvent = events.find((event) => event.id === savedId);
-          if (savedEvent) {
-            handleSelectEvent(savedEvent);
-          }
-        }
-      }
-      // Verifica se o evento atual ainda existe (não foi deletado)
-      if (currentEvent?.id) {
-        const eventStillExists = events.find((event) => event.id === currentEvent.id);
-        if (!eventStillExists) {
-          checkAndUpdateEvents();
-        }
-      }
-    }, 1000); // Verifica a cada 1 segundo (mais eficiente)
-
-    // Verifica quando a página/aba fica visível
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        checkAndUpdateEvents();
-      }
-    };
-
-    // Verifica quando a janela ganha foco
-    const handleFocus = () => {
-      checkAndUpdateEvents();
-    };
-
-    // Adiciona listeners
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      clearInterval(checkInterval);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
     };
-  }, [isAuthenticated, events, currentEvent?.id, handleSelectEvent, checkAndUpdateEvents]);
+  }, [isAuthenticated, events, currentEvent?.id, handleSelectEvent]);
 
   const handleSelectOption = (option: string) => {
     setViewMode(option as ViewMode);

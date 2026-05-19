@@ -234,20 +234,7 @@ export default function StorePage() {
     return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
 
-  // Verifica eventos quando a página fica visível (throttle 30s)
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") checkAndUpdateEvents();
-    };
-    const handleFocus = () => checkAndUpdateEvents();
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("focus", handleFocus);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [checkAndUpdateEvents]);
+  // Sem polling de visibilidade/foco para evitar recarregamentos
 
   // Controla animações quando a página carrega
   useEffect(() => {
