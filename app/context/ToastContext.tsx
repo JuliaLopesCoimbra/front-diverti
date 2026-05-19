@@ -1,7 +1,7 @@
 // /app/context/ToastContext.tsx
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { Snackbar, Alert } from '@mui/material';
 
 interface ToastContextType {
@@ -27,15 +27,15 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [message, setMessage] = useState<string>('');
   const [severity, setSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
 
-  const showToast = (message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
+  const showToast = useCallback((message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
     setMessage(message);
     setSeverity(severity);
     setOpen(true);
-  };
+  }, []);
 
-  const closeToast = () => {
+  const closeToast = useCallback(() => {
     setOpen(false);
-  };
+  }, []);
 
   return (
    <ToastContext.Provider value={{ open, message, severity, showToast, closeToast }}>

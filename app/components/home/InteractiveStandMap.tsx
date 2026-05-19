@@ -112,6 +112,9 @@ export default function InteractiveStandMap({ eventId }: Props) {
   const [stands, setStands] = useState<UserEventStand[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const showToastRef = useRef(showToast);
+  useEffect(() => { showToastRef.current = showToast; }, [showToast]);
+
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [selectedStand, setSelectedStand] = useState<UserEventStand | null>(null);
 
@@ -130,11 +133,11 @@ export default function InteractiveStandMap({ eventId }: Props) {
         err && typeof err === "object" && "response" in err
           ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail
           : undefined;
-      showToast(detail || "Erro ao carregar estandes", "error");
+      showToastRef.current(detail || "Erro ao carregar estandes", "error");
     } finally {
       setLoading(false);
     }
-  }, [eventId, showToast]);
+  }, [eventId]);
 
   useEffect(() => { loadData(); }, [loadData]);
 

@@ -6,18 +6,51 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
   const LAST_PATH_KEY = "bottomNavLastPath";
 
+  const [visible, setVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(LAST_PATH_KEY, pathname);
     }
   }, [pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (ticking.current) return;
+      ticking.current = true;
+
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const delta = currentY - lastScrollY.current;
+
+        if (currentY < 60) {
+          // Perto do topo: sempre mostra
+          setVisible(true);
+        } else if (delta > 6) {
+          // Rolando para baixo: esconde
+          setVisible(false);
+        } else if (delta < -6) {
+          // Rolando para cima: mostra
+          setVisible(true);
+        }
+
+        lastScrollY.current = currentY;
+        ticking.current = false;
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const items = [
     { path: "/pages/user/home", icon: <HomeIcon /> },
@@ -31,64 +64,83 @@ export default function BottomNav() {
       data-fixed-bottom="true"
       sx={{
         position: "fixed",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        width: "100%",
-        height: "calc(64px + env(safe-area-inset-bottom))",
-        minHeight: 64,
-        backgroundColor: "#0a0a0a",
-        display: "flex",
-        justifyContent: "space-around",
-        alignItems: "center",
-        borderTop: "1px solid rgba(255,255,255,0.12)",
+        bottom: "calc(24px + env(safe-area-inset-bottom))",
+        left: "50%",
+        transform: visible
+          ? "translateX(-50%) translateY(0)"
+          : "translateX(-50%) translateY(calc(100% + 40px))",
+        opacity: visible ? 1 : 0,
+        transition: "transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease",
         zIndex: 9999,
-        transform: "translateZ(0)",
-        WebkitTransform: "translateZ(0)",
-        willChange: "transform",
-        WebkitBackfaceVisibility: "hidden",
-        paddingBottom: "env(safe-area-inset-bottom)",
-        boxSizing: "border-box",
-        margin: 0,
-        flexShrink: 0,
-        touchAction: "none",
-        pointerEvents: "auto",
+        pointerEvents: visible ? "auto" : "none",
       }}
     >
-      {items.map((item) => {
-        const isActive = pathname === item.path;
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          backgroundColor: "rgba(8, 8, 8, 0.55)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: "999px",
+          padding: "8px 10px",
+          boxShadow:
+            "0 8px 40px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08)",
+        }}
+      >
+        {items.map((item) => {
+          const isActive = pathname === item.path;
 
-        return (
-          <IconButton
-            key={item.path}
-            onClick={() => {
-              if (item.path === "/pages/user/home" && typeof window !== "undefined") {
-                // Força restaurar aba/tela anterior da home
-                sessionStorage.setItem("forceHomeRestore", "1");
-                const lastPath = sessionStorage.getItem(LAST_PATH_KEY);
-                if (window.history.length > 1 && lastPath && lastPath !== pathname) {
-                  router.back();
-                  return;
+          return (
+            <IconButton
+              key={item.path}
+              onClick={() => {
+                if (item.path === "/pages/user/home" && typeof window !== "undefined") {
+                  sessionStorage.setItem("forceHomeRestore", "1");
+                  const lastPath = sessionStorage.getItem(LAST_PATH_KEY);
+                  if (window.history.length > 1 && lastPath && lastPath !== pathname) {
+                    router.back();
+                    return;
+                  }
                 }
-              }
-              router.push(item.path);
-            }}
-            sx={{
-              color: isActive ? "primary.main" : "rgba(255, 31, 33, 0.75)",
-              "& svg": {
-                fontSize: isActive ? 28 : 24,
-              },
-              "&:hover": {
-                color: "primary.main",
-                backgroundColor: "rgba(255, 31, 33, 0.08)",
-              },
-              transition: "all 0.2s ease",
-            }}
-          >
-            {item.icon}
-          </IconButton>
-        );
-      })}
+                router.push(item.path);
+              }}
+              sx={{
+                width: 52,
+                height: 52,
+                borderRadius: "50%",
+                background: isActive
+                  ? "linear-gradient(180deg, #ff2e30 0%, #cc1012 100%)"
+                  : "rgba(255, 31, 33, 0.14)",
+                color: isActive ? "#fff" : "rgba(255, 255, 255, 0.65)",
+                border: isActive
+                  ? "1px solid rgba(255,80,82,0.6)"
+                  : "1px solid rgba(255, 31, 33, 0.25)",
+                boxShadow: isActive
+                  ? "0 0 18px rgba(255, 31, 33, 0.55), 0 4px 12px rgba(0,0,0,0.3)"
+                  : "none",
+                "& svg": {
+                  fontSize: 22,
+                  filter: isActive ? "drop-shadow(0 1px 3px rgba(0,0,0,0.4))" : "none",
+                },
+                "&:hover": {
+                  background: isActive
+                    ? "linear-gradient(180deg, #ff4547 0%, #dc1416 100%)"
+                    : "rgba(255, 31, 33, 0.28)",
+                  color: "#fff",
+                  boxShadow: "0 0 18px rgba(255, 31, 33, 0.45)",
+                },
+                transition: "all 0.22s ease",
+                flexShrink: 0,
+              }}
+            >
+              {item.icon}
+            </IconButton>
+          );
+        })}
+      </Box>
     </Box>
   );
 }

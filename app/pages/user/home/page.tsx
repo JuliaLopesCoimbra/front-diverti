@@ -58,6 +58,7 @@ const HomeContent: React.FC = () => {
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const currentEventIdRef = useRef<number | null>(null);
   const isCheckingRef = useRef(false); // Previne múltiplas verificações simultâneas
+  const lastCheckTimeRef = useRef(0); // Throttle: mínimo 30s entre checks de foco/visibilidade
   const scrollExecutedRef = useRef(false);
   const router = useRouter();
   const { isAdmin, authReady, isAuthenticated } = useAuth();
@@ -263,8 +264,12 @@ const HomeContent: React.FC = () => {
             currentEventIdRef.current = null;
           }
         } else if (updatedEvent) {
-          // Atualiza o evento atual com os dados mais recentes
-          setCurrentEvent(updatedEvent);
+          // Atualiza apenas se algo relevante mudou (evita re-renders desnecessários)
+          setCurrentEvent(prev =>
+            prev && prev.id === updatedEvent.id && prev.is_active === updatedEvent.is_active
+              ? prev
+              : updatedEvent
+          );
         }
       }
     } catch (error) {
@@ -413,16 +418,26 @@ const HomeContent: React.FC = () => {
     // Carrega eventos e perfil em paralelo
     Promise.all([fetchEvents(), fetchProfile()]);
 
+    const MIN_CHECK_INTERVAL = 30_000;
+
     // Verifica quando a página/aba fica visível
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        checkAndUpdateEvents();
+        const now = Date.now();
+        if (now - lastCheckTimeRef.current > MIN_CHECK_INTERVAL) {
+          lastCheckTimeRef.current = now;
+          checkAndUpdateEvents();
+        }
       }
     };
 
     // Verifica quando a janela ganha foco
     const handleFocus = () => {
-      checkAndUpdateEvents();
+      const now = Date.now();
+      if (now - lastCheckTimeRef.current > MIN_CHECK_INTERVAL) {
+        lastCheckTimeRef.current = now;
+        checkAndUpdateEvents();
+      }
     };
 
     // Adiciona listeners
