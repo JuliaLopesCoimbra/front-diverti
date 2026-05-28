@@ -725,7 +725,7 @@ export default function EventPage() {
           >
               <Button
                 component="a"
-                href="https://www.ticketmaster.com.br/event/camaroten1"
+                href="https://www.totalacesso.com/events/71festadopeaodeboiadeirodebarretos2026"
                 target="_blank"
                 rel="noopener noreferrer"
                 sx={{
