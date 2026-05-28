@@ -1,20 +1,20 @@
 {
-    "name": "RockWorld - Application Event",
-    "short_name": "RockWorld App",
-    "description": "Plataforma de eventos N1",
+    "name": "Circuito Sertanejo - Application Event",
+    "short_name": "Circuito Sertanejo App",
+    "description": "Plataforma de eventos Circuito Sertanejo",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#000000",
     "icons": [
       {
-        "src": "/logo/logo-rockinrio.jpg",
+        "src": "/logo/logo-android.png",
         "sizes": "192x192",
         "type": "image/jpeg",
         "purpose": "any"
       },
       {
-        "src": "/logo/logo-rockinrio.jpg",
+        "src": "/logo/logo-android.png",
         "sizes": "512x512",
         "type": "image/jpeg",
         "purpose": "maskable"
