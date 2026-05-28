@@ -60,17 +60,11 @@ export default function EventsPage() {
         <div
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             padding: "16px 32px",
           }}
         >
-          <Skeleton
-            variant="rectangular"
-            width={180}
-            height={60}
-            sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: 2 }}
-          />
           <Skeleton
             variant="rectangular"
             width={80}
@@ -174,15 +168,6 @@ export default function EventsPage() {
           padding: "16px 32px",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <Image
-            src="/logo/rockinrio.png"
-            alt="Circuito Sertanejo"
-            width={180}
-            height={60}
-            style={{ height: "auto", maxWidth: "100%" }}
-          />
-        </div>
         <Button
           onClick={() => router.push("/")}
           sx={{

@@ -425,15 +425,6 @@ export default function EventPage() {
             padding: "16px 32px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <Image
-              src="/logo/rockinrio.png"
-              alt="Circuito Sertanejo"
-              width={180}
-              height={60}
-              style={{ height: "auto", maxWidth: "100%" }}
-            />
-          </div>
           <Button
             onClick={() => router.push("/pages/auth/login")}
             sx={{
@@ -636,7 +627,7 @@ export default function EventPage() {
               startIcon={<MusicNoteIcon />}
               sx={{
                 backgroundColor: "#ffffff",
-                color: "#fff",
+                color: "#111111",
                 fontWeight: 700,
                 padding: "12px 32px",
                 borderRadius: "30px",
@@ -644,7 +635,7 @@ export default function EventPage() {
                 fontSize: 16,
                 boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                 "&:hover": {
-                  backgroundColor: "#ffffff",
+                  backgroundColor: "#e8e8e8",
                 },
               }}
             >
@@ -739,7 +730,7 @@ export default function EventPage() {
                 rel="noopener noreferrer"
                 sx={{
                   backgroundColor: "#ffffff",
-                  color: "#fff",
+                  color: "#111111",
                   fontWeight: 700,
                   padding: "12px 32px",
                   borderRadius: "30px",
@@ -747,7 +738,7 @@ export default function EventPage() {
                   fontSize: 16,
                   boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   "&:hover": {
-                    backgroundColor: "#ffffff",
+                    backgroundColor: "#e8e8e8",
                   },
                 }}
               >
