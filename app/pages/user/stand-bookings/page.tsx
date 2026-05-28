@@ -5,20 +5,21 @@ import { useRouter } from "next/navigation";
 import {
   Box,
   Button,
-  Card,
-  CardContent,
-  CardMedia,
   CircularProgress,
-  Container,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  IconButton,
+  Skeleton,
   Typography,
 } from "@mui/material";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import QrCodeIcon from "@mui/icons-material/QrCode";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import QrCodeRoundedIcon from "@mui/icons-material/QrCodeRounded";
+import EventAvailableRoundedIcon from "@mui/icons-material/EventAvailableRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
 import QRCode from "react-qr-code";
 
 import BottomNav from "@/app/components/layout/BottomNav";
@@ -32,13 +33,37 @@ import {
 
 const QUEUE_STAND_KEYS = ["tic tac", "tictac", "bauducco"];
 function isQueueStand(name: string) {
-  const lower = name.toLowerCase();
-  return QUEUE_STAND_KEYS.some((k) => lower.includes(k));
+  return QUEUE_STAND_KEYS.some((k) => name.toLowerCase().includes(k));
 }
 function getStoredQueuePos(bookingId: number): number | null {
   if (typeof window === "undefined") return null;
   const v = localStorage.getItem(`stand_queue_pos_${bookingId}`);
   return v ? parseInt(v, 10) : null;
+}
+
+function statusLabel(status: string) {
+  switch (status) {
+    case "checked_in": return { label: "Check-in feito", color: "#ffc91f" };
+    case "cancelled": return { label: "Cancelado", color: "rgba(255,255,255,0.35)" };
+    default: return { label: "Confirmado", color: "#2ecc71" };
+  }
+}
+
+function BookingSkeleton() {
+  return (
+    <Box sx={{ borderRadius: "20px", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <Skeleton variant="rectangular" sx={{ width: "100%", height: 140, bgcolor: "rgba(255,255,255,0.07)" }} />
+      <Box sx={{ p: 2 }}>
+        <Skeleton variant="text" width="55%" height={22} sx={{ bgcolor: "rgba(255,255,255,0.08)", mb: 0.5 }} />
+        <Skeleton variant="text" width="35%" height={16} sx={{ bgcolor: "rgba(255,255,255,0.06)", mb: 1.5 }} />
+        <Skeleton variant="text" width="60%" height={16} sx={{ bgcolor: "rgba(255,255,255,0.06)", mb: 2 }} />
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Skeleton variant="rectangular" width={110} height={36} sx={{ bgcolor: "rgba(255,255,255,0.07)", borderRadius: 2 }} />
+          <Skeleton variant="rectangular" width={90} height={36} sx={{ bgcolor: "rgba(255,255,255,0.05)", borderRadius: 2 }} />
+        </Box>
+      </Box>
+    </Box>
+  );
 }
 
 export default function UserStandBookingsPage() {
@@ -55,7 +80,6 @@ export default function UserStandBookingsPage() {
     try {
       setLoading(true);
       const data = await getMyStandBookings();
-      // Enrich queue-type bookings with locally stored position
       const enriched = data.map((b) => {
         if (isQueueStand(b.stand_name) && b.queue_position == null) {
           const pos = getStoredQueuePos(b.id);
@@ -64,279 +88,419 @@ export default function UserStandBookingsPage() {
         return b;
       });
       setBookings(enriched);
-    } catch (error: any) {
-      console.error("Erro ao carregar meus agendamentos", error);
-      showToast(error?.response?.data?.detail || "Erro ao carregar seus agendamentos", "error");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      showToast(err?.response?.data?.detail || "Erro ao carregar seus agendamentos", "error");
     } finally {
       setLoading(false);
     }
   }, [showToast]);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleCancel = async () => {
-    if (!bookingToCancel) {
-      return;
-    }
-
+    if (!bookingToCancel) return;
     try {
       setCancelling(true);
-      const cancelledBookingId = bookingToCancel.id;
-      await cancelMyStandBooking(cancelledBookingId);
-      setBookings((currentBookings) =>
-        currentBookings.filter((booking) => booking.id !== cancelledBookingId)
-      );
-      if (bookingToShowQr?.id === cancelledBookingId) {
-        setBookingToShowQr(null);
-      }
+      const id = bookingToCancel.id;
+      await cancelMyStandBooking(id);
+      setBookings((prev) => prev.filter((b) => b.id !== id));
+      if (bookingToShowQr?.id === id) setBookingToShowQr(null);
       showToast("Agendamento cancelado com sucesso", "success");
       setBookingToCancel(null);
-    } catch (error: any) {
-      console.error("Erro ao cancelar agendamento", error);
-      showToast(error?.response?.data?.detail || "Erro ao cancelar agendamento", "error");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { detail?: string } } };
+      showToast(err?.response?.data?.detail || "Erro ao cancelar agendamento", "error");
     } finally {
       setCancelling(false);
     }
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, pb: "88px" }}>
-      <Container maxWidth="md" sx={{ py: 3 }}>
-        <Button
-          startIcon={<ArrowBackIcon />}
+    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, pb: "calc(88px + env(safe-area-inset-bottom))" }}>
+
+      {/* Sticky header */}
+      <Box
+        sx={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          px: { xs: 2, md: 3 },
+          py: 1.5,
+          backgroundColor: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+        }}
+      >
+        <IconButton
           onClick={() => router.push("/pages/user/home?tab=estandes")}
           sx={{
-            color: "#ff1f21",
-            textTransform: "none",
-            mb: 2,
-            "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" },
+            color: "#fff",
+            width: 38,
+            height: 38,
+            backgroundColor: "rgba(255,255,255,0.07)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "12px",
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.13)" },
           }}
         >
-          Voltar
-        </Button>
-
-        <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700, mb: 3 }}>
+          <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+        </IconButton>
+        <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: 16, md: 18 } }}>
           Meus agendamentos
         </Typography>
+      </Box>
+
+      {/* Content */}
+      <Box sx={{ px: { xs: 1.5, md: 2 }, pt: 2.5, maxWidth: "600px", mx: "auto", width: "100%" }}>
 
         {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-            <CircularProgress sx={{ color: "#ffc91f" }} />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            {[1, 2, 3].map((i) => <BookingSkeleton key={i} />)}
           </Box>
         ) : bookings.length === 0 ? (
-          <Card sx={{ backgroundColor: "rgba(255,255,255,0.04)", color: "#fff", borderRadius: 3 }}>
-            <CardContent>
-              <Typography sx={{ fontWeight: 700, mb: 1 }}>Nenhum agendamento encontrado</Typography>
-              <Typography sx={{ color: "rgba(255,255,255,0.68)" }}>
-                Quando voce agendar uma sessao em um estande, ela vai aparecer aqui.
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 2,
+              pt: 8,
+              pb: 4,
+              textAlign: "center",
+            }}
+          >
+            <Box
+              sx={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                backgroundColor: "rgba(255,255,255,0.05)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <StorefrontRoundedIcon sx={{ fontSize: 32, color: "rgba(255,255,255,0.3)" }} />
+            </Box>
+            <Box>
+              <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 16, mb: 0.5 }}>
+                Nenhum agendamento
               </Typography>
-            </CardContent>
-          </Card>
+              <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 14, maxWidth: 260, mx: "auto" }}>
+                Quando você agendar uma sessão em um estande, ela vai aparecer aqui.
+              </Typography>
+            </Box>
+            <Button
+              onClick={() => router.push("/pages/user/home?tab=estandes")}
+              sx={{
+                backgroundColor: "#ffffff",
+                color: "#111111",
+                fontWeight: 700,
+                textTransform: "none",
+                borderRadius: "12px",
+                px: 3,
+                py: 1.2,
+                mt: 1,
+                "&:hover": { backgroundColor: "#e8e8e8" },
+              }}
+            >
+              Ver estandes
+            </Button>
+          </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {bookings.map((booking) => (
-              <Card
-                key={booking.id}
-                sx={{
-                  backgroundColor: "rgba(0,0,0,0.35)",
-                  color: "#fff",
-                  borderRadius: 3,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  overflow: "hidden",
-                }}
-              >
-                {booking.stand_image_url ? (
-                  <CardMedia component="img" image={booking.stand_image_url} alt={booking.stand_name} sx={{ height: 180, objectFit: "cover" }} />
-                ) : null}
-                <CardContent sx={{ p: 3 }}>
-                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                    {booking.stand_name}
-                  </Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,0.7)", mt: 0.5 }}>
-                    {booking.event_title || "Evento"}
-                  </Typography>
-                  <Typography sx={{ color: "#fff", mt: 2 }}>
-                    {new Date(`${booking.session_date}T00:00:00`).toLocaleDateString("pt-BR")} • {booking.start_time.substring(0, 5)}
-                    {booking.end_time ? ` - ${booking.end_time.substring(0, 5)}` : ""}
-                  </Typography>
-                  {booking.booking_open_time ? (
-                    <Typography sx={{ color: "rgba(255,255,255,0.65)", mt: 0.5 }}>
-                      Abertura da lista: {booking.booking_open_time.substring(0, 5)}
-                    </Typography>
-                  ) : null}
+            {bookings.map((booking) => {
+              const { label: sLabel, color: sColor } = statusLabel(booking.status);
+              const isCancelled = booking.status === "cancelled";
 
-                  {/* Queue position badge */}
-                  {isQueueStand(booking.stand_name) && booking.queue_position != null && (
+              return (
+                <Box
+                  key={booking.id}
+                  sx={{
+                    borderRadius: "20px",
+                    overflow: "hidden",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    opacity: isCancelled ? 0.55 : 1,
+                    transition: "opacity 0.2s",
+                  }}
+                >
+                  {/* Stand image */}
+                  {booking.stand_image_url ? (
+                    <Box sx={{ position: "relative", width: "100%", height: 140 }}>
+                      <img
+                        src={booking.stand_image_url}
+                        alt={booking.stand_name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                      />
+                      <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)" }} />
+                    </Box>
+                  ) : (
                     <Box
                       sx={{
-                        display: "inline-flex",
+                        width: "100%",
+                        height: 80,
+                        background: "linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03))",
+                        display: "flex",
                         alignItems: "center",
-                        gap: 1,
-                        mt: 1.5,
-                        backgroundColor: "rgba(255,193,7,0.1)",
-                        border: "1px solid rgba(255,193,7,0.35)",
-                        borderRadius: 2,
-                        px: 1.5,
-                        py: 0.75,
+                        justifyContent: "center",
                       }}
                     >
-                      <Typography sx={{ fontSize: "1rem" }}>🎟️</Typography>
-                      <Box>
-                        <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.68rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", lineHeight: 1 }}>
-                          Posição na fila
-                        </Typography>
-                        <Typography sx={{ color: "#ffc91f", fontWeight: 900, fontSize: "1.2rem", lineHeight: 1.2 }}>
-                          #{booking.queue_position}
-                        </Typography>
-                      </Box>
+                      <StorefrontRoundedIcon sx={{ fontSize: 28, color: "rgba(255,255,255,0.2)" }} />
                     </Box>
                   )}
 
-                  <Box sx={{ mt: 2 }}>
-                    {booking.qr_token ? (
-                      <Button
-                        variant="contained"
-                        startIcon={<QrCodeIcon />}
-                        onClick={() => setBookingToShowQr(booking)}
+                  <Box sx={{ p: 2 }}>
+                    {/* Stand name + status */}
+                    <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 0.4 }}>
+                      <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 16, lineHeight: 1.3 }}>
+                        {booking.stand_name}
+                      </Typography>
+                      <Box
                         sx={{
-                          mr: 1.5,
-                          mb: { xs: 1.5, sm: 0 },
-                          backgroundColor: "#ff1f21",
-                          color: "#fff",
-                          textTransform: "none",
-                          "&:hover": {
-                            backgroundColor: "#dc1416",
-                          },
+                          flexShrink: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.5,
+                          backgroundColor: `${sColor}18`,
+                          border: `1px solid ${sColor}44`,
+                          borderRadius: "999px",
+                          px: 1.2,
+                          py: 0.3,
                         }}
                       >
-                        Ver QR
-                      </Button>
-                    ) : null}
-                    <Button
-                      variant="outlined"
-                      onClick={() => setBookingToCancel(booking)}
-                      sx={{
-                        color: "#ff1f21",
-                        borderColor: "#ff1f21",
-                        textTransform: "none",
-                        "&:hover": {
-                          borderColor: "#dc1416",
-                          backgroundColor: "rgba(255,31,33,0.08)",
-                        },
-                      }}
-                    >
-                      Cancelar agendamento
-                    </Button>
+                        <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: sColor, flexShrink: 0 }} />
+                        <Typography sx={{ color: sColor, fontSize: 11, fontWeight: 700 }}>{sLabel}</Typography>
+                      </Box>
+                    </Box>
+
+                    {/* Event name */}
+                    {booking.event_title && (
+                      <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 13, mb: 1.2 }}>
+                        {booking.event_title}
+                      </Typography>
+                    )}
+
+                    {/* Date + time */}
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap", mb: 1 }}>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                        <EventAvailableRoundedIcon sx={{ fontSize: 15, color: "rgba(255,255,255,0.45)" }} />
+                        <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600 }}>
+                          {new Date(`${booking.session_date}T00:00:00`).toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "2-digit" })}
+                        </Typography>
+                      </Box>
+                      <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: 13 }}>•</Typography>
+                      <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: 13, fontWeight: 600 }}>
+                        {booking.start_time.substring(0, 5)}
+                        {booking.end_time ? ` – ${booking.end_time.substring(0, 5)}` : ""}
+                      </Typography>
+                    </Box>
+
+                    {/* Queue position */}
+                    {isQueueStand(booking.stand_name) && booking.queue_position != null && (
+                      <Box
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 1,
+                          mt: 0.5,
+                          mb: 1.5,
+                          backgroundColor: "rgba(255,201,31,0.08)",
+                          border: "1px solid rgba(255,201,31,0.3)",
+                          borderRadius: "12px",
+                          px: 1.5,
+                          py: 0.75,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: "1rem", lineHeight: 1 }}>🎟️</Typography>
+                        <Box>
+                          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", lineHeight: 1 }}>
+                            Posição na fila
+                          </Typography>
+                          <Typography sx={{ color: "#ffc91f", fontWeight: 900, fontSize: "1.15rem", lineHeight: 1.2 }}>
+                            #{booking.queue_position}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
+
+                    {/* Actions */}
+                    {!isCancelled && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1.5, flexWrap: "wrap" }}>
+                        {booking.qr_token && (
+                          <Button
+                            startIcon={<QrCodeRoundedIcon />}
+                            onClick={() => setBookingToShowQr(booking)}
+                            sx={{
+                              backgroundColor: "#ffffff",
+                              color: "#111111",
+                              fontWeight: 700,
+                              textTransform: "none",
+                              borderRadius: "12px",
+                              px: 2,
+                              py: 0.9,
+                              fontSize: 13,
+                              "&:hover": { backgroundColor: "#e8e8e8" },
+                            }}
+                          >
+                            Ver QR Code
+                          </Button>
+                        )}
+                        <Button
+                          startIcon={<CancelRoundedIcon />}
+                          onClick={() => setBookingToCancel(booking)}
+                          sx={{
+                            color: "rgba(255,255,255,0.45)",
+                            borderColor: "rgba(255,255,255,0.15)",
+                            border: "1px solid",
+                            fontWeight: 600,
+                            textTransform: "none",
+                            borderRadius: "12px",
+                            px: 2,
+                            py: 0.9,
+                            fontSize: 13,
+                            "&:hover": { backgroundColor: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.7)" },
+                          }}
+                        >
+                          Cancelar
+                        </Button>
+                      </Box>
+                    )}
                   </Box>
-                </CardContent>
-              </Card>
-            ))}
+                </Box>
+              );
+            })}
           </Box>
         )}
-      </Container>
+      </Box>
 
+      {/* Cancel confirmation dialog */}
       <Dialog
         open={Boolean(bookingToCancel)}
         onClose={cancelling ? undefined : () => setBookingToCancel(null)}
         PaperProps={{
           sx: {
             backgroundColor: "rgba(18,18,18,0.97)",
+            backdropFilter: "blur(20px)",
             color: "#fff",
             borderRadius: 3,
+            border: "1px solid rgba(255,255,255,0.1)",
+            maxWidth: 380,
+            width: "100%",
           },
         }}
       >
-        <DialogTitle>Cancelar agendamento</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 16 }}>Cancelar agendamento</DialogTitle>
         <DialogContent>
-          <DialogContentText sx={{ color: "rgba(255,255,255,0.75)" }}>
+          <DialogContentText sx={{ color: "rgba(255,255,255,0.65)", fontSize: 14 }}>
             Tem certeza que deseja cancelar este agendamento?
           </DialogContentText>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions sx={{ p: 2.5, pt: 0, gap: 1 }}>
           <Button
             onClick={() => setBookingToCancel(null)}
             disabled={cancelling}
-            sx={{ color: "#ff1f21", "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" } }}
+            sx={{ color: "rgba(255,255,255,0.55)", textTransform: "none", fontWeight: 600, borderRadius: "10px" }}
           >
             Voltar
           </Button>
           <Button
             onClick={handleCancel}
             disabled={cancelling}
-            variant="contained"
-            sx={{ backgroundColor: "#ff1f21", "&:hover": { backgroundColor: "#dc1416" } }}
+            sx={{
+              backgroundColor: "#ffffff",
+              color: "#111111",
+              fontWeight: 700,
+              textTransform: "none",
+              borderRadius: "10px",
+              px: 2.5,
+              "&:hover": { backgroundColor: "#e8e8e8" },
+            }}
           >
-            {cancelling ? "Cancelando..." : "Confirmar cancelamento"}
+            {cancelling ? "Cancelando..." : "Confirmar"}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* QR dialog */}
       <Dialog
         open={Boolean(bookingToShowQr)}
         onClose={() => setBookingToShowQr(null)}
         PaperProps={{
           sx: {
             backgroundColor: "rgba(18,18,18,0.97)",
+            backdropFilter: "blur(20px)",
             color: "#fff",
             borderRadius: 3,
+            border: "1px solid rgba(255,255,255,0.1)",
+            maxWidth: 360,
+            width: "100%",
           },
         }}
       >
-        <DialogTitle>QR do agendamento</DialogTitle>
-        <DialogContent sx={{ textAlign: "center" }}>
-          {bookingToShowQr?.qr_token ? (
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 16, display: "flex", alignItems: "center", gap: 1 }}>
+          <QrCodeRoundedIcon sx={{ fontSize: 20 }} />
+          QR do agendamento
+        </DialogTitle>
+        <DialogContent sx={{ textAlign: "center", pb: 1 }}>
+          {bookingToShowQr?.qr_token && (
             <>
-              {/* Queue position — only for queue-type stands */}
-              {bookingToShowQr && isQueueStand(bookingToShowQr.stand_name) && bookingToShowQr.queue_position != null && (
+              <Typography sx={{ color: "#fff", fontWeight: 700, mb: 0.25 }}>
+                {bookingToShowQr.stand_name}
+              </Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 13, mb: 2 }}>
+                {new Date(`${bookingToShowQr.session_date}T00:00:00`).toLocaleDateString("pt-BR")} • {bookingToShowQr.start_time.substring(0, 5)}
+                {bookingToShowQr.end_time ? ` – ${bookingToShowQr.end_time.substring(0, 5)}` : ""}
+              </Typography>
+
+              {isQueueStand(bookingToShowQr.stand_name) && bookingToShowQr.queue_position != null && (
                 <Box
                   sx={{
                     display: "inline-flex",
                     flexDirection: "column",
                     alignItems: "center",
-                    backgroundColor: "rgba(255,193,7,0.1)",
-                    border: "1.5px solid rgba(255,193,7,0.5)",
+                    backgroundColor: "rgba(255,201,31,0.08)",
+                    border: "1.5px solid rgba(255,201,31,0.4)",
                     borderRadius: 2.5,
                     px: 3,
                     py: 1.5,
                     mb: 2.5,
-                    minWidth: 160,
+                    minWidth: 150,
                   }}
                 >
-                  <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.72rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.25 }}>
+                  <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.25 }}>
                     Sua posição na fila
                   </Typography>
-                  <Typography sx={{ color: "#ffc91f", fontSize: "2.6rem", fontWeight: 900, lineHeight: 1 }}>
+                  <Typography sx={{ color: "#ffc91f", fontSize: "2.5rem", fontWeight: 900, lineHeight: 1 }}>
                     #{bookingToShowQr.queue_position}
                   </Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", mt: 0.5 }}>
+                  <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: 11, mt: 0.4 }}>
                     Entrada de 3 em 3 pessoas
                   </Typography>
                 </Box>
               )}
 
-              <Box
-                sx={{
-                  backgroundColor: "#fff",
-                  p: 2,
-                  borderRadius: 2,
-                  display: "inline-flex",
-                  mb: 2,
-                }}
-              >
-                <QRCode value={bookingToShowQr.qr_token} size={220} />
+              <Box sx={{ backgroundColor: "#fff", p: 2, borderRadius: 2, display: "inline-flex", mb: 2 }}>
+                <QRCode value={bookingToShowQr.qr_token} size={210} />
               </Box>
-              <Typography sx={{ color: "rgba(255,255,255,0.72)", maxWidth: 320, mx: "auto" }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: 13, maxWidth: 280, mx: "auto" }}>
                 Apresente este QR no acesso do estande para validar sua entrada.
               </Typography>
             </>
-          ) : null}
+          )}
         </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 0 }}>
+        <DialogActions sx={{ p: 2.5, pt: 1 }}>
           <Button
+            fullWidth
             onClick={() => setBookingToShowQr(null)}
-            sx={{ color: "#ff1f21", "&:hover": { backgroundColor: "rgba(255,31,33,0.08)" } }}
+            sx={{ color: "rgba(255,255,255,0.55)", textTransform: "none", fontWeight: 600, borderRadius: "10px" }}
           >
             Fechar
           </Button>

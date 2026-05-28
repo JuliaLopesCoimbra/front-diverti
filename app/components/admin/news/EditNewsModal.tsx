@@ -328,7 +328,7 @@ export default function EditNewsModal({
             variant="contained"
             disabled={loading || !title.trim() || !content.trim()}
             sx={{
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 600,
               "&:hover": {

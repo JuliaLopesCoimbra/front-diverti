@@ -24,7 +24,7 @@ export default function NewsFormFields({
       {/* Seção de Título */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-          <TitleIcon sx={{ color: "rgb(255, 31, 33)", fontSize: 20 }} />
+          <TitleIcon sx={{ color: "#ffffff", fontSize: 20 }} />
           <Typography
             variant="subtitle1"
             sx={{
@@ -74,7 +74,7 @@ export default function NewsFormFields({
                 borderColor: "rgba(255, 255, 255, 0.2)",
               },
               "&.Mui-focused": {
-                borderColor: "rgb(255, 31, 33)",
+                borderColor: "#ffffff",
                 backgroundColor: "rgba(255, 255, 255, 0.08)",
               },
             },
@@ -103,7 +103,7 @@ export default function NewsFormFields({
       {/* Seção de Conteúdo */}
       <Box sx={{ mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-          <Description sx={{ color: "rgb(255, 31, 33)", fontSize: 20 }} />
+          <Description sx={{ color: "#ffffff", fontSize: 20 }} />
           <Typography
             variant="subtitle1"
             sx={{
@@ -153,7 +153,7 @@ export default function NewsFormFields({
                 borderColor: "rgba(255, 255, 255, 0.2)",
               },
               "&.Mui-focused": {
-                borderColor: "rgb(255, 31, 33)",
+                borderColor: "#ffffff",
                 backgroundColor: "rgba(255, 255, 255, 0.08)",
               },
             },

@@ -30,6 +30,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import StorefrontIcon from "@mui/icons-material/Storefront";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { EventResponse } from "@/app/services/events/eventAppService";
@@ -135,11 +136,7 @@ export default function HamburgerMenu({
         PaperProps={{
           sx: {
             minHeight: "100vh",
-            backgroundImage: "url(/background/settings.png)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            backgroundColor: "#000",
+            background: "url(/background/fundo.png) center top / cover no-repeat #000",
           },
         }}
       >
@@ -158,37 +155,88 @@ export default function HamburgerMenu({
           </Box>
 
           {/* ───────── AMBIENTE ATIVO ───────── */}
-          <ListItem sx={{ px: 2 }}>
+          <ListItem sx={{ px: 2, pb: 1.5 }}>
             <Box
               sx={{
                 width: "100%",
-                backgroundColor: "#ff1f21",
-                borderRadius: 2,
-                padding: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 0.8,
+                height: 130,
+                borderRadius: 3,
+                overflow: "hidden",
+                position: "relative",
+                border: "1px solid rgba(255,255,255,0.12)",
               }}
             >
-              {/* TÍTULO */}
-              <Typography fontWeight={600} sx={{ color: "#fff", fontSize: 14 }}>
-                {currentEvent?.title ?? "Nenhum evento"}
-              </Typography>
-
-              {/* STATUS */}
-              <Box display="flex" alignItems="center" gap={0.6}>
-                <Typography fontSize={12} sx={{ color: "#fff", opacity: 0.9 }}>
-                  Ambiente ativo
-                </Typography>
+              {/* Banner do evento */}
+              {currentEvent?.banner_image ? (
                 <Box
+                  component="img"
+                  src={currentEvent.banner_image}
+                  alt={currentEvent.title}
                   sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    backgroundColor: "#2ecc71",
-                    boxShadow: "0 0 6px rgba(46, 204, 113, 0.8)",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    display: "block",
                   }}
                 />
+              ) : (
+                <Box sx={{ width: "100%", height: "100%", background: "rgba(255,255,255,0.07)" }} />
+              )}
+
+              {/* Gradiente escuro na parte inferior */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)",
+                }}
+              />
+
+              {/* Badge "Ambiente ativo" no topo direito */}
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.6,
+                  backgroundColor: "rgba(0,0,0,0.5)",
+                  backdropFilter: "blur(6px)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  borderRadius: "999px",
+                  px: 1.2,
+                  py: 0.4,
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    backgroundColor: "#2ecc71",
+                    boxShadow: "0 0 6px rgba(46,204,113,0.9)",
+                    flexShrink: 0,
+                  }}
+                />
+                <Typography sx={{ color: "#fff", fontSize: "0.7rem", fontWeight: 600 }}>
+                  Ativo
+                </Typography>
+              </Box>
+
+              {/* Título no rodapé */}
+              <Box sx={{ position: "absolute", bottom: 0, left: 0, right: 0, p: 1.5 }}>
+                <Typography
+                  sx={{
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: "0.95rem",
+                    lineHeight: 1.2,
+                    textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+                  }}
+                >
+                  {currentEvent?.title ?? "Nenhum evento"}
+                </Typography>
               </Box>
             </Box>
           </ListItem>
@@ -288,7 +336,7 @@ export default function HamburgerMenu({
                     sx={{
                       position: "relative",
                       cursor: "pointer",
-                      border: isSelected ? "3px solid rgb(255, 31, 33)" : "none",
+                      border: isSelected ? "3px solid #ffffff" : "none",
                       borderRadius: 2,
                       padding: isSelected ? "3px" : 0,
                       transition: "all 0.2s",
@@ -507,26 +555,23 @@ export default function HamburgerMenu({
                 </ListItemButton>
               </ListItem>
               <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
-               <ListItem disablePadding>
-                 <ListItemButton
-                   onClick={() => {
-                     router.push("/pages/admin/broadcast-notification");
-                     setOpen(false);
-                   }}
-                 >
-                   <CampaignIcon sx={{ mr: 2, color: "white" }} />
+              <ListItem disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    router.push(`/pages/admin/live-stands${currentEvent?.id ? `?eventId=${currentEvent.id}` : ""}`);
+                    setOpen(false);
+                  }}
+                >
+                  <StorefrontIcon sx={{ mr: 2, color: "white" }} />
+                  <ListItemText
+                    primary="Dashboard de estandes"
+                    secondary="Gerenciar estandes ao vivo"
+                    primaryTypographyProps={{ fontWeight: 600 }}
+                    secondaryTypographyProps={{ sx: { color: "rgba(255,255,255,0.6)" } }}
+                  />
+                </ListItemButton>
+              </ListItem>
 
-                   <ListItemText
-                     primary="Enviar Notificação"
-                     secondary="Notificar todos os usuários"
-                     primaryTypographyProps={{ fontWeight: 600 }}
-                     secondaryTypographyProps={{
-                       sx: { color: "rgba(255,255,255,0.6)" },
-                     }}
-                   />
-                 </ListItemButton>
-               </ListItem>
-             
              </>
            )}
       

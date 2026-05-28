@@ -41,7 +41,7 @@ export default function SearchBar({ value, onChange, placeholder = "Pesquisar po
                 sx={{
                   color: "rgba(255,255,255,0.7)",
                   "&:hover": {
-                    color: "#ffcc01",
+                    color: "#7c3aed",
                   },
                 }}
               >
@@ -51,14 +51,15 @@ export default function SearchBar({ value, onChange, placeholder = "Pesquisar po
           ),
           sx: {
             color: "white",
+            backgroundColor: "transparent",
             "& .MuiOutlinedInput-notchedOutline": {
               borderColor: "rgba(255,255,255,0.2)",
             },
             "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "rgba(255, 204, 1, 0.5)",
+              borderColor: "rgba(124, 58, 237, 0.5)",
             },
             "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#ffcc01",
+              borderColor: "#7c3aed",
             },
           },
         }}

@@ -346,7 +346,7 @@ export default function CreateMusicModal({
           variant="contained"
           disabled={loading || !songName.trim() || !lyrics.trim()}
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
+            backgroundColor: "#ffffff",
             color: "#fff",
             fontWeight: 600,
             textTransform: "none",

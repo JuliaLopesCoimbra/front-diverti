@@ -2,6 +2,7 @@
 
 import { Box, Typography, Avatar, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Skeleton, Badge, List, ListItem, ListItemButton, Divider, Button, CircularProgress, Paper } from "@mui/material";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import PersonIcon from "@mui/icons-material/Person";
 import LogoutIcon from "@mui/icons-material/Logout";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -27,6 +28,7 @@ interface Props {
   onSelectEvent: (event: EventResponse) => void;
   currentEvent: EventResponse | null;
   profile?: ProfileResponse | null;
+  activeTab?: string;
 }
 
 export default function HomeHeader({
@@ -35,6 +37,7 @@ export default function HomeHeader({
   onSelectEvent,
   currentEvent,
   profile: profileProp,
+  activeTab,
 }: Props) {
   const router = useRouter();
   const { logout, isAuthenticated } = useAuth();
@@ -337,88 +340,42 @@ export default function HomeHeader({
     }
   };
 
-  // Se está carregando o perfil, mostra skeleton
+  const activeEvent = event || currentEvent;
+  const isLive = activeEvent?.is_active;
+  const firstName = profile?.name?.split(" ")[0] || profile?.email || "";
+
+  // Skeleton
   if (loadingProfile || !profile) {
     return (
       <Box
         sx={{
-          padding: { xs: 2, md: 3, lg: 4 },
-          display: "flex",
-          flexDirection: "column",
-          gap: { xs: 1, md: 1.5, lg: 2 },
-          boxShadow: "inset 0 -20px 24px -12px rgba(0,0,0,0.3)",
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          px: { xs: 2, md: 3 },
+          py: { xs: 1.5, md: 2 },
+          backgroundColor: "rgba(0,0,0,0.55)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}
       >
-        {/* LINHA SUPERIOR - Skeleton */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* ESQUERDA: HAMBURGER + NOME - Skeleton */}
-          <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
-            <HamburgerMenu
-              events={events}
-              currentEvent={currentEvent || event}
-              onSelectEvent={onSelectEvent}
-            />
-            <Skeleton
-              variant="text"
-              width={150}
-              height={32}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+          <Box display="flex" alignItems="center" gap={1.2}>
+            <HamburgerMenu events={events} currentEvent={currentEvent || event} onSelectEvent={onSelectEvent} />
+            <Box>
+              <Skeleton variant="text" width={40} height={14} sx={{ bgcolor: "rgba(255,255,255,0.1)", mb: 0.3 }} />
+              <Skeleton variant="text" width={100} height={18} sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
+            </Box>
           </Box>
-
-          {/* DIREITA: NOTIFICAÃ‡Ã•ES + AVATAR - Skeleton */}
-          <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
-            <Skeleton
-              variant="circular"
-              width={40}
-              height={40}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
-            <Skeleton
-              variant="circular"
-              width={40}
-              height={40}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
+          <Box display="flex" alignItems="center" gap={1.2}>
+            <Skeleton variant="circular" width={36} height={36} sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
+            <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
           </Box>
         </Box>
-
-        {/* EVENTO + STATUS - Skeleton */}
         {(event || currentEvent) && (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: { xs: 0.4, md: 0.6, lg: 0.8 },
-            }}
-          >
-            <Skeleton
-              variant="text"
-              width={200}
-              height={24}
-              sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-            />
-            <Box display="flex" alignItems="center" gap={{ xs: 0.6, md: 0.8, lg: 1 }}>
-              <Skeleton
-                variant="text"
-                width={120}
-                height={20}
-                sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-              />
-              <Skeleton
-                variant="circular"
-                width={12}
-                height={12}
-                sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
-              />
-            </Box>
+          <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <Skeleton variant="rectangular" width={200} height={30} sx={{ bgcolor: "rgba(255,255,255,0.08)", borderRadius: "999px" }} />
           </Box>
         )}
       </Box>
@@ -428,70 +385,101 @@ export default function HomeHeader({
   return (
     <Box
       sx={{
-        padding: { xs: 2, md: 3, lg: 4 },
-        display: "flex",
-        flexDirection: "column",
-        gap: { xs: 1, md: 1.5, lg: 2 },
-        boxShadow: "inset 0 -20px 24px -12px rgba(0,0,0,0.3)",
+        position: "sticky",
+        top: 0,
+        zIndex: 100,
+        px: { xs: 2, md: 3 },
+        pt: { xs: 1.5, md: 2 },
+        pb: { xs: 1.5, md: 2 },
+        backgroundColor: "rgba(0,0,0,0.6)",
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        boxShadow: "0 4px 24px rgba(0,0,0,0.3)",
       }}
     >
-      {/* LINHA SUPERIOR */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* ESQUERDA: HAMBURGER + NOME */}
-        <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
+      {/* Linha principal: hamburger + saudação | sino + avatar */}
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+
+        {/* ESQUERDA */}
+        <Box display="flex" alignItems="center" gap={1.2}>
           <HamburgerMenu
             events={events}
             currentEvent={currentEvent || event}
             onSelectEvent={onSelectEvent}
           />
-
-          <Typography 
-            variant="h6" 
-            fontWeight={700} 
-            sx={{ 
-              color: "white",
-              fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
-            }}
-          >
-            {profile.name || profile.email}
-          </Typography>
+          <Box>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: 11, fontWeight: 500, lineHeight: 1, mb: "3px", letterSpacing: "0.3px" }}>
+              Olá,
+            </Typography>
+            <Typography sx={{ color: "#fff", fontSize: { xs: 15, md: 17 }, fontWeight: 700, lineHeight: 1 }}>
+              {firstName}
+            </Typography>
+          </Box>
         </Box>
 
-        {/* DIREITA: NOTIFICAÃ‡Ã•ES + AVATAR */}
-        <Box display="flex" alignItems="center" gap={{ xs: 1, md: 1.5, lg: 2 }}>
+        {/* DIREITA */}
+        <Box display="flex" alignItems="center" gap={1.2}>
+          {activeTab === "estandes" && (
+            <IconButton
+              onClick={() => router.push("/pages/user/stand-bookings")}
+              sx={{
+                color: "rgba(255,255,255,0.75)",
+                width: 38,
+                height: 38,
+                backgroundColor: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: "12px",
+                transition: "all 0.2s",
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)", color: "#fff" },
+              }}
+            >
+              <StorefrontRoundedIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          )}
           <IconButton
             onClick={(e) => setNotificationsAnchorEl(e.currentTarget)}
             sx={{
-              color: "white",
-              "&:hover": {
-                backgroundColor: "rgba(255, 255, 255, 0.1)",
-              },
-              fontSize: { xs: "1.5rem", md: "1.75rem", lg: "2rem" },
+              color: "rgba(255,255,255,0.75)",
+              width: 38,
+              height: 38,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "12px",
+              transition: "all 0.2s",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.12)", color: "#fff" },
             }}
           >
-            <Badge badgeContent={unreadCount > 0 ? unreadCount : 0} color="error" max={99}>
-            <NotificationsIcon sx={{ fontSize: "inherit" }} />
+            <Badge
+              badgeContent={unreadCount > 0 ? unreadCount : 0}
+              max={99}
+              sx={{
+                "& .MuiBadge-badge": {
+                  backgroundColor: "#fff",
+                  color: "#111",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  minWidth: 16,
+                  height: 16,
+                  padding: "0 4px",
+                },
+              }}
+            >
+              <NotificationsIcon sx={{ fontSize: 20 }} />
             </Badge>
           </IconButton>
-          
-          <Avatar 
-            src={profile.profile_photo || undefined} 
+
+          <Avatar
+            src={profile.profile_photo || undefined}
             onClick={(e) => setAnchorEl(e.currentTarget)}
-            sx={{ 
-              width: { xs: 40, md: 56, lg: 64 }, 
-              height: { xs: 40, md: 56, lg: 64 },
-              border: "2px solid rgb(255, 31, 33)",
+            sx={{
+              width: { xs: 40, md: 44 },
+              height: { xs: 40, md: 44 },
+              border: "2px solid rgba(255,255,255,0.25)",
               cursor: "pointer",
-              transition: "transform 0.2s",
-              "&:hover": {
-                transform: "scale(1.05)",
-              },
+              transition: "all 0.2s",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.3)",
+              "&:hover": { transform: "scale(1.06)", border: "2px solid rgba(255,255,255,0.5)" },
             }}
           >
             {!profile.profile_photo && (profile.name?.[0] || profile.email[0]).toUpperCase()}
@@ -499,59 +487,8 @@ export default function HomeHeader({
         </Box>
       </Box>
 
-      {/* DATA */}
-      {/* <Typography variant="body2" sx={{ color: "white" }}>
-        {today}
-      </Typography> */}
 
-      {/* EVENTO + STATUS */}
-      {(event || currentEvent) && (
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: { xs: 0.4, md: 0.6, lg: 0.8 },
-          }}
-        >
-          <Typography
-            variant="body1"
-            fontWeight={600}
-            sx={{ 
-              color: "#fff",
-              fontSize: { xs: "1rem", md: "1.25rem", lg: "1.5rem" },
-            }}
-          >
-            {(event || currentEvent)?.title || "Carregando..."}
-          </Typography>
-
-          <Box display="flex" alignItems="center" gap={{ xs: 0.6, md: 0.8, lg: 1 }}>
-            <Typography 
-              variant="body2" 
-              sx={{ 
-                color: "white",
-                fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-              }}
-            >
-              {(event || currentEvent)?.is_active ? "Ambiente ao vivo" : "Ambiente offline"}
-            </Typography>
-
-            <Box
-              sx={{
-                width: { xs: 8, md: 10, lg: 12 },
-                height: { xs: 8, md: 10, lg: 12 },
-                borderRadius: "50%",
-                backgroundColor: (event || currentEvent)?.is_active ? "#2ecc71" : "#9e9e9e",
-                boxShadow: (event || currentEvent)?.is_active 
-                  ? "0 0 6px rgba(46, 204, 113, 0.8)" 
-                  : "0 0 6px rgba(158, 158, 158, 0.5)",
-              }}
-            />
-          </Box>
-        </Box>
-      )}
-
-      {/* MENU DE NOTIFICAÃ‡Ã•ES (POPUP) */}
+      {/* MENU DE NOTIFICAÇÕES */}
       <Menu
         anchorEl={notificationsAnchorEl}
         open={notificationsOpen}
@@ -765,7 +702,7 @@ export default function HomeHeader({
                                   width: 8,
                                   height: 8,
                                   borderRadius: "50%",
-                                  backgroundColor: "rgb(255, 31, 33)",
+                                  backgroundColor: "#ffffff",
                                   ml: 1,
                                   flexShrink: 0,
                                 }}

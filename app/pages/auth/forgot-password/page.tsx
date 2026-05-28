@@ -194,8 +194,8 @@ export default function ForgotPasswordPage() {
           variant="contained"
           sx={{
             mt: 2,
-            backgroundColor: "rgb(255, 31, 33)",
-            color: "#fff",
+            backgroundColor: "#ffffff",
+            color: "#111111",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
@@ -203,7 +203,7 @@ export default function ForgotPasswordPage() {
             transform: mounted ? "translateY(0)" : "translateY(-20px)",
             transition: "opacity 0.6s ease-out 0.3s, transform 0.6s ease-out 0.3s",
             "&:hover": {
-              backgroundColor: "rgb(220, 20, 22)",
+              backgroundColor: "#e8e8e8",
             },
             "&.Mui-disabled": {
               backgroundColor: "rgba(255, 204, 1, 0.4)",

@@ -118,7 +118,7 @@ export default function CTA({
                 handleClick();
               }}
               sx={{
-                backgroundColor: "rgb(255, 31, 33)",
+                backgroundColor: "#ffffff",
                 color: "#fff",
                 fontWeight: 600,
                 borderRadius: "20px",

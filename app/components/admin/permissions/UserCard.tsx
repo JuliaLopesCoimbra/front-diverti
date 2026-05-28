@@ -56,11 +56,11 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
   const getRoleIcon = () => {
     switch (userType) {
       case "subadmin":
-        return <AdminPanelSettings sx={{ fontSize: 20, color: "#ffcc01" }} />;
+        return <AdminPanelSettings sx={{ fontSize: 20, color: "#7c3aed" }} />;
       case "colunista":
-        return <EditNote sx={{ fontSize: 20, color: "#ffcc01" }} />;
+        return <EditNote sx={{ fontSize: 20, color: "#7c3aed" }} />;
       default:
-        return <People sx={{ fontSize: 20, color: "#ffcc01" }} />;
+        return <People sx={{ fontSize: 20, color: "#7c3aed" }} />;
     }
   };
 
@@ -75,7 +75,7 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
         transition: "all 0.3s ease",
         "&:hover": {
           backgroundColor: "rgba(255, 255, 255, 0.12)",
-          borderColor: "rgba(255, 204, 1, 0.4)",
+          borderColor: "rgba(124, 58, 237, 0.4)",
           transform: "translateY(-2px)",
           boxShadow: "0 8px 24px rgba(0, 0, 0, 0.3)",
         },
@@ -117,14 +117,14 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
             {/* Informações do usuário */}
             <Stack spacing={1.5}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <Email sx={{ fontSize: 18, color: "#ffcc01", opacity: 0.9 }} />
+                <Email sx={{ fontSize: 18, color: "#7c3aed", opacity: 0.9 }} />
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
                   {user.email}
                 </Typography>
               </Box>
 
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                <CalendarToday sx={{ fontSize: 18, color: "#ffcc01", opacity: 0.9 }} />
+                <CalendarToday sx={{ fontSize: 18, color: "#7c3aed", opacity: 0.9 }} />
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.85)" }}>
                   Entrou em {formatDate(user.created_at)}
                 </Typography>
@@ -138,16 +138,16 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
                     gap: 1.5,
                     p: 1.5,
                     borderRadius: 2,
-                    backgroundColor: "rgba(255, 204, 1, 0.1)",
-                    border: "1px solid rgba(255, 204, 1, 0.2)",
+                    backgroundColor: "rgba(124, 58, 237, 0.1)",
+                    border: "1px solid rgba(124, 58, 237, 0.2)",
                   }}
                 >
-                  <Person sx={{ fontSize: 18, color: "#ffcc01" }} />
+                  <Person sx={{ fontSize: 18, color: "#7c3aed" }} />
                   <Box>
                     <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)", display: "block" }}>
                       Convidado por
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#ffcc01", fontWeight: 600 }}>
+                    <Typography variant="body2" sx={{ color: "#7c3aed", fontWeight: 600 }}>
                       {user.invited_by.name || user.invited_by.email}
                     </Typography>
                   </Box>

@@ -406,7 +406,7 @@ export default function BroadcastNotificationPage() {
                     )
                   }
                   sx={{
-                    backgroundColor: "rgb(255, 31, 33)",
+                    backgroundColor: "#ffffff",
                     color: "#fff",
                     fontWeight: 600,
                     px: 4,
@@ -577,7 +577,7 @@ export default function BroadcastNotificationPage() {
               )
             }
             sx={{
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 600,
               textTransform: "none",

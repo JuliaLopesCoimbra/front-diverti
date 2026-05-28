@@ -90,13 +90,13 @@ const LgpdModal: React.FC<LgpdModalProps> = ({ open, onClose }) => {
           onClick={onClose}
           variant="contained"
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
-            color: "#fff",
+            backgroundColor: "#ffffff",
+            color: "#111111",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "rgb(220, 20, 22)",
+              backgroundColor: "#e8e8e8",
             },
           }}
         >

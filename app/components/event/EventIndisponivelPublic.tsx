@@ -47,7 +47,7 @@ export default function EventIndisponivelPublic() {
       <Button
         onClick={() => router.push("/")}
         sx={{
-          backgroundColor: "rgb(255, 31, 33)",
+          backgroundColor: "#ffffff",
           color: "#fff",
           fontWeight: 700,
           padding: "12px 32px",

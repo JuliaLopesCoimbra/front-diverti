@@ -399,7 +399,7 @@ export default function StorePage() {
                     mb: 1,
                   }}
                 >
-                  Loja Rock In Rio
+                  Loja Circuito Sertanejo
                 </Typography>
                 <Typography
                   variant="body2"
@@ -411,8 +411,8 @@ export default function StorePage() {
                   }}
                 >
                   {currentEvent?.meeting_point_location 
-                    ? `A loja Rock In Rio está localizada no endereço do Meeting Point: ${currentEvent.meeting_point_location}. Estes produtos estão sendo vendidos na loja Rock In Rio do evento. Clique em qualquer produto para ver mais detalhes.`
-                    : "Estes produtos estão sendo vendidos na loja Rock In Rio do evento. Clique em qualquer produto para ver mais detalhes."}
+                    ? `A loja Circuito Sertanejo está localizada no endereço do Meeting Point: ${currentEvent.meeting_point_location}. Estes produtos estão sendo vendidos na loja Circuito Sertanejo do evento. Clique em qualquer produto para ver mais detalhes.`
+                    : "Estes produtos estão sendo vendidos na loja Circuito Sertanejo do evento. Clique em qualquer produto para ver mais detalhes."}
                 </Typography>
               </Box>
 

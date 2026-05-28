@@ -143,11 +143,11 @@ const professionOptions = [
 ];
 
 const initialDraft: AdDraft = {
-  campaignName: "Brahma Open Bar - Sunset Premium",
+  campaignName: "Mercado Pago - Pague com QR Code",
   adType: "CPC",
-  creativeUrl: "/ads/brahma.png",
-  creativeName: "brahma.png",
-  redirectUrl: "https://www.rockworld.com.br/anuncios/brahma-open-bar",
+  creativeUrl: "/ads/mercadopago.png",
+  creativeName: "mercadopago.png",
+  redirectUrl: "https://www.mercadopago.com.br",
   eventId: "103",
   targetUnits: "8500",
   budgetType: "diario",
@@ -165,7 +165,7 @@ const initialDraft: AdDraft = {
 const mockEvents: EventResponse[] = [
   {
     id: 101,
-    title: "Rock in Rio Experience",
+    title: "Circuito Sertanejo Experience",
     description: "Evento mockado para validação visual do dashboard.",
     starts_at: "2026-04-18T18:00:00",
     ends_at: "2026-04-18T23:59:00",
@@ -199,10 +199,10 @@ const mockDashboardAds: MockDashboardAd[] = [
   {
     id: "ad-1",
     adIdentifier: "1",
-    name: "Beefeater Sunset Sessions",
-    advertiser: "Beefeater",
+    name: "Globoplay",
+    advertiser: "Globoplay",
     imageUrl: "/ads/1.png",
-    redirectUrl: "https://www.pernod-ricard.com/pt/locations/brasil",
+    redirectUrl: "https://www.globoplay.globo.com",
     views: 18240,
     clicks: 624,
     ctr: 3.42,
@@ -213,10 +213,10 @@ const mockDashboardAds: MockDashboardAd[] = [
   {
     id: "ad-2",
     adIdentifier: "2",
-    name: "Maturatta Camarote Prime",
-    advertiser: "Maturatta",
+    name: "Brahma",
+    advertiser: "Brahma",
     imageUrl: "/ads/2.png",
-    redirectUrl: "https://www.friboi.com.br/marcas/maturatta-friboi/",
+    redirectUrl: "https://www.brahma.com.br",
     views: 13980,
     clicks: 402,
     ctr: 2.88,
@@ -227,10 +227,10 @@ const mockDashboardAds: MockDashboardAd[] = [
   {
     id: "ad-3",
     adIdentifier: "3",
-    name: "Brahma Open Bar",
-    advertiser: "Brahma",
+    name: "Sicoob",
+    advertiser: "Sicoob",
     imageUrl: "/ads/3.png",
-    redirectUrl: "https://www.pernod-ricard.com",
+    redirectUrl: "https://www.sicoob.com.br",
     views: 22510,
     clicks: 905,
     ctr: 4.02,
@@ -240,11 +240,11 @@ const mockDashboardAds: MockDashboardAd[] = [
   },
   {
     id: "ad-4",
-    adIdentifier: "5",
-    name: "Ballantine's VIP Night",
-    advertiser: "Ballantine's",
-    imageUrl: "/ads/5.png",
-    redirectUrl: "https://www.pernod-ricard.com/pt/locations/brasil",
+    adIdentifier: "4",
+    name: "Volkswagen",
+    advertiser: "Volkswagen",
+    imageUrl: "/ads/4.png",
+    redirectUrl: "https://www.vw.com.br",
     views: 11760,
     clicks: 318,
     ctr: 2.70,
@@ -254,11 +254,11 @@ const mockDashboardAds: MockDashboardAd[] = [
   },
   {
     id: "ad-5",
-    adIdentifier: "1-premium",
-    name: "After Lounge Experience",
-    advertiser: "RockWorld",
-    imageUrl: "/ads/1.png",
-    redirectUrl: "https://www.rockworld.com.br",
+    adIdentifier: "5",
+    name: "Ballantines",
+    advertiser: "Ballantines",
+    imageUrl: "/ads/5.png",
+    redirectUrl: "https://www.ballantines.com",
     views: 9640,
     clicks: 251,
     ctr: 2.60,
@@ -540,32 +540,32 @@ const mockBrandsByEvent: Record<string, { brand: string; engagement: number }[]>
     { brand: "Beefeater", engagement: 81 },
     { brand: "Ballantine's", engagement: 74 },
     { brand: "Maturatta", engagement: 63 },
-    { brand: "RockWorld", engagement: 58 },
+    { brand: "Circuito Sertanejo", engagement: 58 },
   ],
   "101": [
     { brand: "Brahma", engagement: 69 },
     { brand: "Beefeater", engagement: 78 },
     { brand: "Ballantine's", engagement: 71 },
     { brand: "Maturatta", engagement: 67 },
-    { brand: "RockWorld", engagement: 43 },
+    { brand: "Circuito Sertanejo", engagement: 43 },
   ],
   "102": [
     { brand: "Brahma", engagement: 94 },
     { brand: "Beefeater", engagement: 83 },
     { brand: "Ballantine's", engagement: 72 },
     { brand: "Maturatta", engagement: 49 },
-    { brand: "RockWorld", engagement: 40 },
+    { brand: "Circuito Sertanejo", engagement: 40 },
   ],
   "103": [
     { brand: "Brahma", engagement: 73 },
     { brand: "Beefeater", engagement: 61 },
     { brand: "Ballantine's", engagement: 69 },
     { brand: "Maturatta", engagement: 70 },
-    { brand: "RockWorld", engagement: 64 },
+    { brand: "Circuito Sertanejo", engagement: 64 },
   ],
 };
 
-const chartPalette = ["#ff1f21", "#ffcc01", "#4fc3f7", "#ab47bc", "#66bb6a"];
+const chartPalette = ["#ffffff", "#ffcc01", "#4fc3f7", "#ab47bc", "#66bb6a"];
 
 export default function AdminAdsPage() {
   const router = useRouter();
@@ -879,7 +879,7 @@ export default function AdminAdsPage() {
                   flexShrink: 0,
                 }}
               >
-                <CampaignIcon sx={{ color: "rgb(255, 31, 33)", fontSize: 28 }} />
+                <CampaignIcon sx={{ color: "#ffffff", fontSize: 28 }} />
               </Box>
 
               <Box>
@@ -887,7 +887,7 @@ export default function AdminAdsPage() {
                   {tab === "create" ? "Inserir anúncio" : "Anúncios"}
                 </Typography>
                 <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.55)", mt: 0.25 }}>
-                  Rock in Rio
+                  Circuito Sertanejo
                 </Typography>
               </Box>
             </Box>
@@ -897,15 +897,15 @@ export default function AdminAdsPage() {
                 variant="contained"
                 onClick={() => setTab("create")}
                 sx={{
-                  background: "linear-gradient(180deg, #ff2e30, #ff1f21)",
-                  color: "#fff",
+                  backgroundColor: "#ffffff",
+                  color: "#111111",
                   fontWeight: 700,
                   borderRadius: "12px",
                   textTransform: "none",
                   px: 3,
                   py: 1.1,
                   fontSize: "0.95rem",
-                  "&:hover": { background: "linear-gradient(180deg, #ff4547, #dc1416)" },
+                  "&:hover": { backgroundColor: "#e8e8e8" },
                 }}
               >
                 + Inserir anúncio
@@ -922,11 +922,16 @@ export default function AdminAdsPage() {
                   sx={{
                     minWidth: 520,
                     "& .MuiStepLabel-label": {
-                      color: "rgba(255,255,255,0.7)",
+                      color: "rgba(255,255,255,0.5)",
                       fontSize: { xs: "0.78rem", sm: "0.92rem" },
                     },
-                    "& .Mui-active .MuiStepLabel-label, & .Mui-completed .MuiStepLabel-label":
-                      { color: "#fff" },
+                    "& .MuiStepLabel-label.Mui-active": { color: "#fff", fontWeight: 700 },
+                    "& .MuiStepLabel-label.Mui-completed": { color: "rgba(255,255,255,0.6)" },
+                    "& .MuiStepIcon-root": { color: "rgba(255,255,255,0.15)" },
+                    "& .MuiStepIcon-root.Mui-active": { color: "#ffffff" },
+                    "& .MuiStepIcon-root.Mui-completed": { color: "rgba(255,255,255,0.45)" },
+                    "& .MuiStepIcon-text": { fill: "#111111" },
+                    "& .MuiStepConnector-line": { borderColor: "rgba(255,255,255,0.15)" },
                   }}
                 >
                   {steps.map((label) => (
@@ -1029,7 +1034,7 @@ export default function AdminAdsPage() {
                               sx={textFieldSx}
                             />
                             <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.82rem" }}>
-                              Mock inicial carregado com `3.png`. Ao escolher outra imagem, o preview
+                              Mock inicial carregado com `mercadopago.png`. Ao escolher outra imagem, o preview
                               será atualizado automaticamente.
                             </Typography>
                           </Box>
@@ -1195,7 +1200,7 @@ export default function AdminAdsPage() {
                       </Typography>
                       <ReviewRow label="Campanha" value={draft.campaignName || "-"} />
                       <ReviewRow label="Tipo" value={draft.adType} />
-                      <ReviewRow label="Evento" value="Rock in Rio" />
+                      <ReviewRow label="Evento" value="Circuito Sertanejo" />
                       <ReviewRow label="Criativo" value={draft.creativeName || "-"} />
                       <ReviewRow label="Destino" value={draft.redirectUrl || "-"} />
                       <ReviewRow
@@ -1432,7 +1437,7 @@ export default function AdminAdsPage() {
                   Desempenho por anúncio
                 </Typography>
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", xl: "repeat(3, 1fr)" }, gap: 2 }}>
-                  {mergedRows.slice(0, 4).map((ad) => (
+                  {mergedRows.slice(0, 5).map((ad) => (
                     <Card key={ad.id} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
                       {/* Imagem ou vídeo do anúncio */}
                       {ad.imageUrl.endsWith(".mp4") ? (
@@ -1489,7 +1494,7 @@ export default function AdminAdsPage() {
                         </Typography>
                       </Box>
                       <LinearProgress variant="determinate" value={item.percentage}
-                        sx={{ height: 10, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.08)", "& .MuiLinearProgress-bar": { backgroundColor: "rgb(255, 31, 33)" } }} />
+                        sx={{ height: 10, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.08)", "& .MuiLinearProgress-bar": { backgroundColor: "#ffffff" } }} />
                     </Box>
                   ))}
                 </Box>
@@ -1543,7 +1548,7 @@ export default function AdminAdsPage() {
                       <Tooltip contentStyle={chartTooltipSx} />
                       <Legend wrapperStyle={{ color: "#fff" }} />
                       <Bar dataKey="views" fill="#ffcc01" name="Views" radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="cliques" fill="#ff1f21" name="Cliques" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="cliques" fill="#ffffff" name="Cliques" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartPanel>
@@ -1618,7 +1623,7 @@ export default function AdminAdsPage() {
                       <YAxis tick={{ fill: "#d1d5db" }} />
                       <Tooltip contentStyle={chartTooltipSx} />
                       <Legend wrapperStyle={{ color: "#fff" }} />
-                      <Bar dataKey="engagement" fill="#ff1f21" name="Engajamento" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="engagement" fill="#ffffff" name="Engajamento" radius={[6, 6, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartPanel>
@@ -1921,7 +1926,7 @@ function AudienceAgeRangeSelector({
         max={100}
         disableSwap
         sx={{
-          color: "rgb(255, 31, 33)",
+          color: "#ffffff",
           "& .MuiSlider-thumb": {
             width: 18,
             height: 18,
@@ -2001,7 +2006,7 @@ const textFieldSx = {
       borderColor: "rgba(255,255,255,0.35)",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "rgb(255, 31, 33)",
+      borderColor: "#ffffff",
     },
   },
   "& .MuiInputLabel-root": {
@@ -2010,12 +2015,12 @@ const textFieldSx = {
 } as const;
 
 const primaryButtonSx = {
-  backgroundColor: "rgb(255, 31, 33)",
-  color: "#fff",
+  backgroundColor: "#ffffff",
+  color: "#111111",
   fontWeight: 700,
   px: 3,
   "&:hover": {
-    backgroundColor: "rgb(220, 20, 22)",
+    backgroundColor: "#e8e8e8",
   },
 } as const;
 

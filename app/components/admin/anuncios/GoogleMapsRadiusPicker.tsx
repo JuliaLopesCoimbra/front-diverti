@@ -157,7 +157,7 @@ export default function GoogleMapsRadiusPicker({
             step={1}
             valueLabelDisplay="auto"
             onChange={(_, value) => onRadiusChange(value as number)}
-            sx={{ color: "rgb(255, 31, 33)" }}
+            sx={{ color: "#ffffff" }}
           />
           <Typography sx={{ color: "rgba(255,255,255,0.7)", mt: 0.5 }}>
             Raio selecionado: {radiusKm} km
@@ -197,9 +197,9 @@ export default function GoogleMapsRadiusPicker({
                     center={location}
                     radius={radiusKm * 1000}
                     options={{
-                      fillColor: "#ff1f21",
+                      fillColor: "#ffffff",
                       fillOpacity: 0.18,
-                      strokeColor: "#ff1f21",
+                      strokeColor: "#ffffff",
                       strokeOpacity: 0.8,
                       strokeWeight: 2,
                     }}
@@ -259,7 +259,7 @@ export default function GoogleMapsRadiusPicker({
                 alignItems: "center",
               }}
             >
-              <PlaceIcon sx={{ color: "#ff1f21", fontSize: 34, filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.35))" }} />
+              <PlaceIcon sx={{ color: "#ffffff", fontSize: 34, filter: "drop-shadow(0 6px 10px rgba(0,0,0,0.35))" }} />
               <Box
                 sx={{
                   mt: -0.8,
@@ -321,7 +321,7 @@ const textFieldSx = {
       borderColor: "rgba(255,255,255,0.35)",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "rgb(255, 31, 33)",
+      borderColor: "#ffffff",
     },
   },
   "& .MuiInputLabel-root": {

@@ -15,22 +15,27 @@ interface AdPlacement {
 const MOCK_ADS: AdPlacement[] = [
   {
     image_url: "/ads/1.png",
-    redirect_url: "https://www.pernod-ricard.com/pt/locations/brasil",
-    alt_text: "Beefeater",
+    redirect_url: "https://www.globoplay.globo.com",
+    alt_text: "Globoplay",
   },
   {
     image_url: "/ads/2.png",
-    redirect_url: "https://www.friboi.com.br/marcas/maturatta-friboi/",
-    alt_text: "Maturatta - Oferta Exclusiva N1",
-  },
-  {
-    image_url: "/ads/3.png",
-    redirect_url: "https://www.pernod-ricard.com",
+    redirect_url: "https://www.brahma.com.br",
     alt_text: "Brahma",
   },
   {
+    image_url: "/ads/3.png",
+    redirect_url: "https://www.sicoob.com.br",
+    alt_text: "Sicoob",
+  },
+  {
+    image_url: "/ads/4.png",
+    redirect_url: "https://www.vw.com.br",
+    alt_text: "Volkswagen",
+  },
+  {
     image_url: "/ads/5.png",
-    redirect_url: "https://www.pernod-ricard.com/pt/locations/brasil",
+    redirect_url: "https://www.ballantines.com",
     alt_text: "Ballantines",
   },
 ];

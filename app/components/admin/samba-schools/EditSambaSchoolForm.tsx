@@ -456,7 +456,7 @@ export default function EditSambaSchoolForm({
             sx={{
               flex: 1,
               borderRadius: "999px",
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 700,
               fontSize: { xs: "0.875rem", sm: "1.1rem" },

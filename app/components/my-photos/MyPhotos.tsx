@@ -491,7 +491,7 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
               <CircularProgress
                 size={24}
                 sx={{
-                  color: "rgb(255, 31, 33)",
+                  color: "#ffffff",
                 }}
               />
             )}
@@ -542,7 +542,7 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
               backgroundColor: "rgba(255, 31, 33, 0.1)",
             }}
           >
-            <ImageOutlinedIcon sx={{ color: "rgb(255, 31, 33)", fontSize: 28 }} />
+            <ImageOutlinedIcon sx={{ color: "#ffffff", fontSize: 28 }} />
           </Box>
           Deseja baixar novamente?
         </DialogTitle>
@@ -631,10 +631,10 @@ export default function MyPhotos({ hideTitle = false }: MyPhotosProps) {
             variant="contained"
             startIcon={<DownloadIcon />}
             sx={{
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-              color: "#fff",
+              background: "#ffffff",
+              color: "#111111",
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
           >

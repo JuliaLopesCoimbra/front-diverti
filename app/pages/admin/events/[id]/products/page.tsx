@@ -164,7 +164,7 @@ export default function EventProductsPage() {
               startIcon={<AddIcon />}
               onClick={() => router.push(`/pages/admin/products-event/create?eventId=${eventId}`)}
               sx={{
-                backgroundColor: "rgb(255, 31, 33)",
+                backgroundColor: "#ffffff",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: { xs: "0.688rem", sm: "0.95rem" },
@@ -219,7 +219,7 @@ export default function EventProductsPage() {
               startIcon={<AddIcon />}
               onClick={() => router.push(`/pages/admin/products-event/create?eventId=${eventId}`)}
               sx={{
-                backgroundColor: "rgb(255, 31, 33)",
+                backgroundColor: "#ffffff",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: "1rem",

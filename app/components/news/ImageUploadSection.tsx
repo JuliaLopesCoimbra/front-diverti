@@ -38,7 +38,7 @@ export default function ImageUploadSection({
   return (
     <Box sx={{ mb: 4 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <PhotoCamera sx={{ color: "rgb(255, 31, 33)", fontSize: 20 }} />
+        <PhotoCamera sx={{ color: "#ffffff", fontSize: 20 }} />
         <Typography
           variant="subtitle1"
           sx={{
@@ -55,7 +55,7 @@ export default function ImageUploadSection({
             size="small"
             sx={{
               backgroundColor: "rgba(255, 31, 33, 0.2)",
-              color: "rgb(255, 31, 33)",
+              color: "#ffffff",
               fontWeight: 600,
               fontSize: "0.75rem",
               height: 20,
@@ -194,7 +194,7 @@ export default function ImageUploadSection({
                   "&:hover": {
                     backgroundColor: "rgba(255,255,255,0.1)",
                     borderColor: "rgba(255, 31, 33, 0.5)",
-                    color: "rgb(255, 31, 33)",
+                    color: "#ffffff",
                     transform: "translateY(-2px)",
                   },
                 }}

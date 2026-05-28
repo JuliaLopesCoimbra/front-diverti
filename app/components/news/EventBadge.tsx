@@ -13,22 +13,22 @@ export default function EventBadge({ eventTitle }: EventBadgeProps) {
     <Slide direction="down" in timeout={500}>
       <Box sx={{ mb: 3 }}>
         <Chip
-          icon={<Event sx={{ fontSize: 16, color: "rgb(255, 31, 33) !important" }} />}
+          icon={<Event sx={{ fontSize: 16, color: "#fff !important" }} />}
           label={
             <Typography sx={{ fontSize: "0.875rem", fontWeight: 600 }}>
               {eventTitle}
             </Typography>
           }
           sx={{
-            backgroundColor: "rgba(255, 31, 33, 0.15)",
+            backgroundColor: "rgba(255,255,255,0.1)",
             backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 31, 33, 0.3)",
-            color: "rgb(255, 31, 33)",
+            border: "1px solid rgba(255,255,255,0.2)",
+            color: "#fff",
             fontWeight: 600,
             padding: "8px 4px",
             height: "auto",
             "& .MuiChip-icon": {
-              color: "rgb(255, 31, 33)",
+              color: "#fff",
             },
           }}
         />

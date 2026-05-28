@@ -172,7 +172,7 @@ export default function LiveStandSessionFormDialog({
           disabled={saving || !sessionDate || !startTime || Number(capacity) <= 0}
           variant="contained"
           sx={{
-            backgroundColor: "#ff1f21",
+            backgroundColor: "#ffffff",
             textTransform: "none",
             "&:hover": { backgroundColor: "#dc1416" },
           }}

@@ -123,13 +123,13 @@ function AwaitingEmailVerificationContent() {
             sx={{
               py: 1.5,
               borderRadius: "12px",
-              backgroundColor: "rgb(255, 31, 33)",
-              color: "#fff",
+              backgroundColor: "#ffffff",
+              color: "#111111",
               fontWeight: 600,
               fontSize: "16px",
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "#ffd633",
+                backgroundColor: "#e8e8e8",
               },
               "&:disabled": {
                 backgroundColor: "rgba(255, 204, 1, 0.5)",

@@ -328,7 +328,7 @@ export default function CreateMusicLyricsForm({
             disabled={loading || !songName.trim() || !lyrics.trim()}
             sx={{
               flex: 1,
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 600,
               textTransform: "none",

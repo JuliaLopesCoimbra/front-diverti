@@ -60,6 +60,7 @@ function PrizeWinContent() {
     name: string | null;
     image_url?: string | null;
     position: string | null;
+    event_id: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -67,6 +68,7 @@ function PrizeWinContent() {
     const prizeName = params.get("prize_name");
     const prizeImage = params.get("prize_image");
     const prizePosition = params.get("prize_position");
+    const eventId = params.get("event_id");
 
     if (!prizeName) {
       router.replace("/pages/user/home");
@@ -78,13 +80,15 @@ function PrizeWinContent() {
       name: prizeName,
       image_url: prizeImage,
       position: prizePosition,
+      event_id: eventId,
     });
   }, [params, router]);
 
   const normalizedPrizeName = prize?.name?.trim().toLowerCase() || "";
   const isNoPrizeResult =
-    normalizedPrizeName === "não foi dessa vez" ||
-    normalizedPrizeName === "nao foi dessa vez";
+    normalizedPrizeName.includes("não foi") ||
+    normalizedPrizeName.includes("nao foi") ||
+    normalizedPrizeName.includes("tente novamente");
 
   if (!prize) {
     return (
@@ -275,7 +279,7 @@ function PrizeWinContent() {
                 ? "rgba(255,255,255,0.1)"
                 : "rgba(255,31,33,0.14)",
               border: "1px solid rgba(255,31,33,0.35)",
-              color: isNoPrizeResult ? "#fff" : "rgb(255, 31, 33)",
+              color: isNoPrizeResult ? "#fff" : "#ffffff",
               fontWeight: 700,
               fontSize: "0.82rem",
               letterSpacing: "0.08em",
@@ -296,7 +300,7 @@ function PrizeWinContent() {
               textShadow: "0 4px 20px rgba(0,0,0,0.45)",
             }}
           >
-            {isNoPrizeResult ? "Não foi dessa vez" : "Você ganhou!"}
+            {isNoPrizeResult ? "Que pena!" : "Você ganhou!"}
           </Typography>
 
           <Typography
@@ -304,66 +308,72 @@ function PrizeWinContent() {
               color: "rgba(255,255,255,0.84)",
               fontSize: { xs: "0.95rem", md: "1rem" },
               mb: 3,
-              maxWidth: 280,
+              maxWidth: 300,
             }}
           >
             {isNoPrizeResult
-              ? "Mas sua sorte pode mudar no proximo giro. Continue tentando para ganhar um brinde."
+              ? "Não foi dessa vez, mas você ainda tem giros disponíveis. Tente novamente!"
               : "Você ganhou esse cupom. Resgate agora e aproveite seu brinde."}
           </Typography>
 
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: 220,
-              aspectRatio: "1 / 1",
-              borderRadius: 5,
-              mb: 3,
-              p: 2,
-              background: "linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)",
-              border: "1px solid rgba(255,255,255,0.22)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              animation: "prizeFloat 3.2s ease-in-out infinite, glowPulse 2.8s ease-in-out infinite",
-            }}
-          >
-            {prize.image_url ? (
-              <Box
-                component="img"
-                src={prize.image_url}
-                alt={prize.name || "Prêmio"}
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  filter: "drop-shadow(0 12px 20px rgba(0,0,0,0.35))",
-                }}
-              />
-            ) : (
-              <Typography sx={{ color: "#fff", fontWeight: 700 }}>
-                Seu brinde
-              </Typography>
-            )}
-          </Box>
+          {!isNoPrizeResult && (
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 220,
+                aspectRatio: "1 / 1",
+                borderRadius: 5,
+                mb: 3,
+                p: 2,
+                background: "linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.08) 100%)",
+                border: "1px solid rgba(255,255,255,0.22)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                animation: "prizeFloat 3.2s ease-in-out infinite, glowPulse 2.8s ease-in-out infinite",
+              }}
+            >
+              {prize.image_url ? (
+                <Box
+                  component="img"
+                  src={prize.image_url}
+                  alt={prize.name || "Prêmio"}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    filter: "drop-shadow(0 12px 20px rgba(0,0,0,0.35))",
+                  }}
+                />
+              ) : (
+                <Typography sx={{ color: "#fff", fontWeight: 700 }}>
+                  Seu brinde
+                </Typography>
+              )}
+            </Box>
+          )}
 
-          <Typography
-            sx={{
-              color: "#fff",
-              fontSize: { xs: "1.35rem", md: "1.6rem" },
-              fontWeight: 800,
-              mb: 1,
-            }}
-          >
-            {prize.name}
-          </Typography>
-
-        
+          {!isNoPrizeResult && (
+            <Typography
+              sx={{
+                color: "#fff",
+                fontSize: { xs: "1.35rem", md: "1.6rem" },
+                fontWeight: 800,
+                mb: 1,
+              }}
+            >
+              {prize.name}
+            </Typography>
+          )}
 
           <Button
             variant="contained"
             size="large"
-            onClick={() => router.push("/pages/user/home")}
+            onClick={() =>
+              isNoPrizeResult && prize?.event_id
+                ? router.push(`/pages/user/roulette/${prize.event_id}`)
+                : router.push("/pages/user/home?tab=roleta")
+            }
             sx={{
               width: "100%",
               minHeight: 54,
@@ -371,16 +381,15 @@ function PrizeWinContent() {
               textTransform: "none",
               fontSize: "1rem",
               fontWeight: 800,
-              color: "#fff",
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-              boxShadow: "0 10px 24px rgba(255, 31, 33, 0.28)",
+              backgroundColor: "#ffffff",
+              color: "#111111",
+              boxShadow: "0 10px 24px rgba(0,0,0,0.2)",
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
-                boxShadow: "0 14px 30px rgba(255, 31, 33, 0.38)",
+                backgroundColor: "#e8e8e8",
               },
             }}
           >
-            {isNoPrizeResult ? "Voltar para home" : "Resgatar cupom"}
+            {isNoPrizeResult ? "Tentar novamente" : "Resgatar cupom"}
           </Button>
 
           <Button

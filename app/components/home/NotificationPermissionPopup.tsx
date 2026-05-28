@@ -75,7 +75,7 @@ const NotificationPermissionPopup: React.FC<NotificationPermissionPopupProps> = 
           variant="contained"
           fullWidth
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
+            backgroundColor: "#ffffff",
             color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",

@@ -177,7 +177,7 @@ export default function EventsPage() {
         <div style={{ display: "flex", alignItems: "center" }}>
           <Image
             src="/logo/rockinrio.png"
-            alt="Rock in Rio"
+            alt="Circuito Sertanejo"
             width={180}
             height={60}
             style={{ height: "auto", maxWidth: "100%" }}
@@ -319,8 +319,8 @@ export default function EventsPage() {
               <Button
                 sx={{
                   marginTop: 1,
-                  backgroundColor: "rgb(255, 31, 33)",
-                  color: "#fff",
+                  backgroundColor: "#ffffff",
+                  color: "#111111",
                   fontWeight: 700,
                   padding: { xs: "10px 24px", md: "10px 28px" },
                   borderRadius: "30px",
@@ -329,9 +329,9 @@ export default function EventsPage() {
                   boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
                   transition: "all 0.2s ease",
                   "&:hover": {
-                    backgroundColor: "rgb(255, 31, 33)",
+                    backgroundColor: "#e8e8e8",
                     transform: "scale(1.05)",
-                    boxShadow: "0 6px 16px rgba(255, 31, 33, 0.35)",
+                    boxShadow: "0 6px 16px rgba(0,0,0,0.2)",
                   },
                 }}
               >

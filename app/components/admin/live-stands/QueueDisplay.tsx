@@ -112,7 +112,7 @@ export default function QueueDisplay({ open, onClose, session }: Props) {
         <Box
           component="img"
           src="/logo/rockinrio.png"
-          alt="Rock in Rio"
+          alt="Circuito Sertanejo"
           sx={{ height: { xs: 34, md: 42 }, objectFit: "contain" }}
         />
         <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: { xs: "0.95rem", md: "1.1rem" } }}>
@@ -236,7 +236,7 @@ export default function QueueDisplay({ open, onClose, session }: Props) {
         {/* ── Current group ── */}
         <Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-            <PeopleIcon sx={{ color: "#ff1f21", fontSize: 20 }} />
+            <PeopleIcon sx={{ color: "#ffffff", fontSize: 20 }} />
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem" }}>
               Entrar agora
             </Typography>
@@ -272,7 +272,7 @@ export default function QueueDisplay({ open, onClose, session }: Props) {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: idx === 0 ? "#ff1f21" : "rgba(255,255,255,0.07)",
+                    backgroundColor: idx === 0 ? "#ffffff" : "rgba(255,255,255,0.07)",
                     border: idx === 0 ? "none" : "1px solid rgba(255,255,255,0.12)",
                   }}
                 >
@@ -296,7 +296,7 @@ export default function QueueDisplay({ open, onClose, session }: Props) {
                 {idx === 0 && (
                   <Typography
                     sx={{
-                      color: "#ff1f21",
+                      color: "#ffffff",
                       fontSize: "0.68rem",
                       fontWeight: 800,
                       textTransform: "uppercase",

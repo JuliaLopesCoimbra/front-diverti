@@ -301,7 +301,7 @@ export default function ProfilePage() {
           color: "white",
         }}
       >
-        <CircularProgress sx={{ color: "#ffc91f" }} />
+        <CircularProgress sx={{ color: "#7c3aed" }} />
       </div>
     );
   }
@@ -403,7 +403,7 @@ export default function ProfilePage() {
                 height: { xs: 150, md: 200 },
                 borderRadius: "50%",
                 overflow: "hidden",
-                border: "4px solid #FFD600",
+                border: "4px solid #7c3aed",
                 boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                 position: "relative",
                 "& > span": {
@@ -465,9 +465,9 @@ export default function ProfilePage() {
                 }}
               >
                 {uploading ? (
-                  <CircularProgress sx={{ color: "#FFD600" }} size={40} />
+                  <CircularProgress sx={{ color: "#7c3aed" }} size={40} />
                 ) : (
-                  <CameraAltIcon sx={{ fontSize: { xs: 30, md: 40 }, color: "#FFD600" }} />
+                  <CameraAltIcon sx={{ fontSize: { xs: 30, md: 40 }, color: "#7c3aed" }} />
                 )}
               </Box>
             </Box>
@@ -504,7 +504,7 @@ export default function ProfilePage() {
             >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <PersonIcon sx={{ fontSize: 28, color: "#FFD600" }} />
+                  <PersonIcon sx={{ fontSize: 28, color: "#7c3aed" }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.7)", mb: 0.5 }}>
                       Nome
@@ -529,7 +529,7 @@ export default function ProfilePage() {
             >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <EmailIcon sx={{ fontSize: 28, color: "#FFD600" }} />
+                  <EmailIcon sx={{ fontSize: 28, color: "#7c3aed" }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.7)", mb: 0.5 }}>
                       Email
@@ -557,7 +557,7 @@ export default function ProfilePage() {
             >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <CakeIcon sx={{ fontSize: 28, color: "#FFD600" }} />
+                  <CakeIcon sx={{ fontSize: 28, color: "#7c3aed" }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.7)", mb: 1 }}>
                       Data de Nascimento
@@ -577,10 +577,10 @@ export default function ProfilePage() {
                                 borderColor: "rgba(255, 255, 255, 0.3)",
                               },
                               "&:hover fieldset": {
-                                borderColor: "#FFD600",
+                                borderColor: "#7c3aed",
                               },
                               "&.Mui-focused fieldset": {
-                                borderColor: "#FFD600",
+                                borderColor: "#7c3aed",
                               },
                             },
                             "& .MuiInputBase-input": {
@@ -598,10 +598,10 @@ export default function ProfilePage() {
                             onClick={handleSaveBirthDate}
                             disabled={saving}
                             sx={{
-                              backgroundColor: "rgb(255, 31, 33)",
-                              color: "#fff",
+                              backgroundColor: "#ffffff",
+                              color: "#111111",
                               "&:hover": {
-                                backgroundColor: "rgb(220, 20, 22)",
+                                backgroundColor: "#e8e8e8",
                               },
                               flex: 1,
                             }}
@@ -617,8 +617,8 @@ export default function ProfilePage() {
                               borderColor: "rgba(255,255,255,0.5)",
                               color: "white",
                               "&:hover": {
-                                borderColor: "#FFD600",
-                                backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                borderColor: "#7c3aed",
+                                backgroundColor: "rgba(124, 58, 237, 0.1)",
                               },
                               flex: 1,
                             }}
@@ -635,9 +635,9 @@ export default function ProfilePage() {
                         <IconButton
                           onClick={() => setEditingBirthDate(true)}
                           sx={{
-                            color: "#FFD600",
+                            color: "#7c3aed",
                             "&:hover": {
-                              backgroundColor: "rgba(255, 215, 0, 0.1)",
+                              backgroundColor: "rgba(124, 58, 237, 0.1)",
                             },
                           }}
                         >
@@ -662,7 +662,7 @@ export default function ProfilePage() {
             >
               <CardContent>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <WcIcon sx={{ fontSize: 28, color: "#FFD600" }} />
+                  <WcIcon sx={{ fontSize: 28, color: "#7c3aed" }} />
                   <Box sx={{ flex: 1 }}>
                     <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.7)", mb: 1 }}>
                       Sexo
@@ -683,10 +683,10 @@ export default function ProfilePage() {
                                 borderColor: "rgba(255, 255, 255, 0.3)",
                               },
                               "&:hover .MuiOutlinedInput-notchedOutline": {
-                                borderColor: "#FFD600",
+                                borderColor: "#7c3aed",
                               },
                               "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                                borderColor: "#FFD600",
+                                borderColor: "#7c3aed",
                               },
                               "& .MuiSvgIcon-root": {
                                 color: "white",
@@ -703,13 +703,13 @@ export default function ProfilePage() {
                                   "& .MuiMenuItem-root": {
                                     color: "#fff",
                                     "&:hover": {
-                                      backgroundColor: "rgba(255, 215, 0, 0.2)",
+                                      backgroundColor: "rgba(124, 58, 237, 0.2)",
                                     },
                                     "&.Mui-selected": {
-                                      backgroundColor: "rgba(255, 215, 0, 0.3)",
-                                      color: "#FFD600",
+                                      backgroundColor: "rgba(124, 58, 237, 0.3)",
+                                      color: "#7c3aed",
                                       "&:hover": {
-                                        backgroundColor: "rgba(255, 215, 0, 0.4)",
+                                        backgroundColor: "rgba(124, 58, 237, 0.4)",
                                       },
                                     },
                                   },
@@ -730,10 +730,10 @@ export default function ProfilePage() {
                             onClick={handleSaveGender}
                             disabled={saving}
                             sx={{
-                              backgroundColor: "rgb(255, 31, 33)",
-                              color: "#fff",
+                              backgroundColor: "#ffffff",
+                              color: "#111111",
                               "&:hover": {
-                                backgroundColor: "rgb(220, 20, 22)",
+                                backgroundColor: "#e8e8e8",
                               },
                               flex: 1,
                             }}
@@ -749,8 +749,8 @@ export default function ProfilePage() {
                               borderColor: "rgba(255,255,255,0.5)",
                               color: "white",
                               "&:hover": {
-                                borderColor: "#FFD600",
-                                backgroundColor: "rgba(255, 215, 0, 0.1)",
+                                borderColor: "#7c3aed",
+                                backgroundColor: "rgba(124, 58, 237, 0.1)",
                               },
                               flex: 1,
                             }}
@@ -767,9 +767,9 @@ export default function ProfilePage() {
                         <IconButton
                           onClick={() => setEditingGender(true)}
                           sx={{
-                            color: "#FFD600",
+                            color: "#7c3aed",
                             "&:hover": {
-                              backgroundColor: "rgba(255, 215, 0, 0.1)",
+                              backgroundColor: "rgba(124, 58, 237, 0.1)",
                             },
                           }}
                         >

@@ -123,6 +123,7 @@ function LiveStandsPageContent() {
         name: values.name,
         description: values.description,
         image: values.image,
+        image_url: values.imageUrl || undefined,
       });
       showToast("Estande criado com sucesso", "success");
 
@@ -185,10 +186,10 @@ function LiveStandsPageContent() {
               sx={{
                 width: 44,
                 height: 44,
-                backgroundColor: "#ff1f21",
-                color: "#fff",
+                backgroundColor: "#ffffff",
+                color: "#111111",
                 "&:hover": {
-                  backgroundColor: "#dc1416",
+                  backgroundColor: "#e8e8e8",
                 },
               }}
             >

@@ -1,4 +1,3 @@
-// /components/auth/LoginForm.tsx
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -7,19 +6,10 @@ import {
   TextField,
   Typography,
   Box,
-  FormControlLabel,
-  Checkbox,
   InputAdornment,
   IconButton,
-  Skeleton,
 } from "@mui/material";
-import {
-  Google,
-  Facebook,
-  Visibility,
-  VisibilityOff,
-  Email,
-} from "@mui/icons-material";
+import { Visibility, VisibilityOff, Email, Google, Facebook } from "@mui/icons-material";
 import { loginUser, resendVerificationEmail } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
@@ -32,121 +22,85 @@ interface LoginData {
   remember_me?: boolean;
 }
 
+const inputSx = {
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    color: "#fff",
+    borderRadius: "14px",
+    transition: "all 0.25s ease",
+    "& fieldset": { borderColor: "rgba(255,255,255,0.18)", borderWidth: "1.5px" },
+    "&:hover fieldset": { borderColor: "rgba(255,255,255,0.38)" },
+    "&.Mui-focused fieldset": { borderColor: "#ffffff", borderWidth: "2px" },
+    "&.Mui-focused": { backgroundColor: "rgba(255,255,255,0.09)" },
+    "& input:-webkit-autofill": {
+      WebkitBoxShadow: "0 0 0 1000px rgba(15,15,15,0.95) inset",
+      WebkitTextFillColor: "#fff",
+      transition: "background-color 9999s ease-in-out 0s",
+    },
+    "& input:-webkit-autofill:focus": {
+      WebkitBoxShadow: "0 0 0 1000px rgba(15,15,15,0.95) inset",
+      WebkitTextFillColor: "#fff",
+    },
+  },
+  "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.5)", fontSize: 14 },
+  "& .MuiInputLabel-root.Mui-focused": { color: "rgba(255,255,255,0.85)" },
+};
+
 const LoginForm: React.FC = () => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [keepMeLoggedIn, setKeepMeLoggedIn] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(true);
-
-  const { login } = useAuth();
-
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResendEmail, setShowResendEmail] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [shouldAnimate, setShouldAnimate] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
+  const { login } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
 
-  // Simula o carregamento inicial da página
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 500); // 500ms de delay para mostrar o skeleton
-
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => setMounted(true), 80);
+    return () => clearTimeout(t);
   }, []);
 
-  // Controla animações quando a página carrega
   useEffect(() => {
-    if (!isInitialLoading) {
-      setShouldAnimate(true);
-      const timer = setTimeout(() => {
-        setShouldAnimate(false);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [isInitialLoading]);
-
-  // Efeito para o cooldown
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (cooldownSeconds > 0) {
-      interval = setInterval(() => {
-        setCooldownSeconds((prev) => {
-          if (prev <= 1) {
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
+    if (cooldownSeconds <= 0) return;
+    const id = setInterval(() => setCooldownSeconds((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
   }, [cooldownSeconds]);
 
   const handleLogin = async () => {
     setLoading(true);
     setShowResendEmail(false);
-
     try {
-      const loginData: LoginData = { 
-        email, 
-        password,
-        remember_me: keepMeLoggedIn
-      };
+      const loginData: LoginData = { email, password };
       const response = await loginUser(loginData);
-
-      // sucesso â†’ reseta tentativas
       setShowForgotPassword(false);
-      setShowResendEmail(false);
-
       showToast("Login realizado com sucesso!", "success");
-
       const { access_token, refresh_token } = response;
       login(access_token, refresh_token);
-
       localStorage.setItem("access_token", access_token);
-
-      // Se remember_me estiver marcado, cookie expira em 90 dias
-      // Caso contrário, cookie de sessão (expira quando fechar navegador)
-      const cookieOptions = keepMeLoggedIn
-        ? `refresh_token=${refresh_token}; path=/; secure; max-age=${90 * 24 * 60 * 60}` // 90 dias
-        : `refresh_token=${refresh_token}; path=/; secure`; // Sessão
-
-      document.cookie = cookieOptions;
-
+      document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
       router.push("/pages/user/home");
     } catch (err: unknown) {
       setShowForgotPassword(true);
-
       if (err instanceof Error) {
-        // Verificar se precisa completar perfil
         if (err.message === "PROFILE_COMPLETION_REQUIRED" && (err as any).tempToken) {
-          const tempToken = (err as any).tempToken;
-          // Redirecionar para página de completar perfil
-          router.push(`/pages/auth/complete-profile?temp_token=${tempToken}&requires_profile_completion=true`);
+          router.push(`/pages/auth/complete-profile?temp_token=${(err as any).tempToken}&requires_profile_completion=true`);
           return;
         }
-        
-        // Verificar se precisa verificar idade
         if (err.message === "AGE_VERIFICATION_REQUIRED" && (err as any).tempToken) {
-          const tempToken = (err as any).tempToken;
-          // Redirecionar para página de verificação de idade
-          router.push(`/pages/auth/age-verification?temp_token=${tempToken}&requires_age_verification=true`);
+          router.push(`/pages/auth/age-verification?temp_token=${(err as any).tempToken}&requires_age_verification=true`);
           return;
         }
-
-        const errorMessage = err.message.toLowerCase();
-        // Verifica se o erro é de email não confirmado
+        const msg = err.message.toLowerCase();
         if (
-          errorMessage.includes("confirme seu e-mail") ||
-          errorMessage.includes("confirme seu email") ||
-          errorMessage.includes("email não confirmado")
+          msg.includes("confirme seu e-mail") ||
+          msg.includes("confirme seu email") ||
+          msg.includes("email não confirmado")
         ) {
           setShowResendEmail(true);
         }
@@ -164,25 +118,16 @@ const LoginForm: React.FC = () => {
       showToast("Por favor, insira seu email primeiro", "error");
       return;
     }
-
-    if (cooldownSeconds > 0) {
-      return;
-    }
-
+    if (cooldownSeconds > 0) return;
     setResendLoading(true);
     try {
       await resendVerificationEmail(email);
-      setCooldownSeconds(60); // 1 minuto de cooldown
+      setCooldownSeconds(60);
       showToast("Email de verificação reenviado! Verifique também sua pasta de spam.", "success");
     } catch (err: unknown) {
       if (err instanceof Error) {
-        const errorMessage = err.message.toLowerCase();
-        // Se o erro contém informações sobre cooldown, extrair os segundos
-        const cooldownMatch = err.message.match(/(\d+)\s*segundos?/i);
-        if (cooldownMatch) {
-          const seconds = parseInt(cooldownMatch[1]);
-          setCooldownSeconds(seconds);
-        }
+        const match = err.message.match(/(\d+)\s*segundos?/i);
+        if (match) setCooldownSeconds(parseInt(match[1]));
         showToast(err.message, "error");
       } else {
         showToast("Erro ao reenviar email. Tente novamente.", "error");
@@ -192,684 +137,374 @@ const LoginForm: React.FC = () => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" && email && password && !loading) {
-      handleLogin();
-    }
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && email && password && !loading) handleLogin();
   };
-
-  // Skeleton component
-  if (isInitialLoading) {
-    return (
-      <Box
-        sx={{
-          ...dashboardBackgroundSx,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          minHeight: "100vh",
-          padding: { xs: "20px", md: "40px" },
-        }}
-      >
-        <Box
-          sx={{
-            padding: { xs: "30px", md: "40px" },
-            color: "white",
-            width: "100%",
-            maxWidth: { xs: "100%", md: "450px" },
-            textAlign: "left",
-            backgroundColor: "rgba(255, 255, 255, 0.08)",
-            backdropFilter: "blur(20px)",
-            borderRadius: { xs: "16px", md: "24px" },
-            border: "1px solid rgba(255, 255, 255, 0.15)",
-            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-          }}
-        >
-          {/* Título Skeleton */}
-          <Skeleton
-            variant="text"
-            width="40%"
-            height={40}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              marginBottom: { xs: "16px", md: "20px" },
-              marginX: "auto",
-            }}
-          />
-          
-          {/* Subtítulo Skeleton */}
-          <Skeleton
-            variant="text"
-            width="80%"
-            height={20}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              marginBottom: { xs: "24px", md: "28px" },
-              marginX: "auto",
-            }}
-          />
-
-          {/* Campo Email Skeleton */}
-          <Skeleton
-            variant="rectangular"
-            width="100%"
-            height={56}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              borderRadius: "12px",
-              marginBottom: 2,
-            }}
-          />
-
-          {/* Campo Senha Skeleton */}
-          <Skeleton
-            variant="rectangular"
-            width="100%"
-            height={56}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              borderRadius: "12px",
-              marginBottom: { xs: 2, md: 3 },
-            }}
-          />
-
-          {/* Botão Skeleton */}
-          <Skeleton
-            variant="rectangular"
-            width="100%"
-            height={48}
-            sx={{
-              bgcolor: "rgba(255, 204, 1, 0.2)",
-              borderRadius: "12px",
-              marginBottom: 2,
-            }}
-          />
-
-          {/* Divisor Skeleton */}
-          <Box sx={{ display: "flex", alignItems: "center", marginY: 2 }}>
-            <Skeleton
-              variant="text"
-              width="30%"
-              height={1}
-              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
-            />
-            <Skeleton
-              variant="text"
-              width="40%"
-              height={20}
-              sx={{
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-                marginX: 2,
-              }}
-            />
-            <Skeleton
-              variant="text"
-              width="30%"
-              height={1}
-              sx={{ bgcolor: "rgba(255, 255, 255, 0.1)" }}
-            />
-          </Box>
-
-          {/* Botões Social Skeleton */}
-          <Box
-            sx={{
-              display: "flex",
-              gap: { xs: 1.5, md: 2 },
-              marginBottom: 2,
-            }}
-          >
-            <Skeleton
-              variant="rectangular"
-              width="50%"
-              height={44}
-              sx={{
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-                borderRadius: "12px",
-              }}
-            />
-            <Skeleton
-              variant="rectangular"
-              width="50%"
-              height={44}
-              sx={{
-                bgcolor: "rgba(255, 255, 255, 0.1)",
-                borderRadius: "12px",
-              }}
-            />
-          </Box>
-
-          {/* Link Cadastro Skeleton */}
-          <Skeleton
-            variant="text"
-            width="60%"
-            height={20}
-            sx={{
-              bgcolor: "rgba(255, 255, 255, 0.1)",
-              marginX: "auto",
-              marginTop: { xs: "20px", md: "24px" },
-            }}
-          />
-        </Box>
-      </Box>
-    );
-  }
 
   return (
     <Box
       sx={{
         ...dashboardBackgroundSx,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "100vh",
+        minHeight: "100svh",
         padding: { xs: "20px", md: "40px" },
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "fixed",
+          inset: 0,
+          background:
+            "linear-gradient(170deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%)",
+          zIndex: 0,
+          pointerEvents: "none",
+        },
       }}
     >
       <Box
-        className={shouldAnimate ? "slide-up-animation" : ""}
         sx={{
-          padding: { xs: "30px", md: "40px" },
-          color: "white",
+          position: "relative",
+          zIndex: 1,
           width: "100%",
-          maxWidth: { xs: "100%", md: "450px" },
-          textAlign: "left",
-          backgroundColor: "rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(20px)",
-          borderRadius: { xs: "16px", md: "24px" },
-          border: "1px solid rgba(255, 255, 255, 0.15)",
-          boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)",
-          transition: "all 0.3s ease",
-          "&:hover": {
-            boxShadow: "0 12px 40px rgba(0, 0, 0, 0.4)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          },
+          maxWidth: { xs: "100%", sm: "400px" },
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "translateY(0)" : "translateY(28px)",
+          transition: "opacity 0.55s ease, transform 0.55s ease",
         }}
       >
-        <Box
-          className={shouldAnimate ? "slide-up-delay-1" : ""}
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            marginBottom: { xs: "16px", md: "20px" },
-          }}
-        >
-          <Image
-            src="/logo/rockinrio.png"
-            alt="Rock in Rio"
-            width={300}
-            height={300}
-           
-          />
-   
-        </Box>
-        <Typography
-          className={shouldAnimate ? "slide-up-delay-1" : ""}
-          variant="body2"
-          sx={{
-            marginBottom: { xs: "24px", md: "28px" },
-            textAlign: "center",
-            color: "rgba(255, 255, 255, 0.85)",
-            fontSize: { xs: "13px", md: "14px" },
-          }}
-        >
-          Bem-vindo de volta. Entre com suas credenciais para acessar sua conta.
-        </Typography>
-
-        {/* Formulário de login */}
-        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-          <TextField
-          fullWidth
-          label="Endereço de e-mail"
-          variant="outlined"
-          margin="normal"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={handleKeyDown}
-          inputProps={{
-            autoCapitalize: "none",
-            autoCorrect: "off",
-            spellCheck: false,
-          }}
-          InputLabelProps={{
-            shrink: true, // âœ… fixa o label em cima
-            sx: {
-              color: "#fff",
-              fontSize: 13,
-              transform: "translate(14px, -9px) scale(1)", // canto superior esquerdo
-              "&.Mui-focused": {
-                color: "#fff",
-              },
-            },
-          }}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              color: "#fff",
-              borderRadius: "12px",
-              transition: "all 0.2s ease",
-              "& fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.3)",
-                borderWidth: "1.5px",
-              },
-              "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "rgb(255, 31, 33)",
-                borderWidth: "2px",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
-              },
-              "& input:-webkit-autofill": {
-                WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.05) inset",
-                WebkitTextFillColor: "#fff",
-                transition: "background-color 9999s ease-in-out 0s",
-              },
-              "& input:-webkit-autofill:focus": {
-                WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.08) inset",
-                WebkitTextFillColor: "#fff",
-              },
-            },
-          }}
-        />
-
-        <TextField
-          fullWidth
-          label="Senha"
-          variant="outlined"
-          type={showPassword ? "text" : "password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={handleKeyDown}
-          error={Boolean(password && password.length < 6)}
-          helperText={
-            password && password.length < 6
-              ? "A senha deve ter no mínimo 6 caracteres"
-              : ""
-          }
-          InputLabelProps={{
-            shrink: true,
-            sx: {
-              color: "#fff",
-              fontSize: 13,
-              transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "#fff" },
-            },
-          }}
-          FormHelperTextProps={{
-            sx: { color: "#ff6b6b", fontSize: 12 },
-          }}
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  onClick={() => setShowPassword((prev) => !prev)}
-                  edge="end"
-                  sx={{ color: "#fff" }}
-                >
-                  {showPassword ? <VisibilityOff /> : <Visibility />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
-          sx={{
-            mt: 2,
-            "& .MuiOutlinedInput-root": {
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              color: "#fff",
-              borderRadius: "12px",
-              transition: "all 0.2s ease",
-              "& fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.3)",
-                borderWidth: "1.5px",
-              },
-              "&:hover fieldset": {
-                borderColor: "rgba(255, 255, 255, 0.5)",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "rgb(255, 31, 33)",
-                borderWidth: "2px",
-              },
-              "&.Mui-error fieldset": {
-                borderColor: "#ff6b6b",
-                borderWidth: "2px",
-              },
-              "&.Mui-focused": {
-                backgroundColor: "rgba(255, 255, 255, 0.08)",
-              },
-              "& input:-webkit-autofill": {
-                WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.05) inset",
-                WebkitTextFillColor: "#fff",
-                transition: "background-color 9999s ease-in-out 0s",
-              },
-              "& input:-webkit-autofill:focus": {
-                WebkitBoxShadow: "0 0 0 1000px rgba(255, 255, 255, 0.08) inset",
-                WebkitTextFillColor: "#fff",
-              },
-            },
-          }}
-        />
-        </Box>
-
-        {/* Checkbox para manter-me conectado */}
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={keepMeLoggedIn}
-              onChange={(e) => setKeepMeLoggedIn(e.target.checked)}
-              sx={{
-                color: "rgb(255, 31, 33)", // cor quando desmarcado
-                "&.Mui-checked": {
-                  color: "rgb(255, 31, 33)", // cor quando marcado
-                },
-                "&:hover": {
-                  backgroundColor: "rgba(255, 31, 33, 0.08)", // hover suave
-                },
-              }}
-            />
-          }
-          label="Mantenha-me conectado"
-          sx={{
-            color: "#fff", // texto branco
-            "& .MuiFormControlLabel-label": {
-              fontSize: 14, // opcional
-            },
-          }}
-        />
-
-        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-          <Button
-          fullWidth
-          variant="contained"
-          sx={{
-            mt: { xs: 2, md: 3 },
-            mb: 1,
-            backgroundColor: "rgb(255, 31, 33)",
-            color: "#fff",
-            fontWeight: 700,
-            borderRadius: "12px",
-            textTransform: "none",
-            fontSize: { xs: "15px", md: "16px" },
-            padding: { xs: "12px", md: "14px" },
-            boxShadow: "0 4px 12px rgba(255, 204, 1, 0.3)",
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: "rgb(220, 20, 22)",
-              transform: "translateY(-2px)",
-              boxShadow: "0 6px 16px rgba(255, 204, 1, 0.4)",
-            },
-            "&:active": {
-              backgroundColor: "rgb(220, 20, 22)",
-            },
-            "&.Mui-disabled": {
-              backgroundColor: "rgb(255, 31, 33)",
-              color: "#fff",
-              opacity: 0.85,
-            },
-          }}
-          onClick={handleLogin}
-          disabled={loading}
-        >
-          {loading ? "Carregando..." : "Continuar"}
-        </Button>
-        </Box>
-
-        {/* Botão Continuar sem login */}
-        <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-          <Button
-          fullWidth
-          variant="outlined"
-          sx={{
-            mt: 1,
-            mb: 1,
-            color: "#fff",
-            borderColor: "rgba(255, 255, 255, 0.3)",
-            backgroundColor: "transparent",
-            borderRadius: "12px",
-            textTransform: "none",
-            fontWeight: 600,
-            fontSize: { xs: "14px", md: "15px" },
-            padding: { xs: "12px", md: "14px" },
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
-              borderColor: "rgba(255, 255, 255, 0.5)",
-              transform: "translateY(-2px)",
-            },
-          }}
-          onClick={() => router.push("/pages/events")}
-        >
-          Continuar sem login
-        </Button>
-        </Box>
-
-        {showResendEmail && (
+        {/* Logo */}
+        <Box sx={{ display: "flex", justifyContent: "center", mb: 3.5 }}>
           <Box
-            className={shouldAnimate ? "slide-up-delay-3" : ""}
             sx={{
-              mt: 2,
-              p: { xs: 2, md: 2.5 },
-              backgroundColor: "rgba(255, 204, 1, 0.12)",
-              borderRadius: "12px",
-              border: "1px solid rgba(255, 204, 1, 0.4)",
-              backdropFilter: "blur(10px)",
-              transition: "all 0.2s ease",
+              filter:
+                "drop-shadow(0 0 18px rgba(255,31,33,0.5)) drop-shadow(0 0 40px rgba(255,31,33,0.2))",
             }}
           >
-            <Typography
-              variant="body2"
+            <Image
+              src="/logo/logo-circuito.png"
+              alt="Circuito Sertanejo"
+              width={220}
+              height={80}
+              style={{ objectFit: "contain" }}
+              priority
+            />
+          </Box>
+        </Box>
+
+        {/* Card */}
+        <Box
+          sx={{
+            backgroundColor: "rgba(8,8,8,0.62)",
+            backdropFilter: "blur(30px)",
+            WebkitBackdropFilter: "blur(30px)",
+            borderRadius: "24px",
+            border: "1px solid rgba(255,255,255,0.09)",
+            boxShadow:
+              "0 28px 72px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)",
+            padding: { xs: "28px 22px 32px", md: "36px 32px 40px" },
+            position: "relative",
+            overflow: "hidden",
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: "15%",
+              width: "70%",
+              height: "1px",
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,31,33,0.65), transparent)",
+            },
+          }}
+        >
+          <Typography
+            variant="h5"
+            sx={{
+              color: "#fff",
+              fontWeight: 700,
+              textAlign: "center",
+              mb: 0.5,
+              fontSize: { xs: "20px", md: "22px" },
+              letterSpacing: "-0.3px",
+            }}
+          >
+            Bem-vindo de volta
+          </Typography>
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.45)",
+              textAlign: "center",
+              fontSize: { xs: "13px", md: "14px" },
+              mb: 3,
+            }}
+          >
+            Entre com suas credenciais para continuar
+          </Typography>
+
+          <TextField
+            fullWidth
+            label="E-mail"
+            type="email"
+            variant="outlined"
+            margin="dense"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleKeyDown}
+            inputProps={{ autoCapitalize: "none", autoCorrect: "off", spellCheck: false }}
+            sx={inputSx}
+          />
+
+          <TextField
+            fullWidth
+            label="Senha"
+            variant="outlined"
+            margin="dense"
+            type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    onClick={() => setShowPassword((p) => !p)}
+                    edge="end"
+                    sx={{ color: "rgba(255,255,255,0.45)", "&:hover": { color: "#fff" } }}
+                  >
+                    {showPassword ? (
+                      <VisibilityOff fontSize="small" />
+                    ) : (
+                      <Visibility fontSize="small" />
+                    )}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+            sx={{ ...inputSx, mt: 1.5 }}
+          />
+
+          {showForgotPassword && (
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
+              <Typography
+                sx={{
+                  color: "rgba(255,255,255,0.55)",
+                  fontSize: 13,
+                  cursor: "pointer",
+                  fontWeight: 500,
+                  transition: "color 0.2s",
+                  "&:hover": { color: "#fff", textDecoration: "underline" },
+                }}
+                onClick={() => router.push("/pages/auth/forgot-password")}
+              >
+                Esqueceu a senha?
+              </Typography>
+            </Box>
+          )}
+
+          {/* Reenvio de email */}
+          {showResendEmail && (
+            <Box
               sx={{
-                color: "#fff",
-                mb: 1.5,
-                fontSize: 14,
+                mt: 2,
+                p: 2,
+                backgroundColor: "rgba(255,204,1,0.08)",
+                borderRadius: "12px",
+                border: "1px solid rgba(255,204,1,0.25)",
               }}
             >
-              Seu email ainda não foi confirmado. Clique no botão abaixo para reenviar o email de verificação.
-            </Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.85)", mb: 1.5, fontSize: 13 }}>
+                Seu email ainda não foi confirmado. Reenvie o email de verificação.
+              </Typography>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<Email fontSize="small" />}
+                onClick={handleResendEmail}
+                disabled={resendLoading || cooldownSeconds > 0}
+                sx={{
+                  color: "#ffcc01",
+                  borderColor: "rgba(255,204,1,0.5)",
+                  borderRadius: "10px",
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  py: 1,
+                  "&:hover": { backgroundColor: "rgba(255,204,1,0.1)" },
+                  "&.Mui-disabled": {
+                    color: "rgba(255,204,1,0.35)",
+                    borderColor: "rgba(255,204,1,0.2)",
+                  },
+                }}
+              >
+                {resendLoading
+                  ? "Enviando..."
+                  : cooldownSeconds > 0
+                  ? `Aguarde ${cooldownSeconds}s`
+                  : "Reenviar email de verificação"}
+              </Button>
+            </Box>
+          )}
+
+          {/* Botão Entrar */}
+          <Button
+            fullWidth
+            variant="contained"
+            onClick={handleLogin}
+            disabled={loading}
+            sx={{
+              mt: 3,
+              py: 1.6,
+              borderRadius: "14px",
+              textTransform: "none",
+              fontWeight: 700,
+              fontSize: 15,
+              letterSpacing: "0.2px",
+              backgroundColor: "#ffffff",
+              color: "#111111",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
+              transition: "all 0.25s ease",
+              "&:hover": {
+                backgroundColor: "#e8e8e8",
+                boxShadow: "0 6px 32px rgba(0,0,0,0.2)",
+                transform: "translateY(-2px)",
+              },
+              "&:active": { transform: "translateY(0)", boxShadow: "0 2px 12px rgba(0,0,0,0.15)" },
+              "&.Mui-disabled": {
+                backgroundColor: "rgba(255,255,255,0.25)",
+                color: "rgba(0,0,0,0.4)",
+                boxShadow: "none",
+              },
+            }}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </Button>
+
+          {/* Continuar sem login */}
+          <Button
+            fullWidth
+            variant="text"
+            onClick={() => router.push("/pages/events")}
+            sx={{
+              mt: 1.5,
+              py: 1.2,
+              borderRadius: "14px",
+              textTransform: "none",
+              fontWeight: 500,
+              fontSize: 14,
+              color: "rgba(255,255,255,0.4)",
+              transition: "all 0.2s ease",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.06)",
+                color: "rgba(255,255,255,0.7)",
+              },
+            }}
+          >
+            Continuar sem login
+          </Button>
+
+          {/* Divisor */}
+          <Typography
+            sx={{
+              mt: 3,
+              mb: 1.5,
+              textAlign: "center",
+              color: "rgba(255,255,255,0.3)",
+              fontSize: 12,
+              position: "relative",
+              "&::before, &::after": {
+                content: '""',
+                position: "absolute",
+                top: "50%",
+                width: "35%",
+                height: "1px",
+                backgroundColor: "rgba(255,255,255,0.12)",
+              },
+              "&::before": { left: 0 },
+              "&::after": { right: 0 },
+            }}
+          >
+            ou entre com
+          </Typography>
+
+          {/* Botões sociais desabilitados */}
+          <Box sx={{ display: "flex", gap: 1.5 }}>
             <Button
               fullWidth
               variant="outlined"
-              startIcon={<Email />}
-              onClick={handleResendEmail}
-              disabled={resendLoading || cooldownSeconds > 0}
+              startIcon={<Google fontSize="small" />}
+              disabled
               sx={{
-                color: "#ffcc01",
-                borderColor: "#ffcc01",
-                backgroundColor: "transparent",
                 borderRadius: "12px",
                 textTransform: "none",
                 fontWeight: 600,
-                fontSize: { xs: "13px", md: "14px" },
-                padding: { xs: "10px", md: "12px" },
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 204, 1, 0.15)",
-                  borderColor: "#ffcc01",
-                  transform: "translateY(-2px)",
-                },
+                fontSize: 13,
+                py: 1.2,
+                borderColor: "rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.3)",
+                backgroundColor: "rgba(255,255,255,0.04)",
                 "&.Mui-disabled": {
-                  color: "rgba(255, 204, 1, 0.5)",
-                  borderColor: "rgba(255, 204, 1, 0.3)",
+                  borderColor: "rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.25)",
+                  backgroundColor: "rgba(255,255,255,0.03)",
                 },
               }}
             >
-              {resendLoading
-                ? "Enviando..."
-                : cooldownSeconds > 0
-                ? `Aguarde ${cooldownSeconds}s`
-                : "Reenviar email de verificação"}
+              Google
             </Button>
-            {cooldownSeconds === 0 && (
-              <Typography
-                variant="body2"
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Facebook fontSize="small" />}
+              disabled
+              sx={{
+                borderRadius: "12px",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: 13,
+                py: 1.2,
+                borderColor: "rgba(255,255,255,0.15)",
+                color: "rgba(255,255,255,0.3)",
+                backgroundColor: "rgba(255,255,255,0.04)",
+                "&.Mui-disabled": {
+                  borderColor: "rgba(255,255,255,0.12)",
+                  color: "rgba(255,255,255,0.25)",
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                },
+              }}
+            >
+              Facebook
+            </Button>
+          </Box>
+
+          {/* Rodapé */}
+          <Box
+            sx={{
+              mt: 3,
+              pt: 2.5,
+              borderTop: "1px solid rgba(255,255,255,0.07)",
+              textAlign: "center",
+            }}
+          >
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
+              Não tem uma conta?{" "}
+              <Box
+                component="span"
                 sx={{
-                  mt: 1,
-                  color: "rgba(255, 255, 255, 0.7)",
-                  fontSize: 12,
-                  textAlign: "center",
-                  fontStyle: "italic",
+                  color: "rgba(255,255,255,0.6)",
+                  fontWeight: 600,
+                  cursor: "default",
+                  userSelect: "none",
                 }}
               >
-                Verifique também sua pasta de spam
-              </Typography>
-            )}
+                Cadastre-se aqui
+              </Box>
+            </Typography>
           </Box>
-        )}
-
-        {showForgotPassword && (
-          <Typography
-            className={shouldAnimate ? "slide-up-delay-3" : ""}
-            variant="body2"
-            sx={{
-              mt: 2,
-              color: "#ffcc01",
-              cursor: "pointer",
-              textAlign: "center",
-              fontSize: { xs: "13px", md: "14px" },
-              fontWeight: 500,
-              transition: "all 0.2s ease",
-              "&:hover": {
-                color: "#e6b800",
-                textDecoration: "underline",
-              },
-            }}
-            onClick={() => router.push("/pages/auth/forgot-password")}
-          >
-            Esqueceu a senha?
-          </Typography>
-        )}
-        <Typography
-          className={shouldAnimate ? "slide-up-delay-3" : ""}
-          sx={{
-            mt: { xs: 3, md: 3.5 },
-            mb: 1.5,
-            textAlign: "center",
-            color: "rgba(255,255,255,0.7)",
-            fontSize: { xs: 12, md: 13 },
-            fontWeight: 500,
-            position: "relative",
-            "&::before, &::after": {
-              content: '""',
-              position: "absolute",
-              top: "50%",
-              width: "30%",
-              height: "1px",
-              backgroundColor: "rgba(255,255,255,0.2)",
-            },
-            "&::before": {
-              left: 0,
-            },
-            "&::after": {
-              right: 0,
-            },
-          }}
-        >
-          ou logue com
-        </Typography>
-        <Box
-          className={shouldAnimate ? "slide-up-delay-3" : ""}
-          sx={{
-            display: "flex",
-            gap: { xs: 1.5, md: 2 },
-            mt: 2,
-          }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<Google />}
-            disabled
-            sx={{
-              flex: 1,
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.3)",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              borderRadius: "12px",
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: { xs: "13px", md: "14px" },
-              padding: { xs: "10px", md: "12px" },
-              transition: "all 0.2s ease",
-              "& .MuiSvgIcon-root": {
-                color: "#fff",
-              },
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-                borderColor: "rgba(255, 255, 255, 0.5)",
-                transform: "translateY(-2px)",
-              },
-              "&.Mui-disabled": {
-                color: "rgba(255, 255, 255, 0.45)",
-                borderColor: "rgba(255, 255, 255, 0.2)",
-                backgroundColor: "rgba(255, 255, 255, 0.03)",
-              },
-            }}
-          >
-            Google
-          </Button>
-
-          <Button
-            variant="outlined"
-            startIcon={<Facebook />}
-            disabled
-            sx={{
-              flex: 1,
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.3)",
-              backgroundColor: "rgba(255, 255, 255, 0.05)",
-              borderRadius: "12px",
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: { xs: "13px", md: "14px" },
-              padding: { xs: "10px", md: "12px" },
-              transition: "all 0.2s ease",
-              "& .MuiSvgIcon-root": {
-                color: "#fff",
-              },
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.12)",
-                borderColor: "rgba(255, 255, 255, 0.5)",
-                transform: "translateY(-2px)",
-              },
-              "&.Mui-disabled": {
-                color: "rgba(255, 255, 255, 0.45)",
-                borderColor: "rgba(255, 255, 255, 0.2)",
-                backgroundColor: "rgba(255, 255, 255, 0.03)",
-              },
-            }}
-          >
-            Facebook
-          </Button>
         </Box>
-
-        <Typography
-          className={shouldAnimate ? "slide-up-delay-3" : ""}
-          variant="body2"
-          sx={{
-            marginTop: { xs: "20px", md: "24px" },
-            textAlign: "center",
-            color: "rgba(255, 255, 255, 0.85)",
-            fontSize: { xs: "13px", md: "14px" },
-          }}
-        >
-          Não tem uma conta?{" "}
-          <Box
-            component="span"
-            sx={{
-              color: "rgba(255, 31, 33, 0.55)",
-              fontWeight: 600,
-              cursor: "default",
-            }}
-          >
-            Cadastre-se aqui
-          </Box>
-        </Typography>
       </Box>
     </Box>
   );
 };
 
 export default LoginForm;
-

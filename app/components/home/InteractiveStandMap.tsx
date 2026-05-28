@@ -46,19 +46,33 @@ interface StandPosition {
   labelOffset?: { x?: number; y?: number }; // fine-tune label placement
 }
 
+const STAND_IMAGES: { keys: string[]; image: string }[] = [
+  { keys: ["coca"],                    image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg" },
+  { keys: ["fiat"],                    image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp" },
+  { keys: ["sprite"],                  image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg" },
+  { keys: ["balatines", "ballantines"],image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png" },
+  { keys: ["vivo"],                    image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg" },
+  { keys: ["samsung"],                 image: "https://t2.tudocdn.net/507931?w=1920" },
+  { keys: ["volkswagen", "volks", "vw"], image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg" },
+];
+
+function getStandImage(name: string, backendImage?: string | null): string | null {
+  if (backendImage) return backendImage;
+  const lower = name.toLowerCase();
+  for (const { keys, image } of STAND_IMAGES) {
+    if (keys.some((k) => lower.includes(k))) return image;
+  }
+  return null;
+}
+
 const STAND_CONFIGS: { keys: string[]; config: StandPosition }[] = [
-  {
-    keys: ["coca"],
-    config: { x: 30, y: 54, color: "#CC0000" },
-  },
-  {
-    keys: ["tic tac", "tictac"],
-    config: { x: 64, y: 42, color: "#00A651" },
-  },
-  {
-    keys: ["bauducco"],
-    config: { x: 50, y: 68, color: "#E8850C" },
-  },
+  { keys: ["coca"],                     config: { x: 30, y: 54, color: "#CC0000" } },
+  { keys: ["vivo"],                     config: { x: 55, y: 35, color: "#6600CC" } },
+  { keys: ["volkswagen", "volks", "vw"],config: { x: 72, y: 58, color: "#1D1D1B" } },
+  { keys: ["fiat"],                     config: { x: 45, y: 72, color: "#C9151E" } },
+  { keys: ["sprite"],                   config: { x: 22, y: 42, color: "#00A651" } },
+  { keys: ["samsung"],                  config: { x: 64, y: 42, color: "#1428A0" } },
+  { keys: ["balatines", "ballantines"], config: { x: 50, y: 68, color: "#B8860B" } },
 ];
 
 const FALLBACK_POSITIONS: StandPosition[] = [
@@ -80,7 +94,7 @@ function getStandConfig(name: string, fallbackIndex: number): StandPosition {
 // "queue" stands work with ordered position (3 people enter at a time).
 // "bulk" stands allow a group at the door simultaneously.
 
-const QUEUE_STAND_KEYS = ["tic tac", "tictac", "bauducco"];
+const QUEUE_STAND_KEYS = ["balatines", "ballantines", "samsung", "sprite"];
 
 function isQueueStand(name: string): boolean {
   const lower = name.toLowerCase();
@@ -101,11 +115,12 @@ SlideUp.displayName = "SlideUp";
 
 interface Props {
   eventId: number;
+  mapImageUrl?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function InteractiveStandMap({ eventId }: Props) {
+export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
   const router = useRouter();
   const { showToast } = useToast();
 
@@ -126,7 +141,26 @@ export default function InteractiveStandMap({ eventId }: Props) {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getUserEventStands(eventId);
+      const raw = await getUserEventStands(eventId);
+      const HIDDEN = ["bauducco", "tic tac", "tictac", "piracanjuba", "eisenbahn"];
+      const SOLD_OUT_KEYS = ["balatines", "ballantines"];
+      const MOCK_SOLD_OUT_SESSIONS = [
+        { id: -1, stand_id: -1, session_date: "2026-09-04", start_time: "19:00:00", end_time: "20:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
+        { id: -2, stand_id: -1, session_date: "2026-09-04", start_time: "21:00:00", end_time: "22:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
+        { id: -3, stand_id: -1, session_date: "2026-09-05", start_time: "19:00:00", end_time: "20:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
+        { id: -4, stand_id: -1, session_date: "2026-09-05", start_time: "21:00:00", end_time: "22:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
+      ];
+      const data = raw
+        .filter((s) => !HIDDEN.some((h) => s.name.toLowerCase().includes(h)))
+        .map((s) => {
+          const lower = s.name.toLowerCase();
+          const soldOut = SOLD_OUT_KEYS.some((k) => lower.includes(k));
+          if (!soldOut) return { ...s, image_url: getStandImage(s.name, s.image_url) };
+          const sessions = s.sessions.length > 0
+            ? s.sessions.map((sess) => ({ ...sess, remaining_slots: 0 }))
+            : MOCK_SOLD_OUT_SESSIONS.map((sess) => ({ ...sess, stand_id: s.id }));
+          return { ...s, image_url: getStandImage(s.name, s.image_url), sessions };
+        });
       setStands(data);
     } catch (err: unknown) {
       const detail =
@@ -242,28 +276,13 @@ export default function InteractiveStandMap({ eventId }: Props) {
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-        <CircularProgress sx={{ color: "#ff1f21" }} />
+        <CircularProgress sx={{ color: "#fff" }} />
       </Box>
     );
   }
 
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 1.5, md: 3 }, pb: 10 }}>
-
-      {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2.5, flexWrap: "wrap", gap: 1 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <StorefrontIcon sx={{ color: "#ffc91f" }} />
-          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700 }}>Estandes</Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          onClick={() => router.push("/pages/user/stand-bookings")}
-          sx={{ color: "#fff", borderColor: "rgba(255,255,255,0.3)", textTransform: "none", "&:hover": { borderColor: "rgba(255,255,255,0.5)", backgroundColor: "rgba(255,255,255,0.06)" } }}
-        >
-          Meus agendamentos
-        </Button>
-      </Box>
 
       {/* Map */}
       <Box
@@ -280,8 +299,8 @@ export default function InteractiveStandMap({ eventId }: Props) {
         {/* Base map image */}
         <Box
           component="img"
-          src="/mapa/Mapa-do-Rock-In-Rio-2024.png"
-          alt="Mapa Rock in Rio"
+          src={mapImageUrl || "/mapa/Mapa-do-Rock-In-Rio-2024.png"}
+          alt="Mapa do evento"
           sx={{ width: "100%", height: "auto", display: "block" }}
         />
 
@@ -444,32 +463,119 @@ export default function InteractiveStandMap({ eventId }: Props) {
 
       </Box>
 
-      {/* Map legend + hint */}
-      <Box
-        sx={{
-          mt: 1.5,
-          px: 0.5,
-          display: "flex",
-          flexDirection: "column",
-          gap: 1,
-        }}
-      >
-        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.7rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-          Legenda
+      {/* Stand cards */}
+      <Box sx={{ mt: 3 }}>
+        <Typography
+          sx={{
+            color: "rgba(255,255,255,0.5)",
+            fontSize: "0.7rem",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            mb: 1.5,
+          }}
+        >
+          Estandes disponíveis
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "row", flexWrap: "wrap", gap: { xs: 1.5, md: 2.5 } }}>
-          {standsWithPos.map(({ stand, pos }) => (
-            <Box key={stand.id} sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-              <Box sx={{ flexShrink: 0, width: 10, height: 10, borderRadius: "50%", backgroundColor: pos.color, boxShadow: `0 0 6px ${pos.color}` }} />
-              <Typography sx={{ color: "rgba(255,255,255,0.85)", fontSize: "0.78rem", fontWeight: 600, lineHeight: 1.2 }}>
-                {stand.name}
-              </Typography>
-            </Box>
-          ))}
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
+            gap: 1.5,
+          }}
+        >
+          {standsWithPos.map(({ stand, pos }) => {
+            const availableSessions = stand.sessions.filter((s) => s.remaining_slots > 0).length;
+            const hasBooking = stand.sessions.some((s) => s.is_booked);
+            return (
+              <Box
+                key={stand.id}
+                onClick={() => { setSelectedStand(stand); setSelectedDate(""); }}
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  border: `1px solid ${pos.color}44`,
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                  cursor: "pointer",
+                  transition: "transform 0.18s ease, box-shadow 0.18s ease",
+                  "&:hover": {
+                    transform: "translateY(-2px)",
+                    boxShadow: `0 8px 24px ${pos.color}44`,
+                  },
+                  "&:active": { transform: "scale(0.97)" },
+                }}
+              >
+                {stand.image_url ? (
+                  <Box
+                    component="img"
+                    src={stand.image_url}
+                    alt={stand.name}
+                    sx={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: "100%",
+                      height: 80,
+                      background: `linear-gradient(135deg, ${pos.color}44, ${pos.color}22)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <StorefrontIcon sx={{ color: pos.color, fontSize: 32 }} />
+                  </Box>
+                )}
+                <Box sx={{ p: 1.5 }}>
+                  <Typography
+                    sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", lineHeight: 1.2, mb: 0.6 }}
+                    noWrap
+                  >
+                    {stand.name}
+                  </Typography>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                    <Box
+                      sx={{
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        backgroundColor: hasBooking
+                          ? "#ffc91f"
+                          : availableSessions > 0
+                          ? "#2ecc71"
+                          : "rgba(255,255,255,0.3)",
+                        flexShrink: 0,
+                        boxShadow: hasBooking
+                          ? "0 0 6px rgba(255,201,31,0.7)"
+                          : availableSessions > 0
+                          ? "0 0 6px rgba(46,204,113,0.7)"
+                          : "none",
+                      }}
+                    />
+                    <Typography
+                      sx={{
+                        color: hasBooking
+                          ? "#ffc91f"
+                          : availableSessions > 0
+                          ? "#2ecc71"
+                          : "rgba(255,255,255,0.35)",
+                        fontSize: "0.7rem",
+                        fontWeight: 600,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {hasBooking
+                        ? "Agendado"
+                        : availableSessions > 0
+                        ? `${availableSessions} ${availableSessions === 1 ? "sessão" : "sessões"}`
+                        : "Sem vagas"}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            );
+          })}
         </Box>
-        <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mt: 0.25 }}>
-          Toque em um ponto do mapa para ver os horarios e agendar sua visita
-        </Typography>
       </Box>
 
       {/* ── Bottom Sheet: Stand details ── */}
@@ -490,7 +596,7 @@ export default function InteractiveStandMap({ eventId }: Props) {
             width: "100%",
             maxWidth: "100%",
             borderRadius: "20px 20px 0 0",
-            backgroundColor: "#111827",
+            backgroundColor: "#1e082e",
             color: "#fff",
             maxHeight: "82vh",
             display: "flex",
@@ -512,7 +618,7 @@ export default function InteractiveStandMap({ eventId }: Props) {
                   sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 />
                 {/* Gradient fade */}
-                <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, #111827 100%)" }} />
+                <Box sx={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, #1e082e 100%)" }} />
                 {/* Stand name over image */}
                 <Box sx={{ position: "absolute", bottom: 0, left: 0, right: 0, px: 2.5, pb: 1.5 }}>
                   <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: { xs: "1.3rem", md: "1.6rem" } }}>
@@ -645,11 +751,11 @@ export default function InteractiveStandMap({ eventId }: Props) {
                                 sx={{
                                   textTransform: "none",
                                   minWidth: 148,
-                                  backgroundColor: session.is_booked ? "transparent" : "#ff1f21",
-                                  color: "#fff",
+                                  backgroundColor: session.is_booked ? "transparent" : "#ffffff",
+                                  color: session.is_booked ? "#fff" : "#111111",
                                   borderColor: "rgba(255,255,255,0.3)",
                                   fontWeight: 700,
-                                  "&:hover": { backgroundColor: session.is_booked ? "rgba(255,255,255,0.05)" : "#dc1416" },
+                                  "&:hover": { backgroundColor: session.is_booked ? "rgba(255,255,255,0.05)" : "#e8e8e8" },
                                   "&.Mui-disabled": { color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.15)", backgroundColor: session.is_booked ? "transparent" : "rgba(255,255,255,0.1)" },
                                 }}
                               >

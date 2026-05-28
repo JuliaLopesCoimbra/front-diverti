@@ -174,16 +174,12 @@ export default function LineupView({ eventId }: LineupViewProps) {
             maxWidth: { xs: 200, md: 250 },
             fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
             // Ativo
-            backgroundColor: lineupType === 'shows' ? "primary.main" : "transparent",
-            color: "#fff",
-            border: `1px solid ${
-              lineupType === 'shows' ? "primary.main" : "#fff"
-            }`,
+            backgroundColor: lineupType === 'shows' ? "#ffffff" : "transparent",
+            color: lineupType === 'shows' ? "#111111" : "#fff",
+            border: `1px solid ${lineupType === 'shows' ? "#ffffff" : "rgba(255,255,255,0.4)"}`,
             "&:hover": {
-              backgroundColor: lineupType === 'shows'
-                ? "primary.dark"
-                : "rgba(255,255,255,0.1)",
-              borderColor: lineupType === 'shows' ? "primary.dark" : "#fff",
+              backgroundColor: lineupType === 'shows' ? "#e8e8e8" : "rgba(255,255,255,0.1)",
+              borderColor: lineupType === 'shows' ? "#e8e8e8" : "#fff",
               fontWeight: 900,
             },
           }}
@@ -330,7 +326,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                     },
                   },
                   "& .MuiTabs-indicator": {
-                    backgroundColor: "rgb(255, 31, 33)",
+                    backgroundColor: "#ffffff",
                     height: 3,
                   },
                 }}
@@ -406,7 +402,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   aspectRatio: "1 / 1",
                   overflow: "hidden",
                   borderRadius: 2,
-                  backgroundColor: "rgba(255, 31, 33, 0.1)",
+                  backgroundColor: "rgba(255,255,255,0.07)",
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
@@ -431,7 +427,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   <MusicNoteIcon
                     sx={{
                       fontSize: { xs: "2rem", md: "3rem" },
-                      color: "rgba(255, 31, 33, 0.3)",
+                      color: "rgba(255,255,255,0.25)",
                     }}
                   />
                 )}
@@ -552,7 +548,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   aspectRatio: "1 / 1",
                   overflow: "hidden",
                   borderRadius: 2,
-                  backgroundColor: "rgba(255, 31, 33, 0.1)",
+                  backgroundColor: "rgba(255,255,255,0.07)",
                   position: "relative",
                   display: "flex",
                   alignItems: "center",
@@ -577,7 +573,7 @@ export default function LineupView({ eventId }: LineupViewProps) {
                   <MusicNoteIcon
                     sx={{
                       fontSize: { xs: "2rem", md: "3rem" },
-                      color: "rgba(255, 31, 33, 0.3)",
+                      color: "rgba(255,255,255,0.25)",
                     }}
                   />
                 )}

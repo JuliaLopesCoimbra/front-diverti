@@ -59,17 +59,17 @@ export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refre
           startIcon={<PersonAdd />}
           onClick={onAddClick}
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
-            color: "#fff",
+            backgroundColor: "#ffffff",
+            color: "#111111",
             fontWeight: 600,
             px: 3,
             py: 1.5,
             borderRadius: 2,
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "rgb(220, 20, 22)",
+              backgroundColor: "#e8e8e8",
               transform: "translateY(-2px)",
-              boxShadow: "0 4px 12px rgba(255, 204, 1, 0.4)",
+              boxShadow: "0 4px 12px rgba(124, 58, 237, 0.3)",
             },
             transition: "all 0.2s ease",
           }}
@@ -102,7 +102,7 @@ export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refre
           {/* Loader para infinite scroll - só mostra se não estiver buscando */}
           {!searchTerm && hasMore && (
             <Box ref={loaderRef} sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              {loading && <CircularProgress sx={{ color: "#ffcc01" }} size={24} />}
+              {loading && <CircularProgress sx={{ color: "#7c3aed" }} size={24} />}
             </Box>
           )}
         </>

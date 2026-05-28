@@ -24,7 +24,7 @@ export default function EventMap({ event }: EventMapProps) {
           }}
         >
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
-            <MapIcon style={{ color: "rgb(255, 31, 33)" }} />
+            <MapIcon style={{ color: "#fff" }} />
             <Typography
               variant="h6"
               sx={{
@@ -55,7 +55,7 @@ export default function EventMap({ event }: EventMapProps) {
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, marginBottom: 2 }}>
-        <MapIcon style={{ color: "rgb(255, 31, 33)" }} />
+        <MapIcon style={{ color: "#fff" }} />
         <Typography
           variant="h6"
           sx={{

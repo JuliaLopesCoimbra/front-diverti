@@ -9,7 +9,7 @@ import BottomNav from "@/app/components/layout/BottomNav";
 import { EventResponse, getEvents } from "@/app/services/events/eventAppService";
 import { Skeleton } from "@mui/material";
 import NewsFeed from "@/app/components/home/NewsFeed";
-import AdBanner from "@/app/components/ads/AdBanner";
+import AdCarousel from "@/app/components/ads/AdCarousel";
 import EventDetails from "@/app/components/home/EventDetails";
 import InteractiveStandMap from "@/app/components/home/InteractiveStandMap";
 import { useAuth } from "@/app/context/AuthContext";
@@ -17,19 +17,11 @@ import PhotoAI from "@/app/components/home/PhotoAI";
 import EventMap from "@/app/components/home/EventMap";
 import LineUp from "@/app/components/home/LineUp";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
-import NotificationPermissionPopup from "@/app/components/home/NotificationPermissionPopup";
 import DashboardRoulette from "@/app/components/home/DashboardRoulette";
 import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
-import {
-  getNotificationPreferences,
-  updateNotificationPreferences,
-} from "@/app/services/notifications/notificationPreferenceService";
-import { subscribeForPush } from "@/app/services/notifications/pushService";
 import { useToast } from "@/app/context/ToastContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
-const NOTIFICATION_POPUP_DISMISSED_KEY = "n1_notification_popup_dismissed_at";
-const NOTIFICATION_POPUP_DISMISS_DAYS = 7;
 
 const STORAGE_KEY = "selectedEventId";
 const SCROLL_KEY = "homeScrollY";
@@ -63,8 +55,6 @@ const HomeContent: React.FC = () => {
   const router = useRouter();
   const { isAdmin, authReady, isAuthenticated } = useAuth();
   const { showToast } = useToast();
-  const [showNotificationPopup, setShowNotificationPopup] = useState(false);
-  const [pushPopupLoading, setPushPopupLoading] = useState(false);
 
   // Persist tab selection
   useEffect(() => {
@@ -424,51 +414,6 @@ const HomeContent: React.FC = () => {
     };
   }, [router, isAdmin, authReady]);
 
-  // Popup de permissão de notificações na tela inicial (uma vez por período ou até ativar)
-  useEffect(() => {
-    if (typeof window === "undefined" || !authReady || !isAuthenticated || !profileLoaded) return;
-    const dismissedAt = localStorage.getItem(NOTIFICATION_POPUP_DISMISSED_KEY);
-    if (dismissedAt) {
-      const elapsed = Date.now() - parseInt(dismissedAt, 10);
-      if (elapsed < NOTIFICATION_POPUP_DISMISS_DAYS * 24 * 60 * 60 * 1000) return;
-    }
-    let cancelled = false;
-    const timer = setTimeout(async () => {
-      try {
-        const prefs = await getNotificationPreferences();
-        if (cancelled || prefs.push_enabled) return;
-        setShowNotificationPopup(true);
-      } catch {
-        // Ignora erro (ex.: usuário não autenticado na API)
-      }
-    }, 1200);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [authReady, isAuthenticated, profileLoaded]);
-
-  const handleNotificationPopupAllow = async () => {
-    setPushPopupLoading(true);
-    try {
-      await subscribeForPush();
-      await updateNotificationPreferences({ push_enabled: true });
-      setShowNotificationPopup(false);
-      showToast("Notificações push ativadas com sucesso.", "success");
-    } catch (e: any) {
-      showToast(
-        e?.message || "Não foi possível ativar. Tente novamente nas preferências de notificações.",
-        "error"
-      );
-    } finally {
-      setPushPopupLoading(false);
-    }
-  };
-
-  const handleNotificationPopupDismiss = () => {
-    localStorage.setItem(NOTIFICATION_POPUP_DISMISSED_KEY, String(Date.now()));
-    setShowNotificationPopup(false);
-  };
 
   // Se não há eventos ativos disponíveis para usuário não-admin, mostra Evento Indisponível
   if (eventsLoaded && !currentEvent) {
@@ -488,7 +433,7 @@ const HomeContent: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...pageBackgroundSx,
-          paddingBottom: "88px",
+          paddingBottom: "calc(100px + env(safe-area-inset-bottom))",
         }}
       >
         {/* Header Skeleton */}
@@ -590,10 +535,10 @@ const HomeContent: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...pageBackgroundSx,
-          paddingBottom: "88px", // espaço pro rodapé
+          paddingBottom: "calc(100px + env(safe-area-inset-bottom))",
         }}
       >
-        {/* Header com nome, foto e data */}
+        {/* Header */}
         <Box className={shouldAnimate ? "slide-up-animation" : ""}>
           <HomeHeader
             event={currentEvent}
@@ -601,28 +546,26 @@ const HomeContent: React.FC = () => {
             currentEvent={currentEvent}
             onSelectEvent={handleSelectEvent}
             profile={profile}
+            activeTab={activeTab}
           />
         </Box>
 
-        {/* Tabs */}
-        <Box className={shouldAnimate ? "slide-up-delay-1" : ""}>
-          <HomeTabs 
-            active={activeTab} 
-            onChange={(newTab) => {
-              setActiveTab(newTab);
-              // Atualiza a URL para refletir a aba selecionada, mas não força navegação
-              const url = new URL(window.location.href);
-              url.searchParams.set("tab", newTab);
-              window.history.replaceState({}, "", url.toString());
-            }} 
-          />
-        </Box>
+        {/* Tabs — dock flutuante fixo acima do BottomNav */}
+        <HomeTabs
+          active={activeTab}
+          onChange={(newTab) => {
+            setActiveTab(newTab);
+            const url = new URL(window.location.href);
+            url.searchParams.set("tab", newTab);
+            window.history.replaceState({}, "", url.toString());
+          }}
+        />
 
         {/* Conteúdo baseado na aba selecionada */}
         {activeTab === "home" && currentEvent && (
           <>
             <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-              <AdBanner isFirst={true} eventId={currentEvent.id} />
+              <AdCarousel eventId={currentEvent.id} />
             </Box>
             <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
               <NewsFeed eventId={currentEvent.id} event={currentEvent} />
@@ -636,7 +579,7 @@ const HomeContent: React.FC = () => {
         )}
         {activeTab === "estandes" && currentEvent && (
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-            <InteractiveStandMap eventId={currentEvent.id} />
+            <InteractiveStandMap eventId={currentEvent.id} mapImageUrl={currentEvent.map_images?.[0]?.image_url ?? currentEvent.image_map ?? undefined} />
           </Box>
         )}
   {activeTab === "roleta" && currentEvent && (
@@ -665,12 +608,6 @@ const HomeContent: React.FC = () => {
       
       </Box>
       <BottomNav />
-      <NotificationPermissionPopup
-        open={showNotificationPopup}
-        onClose={handleNotificationPopupDismiss}
-        onAllow={handleNotificationPopupAllow}
-        loading={pushPopupLoading}
-      />
     </>
   );
 };
@@ -682,7 +619,7 @@ const Home: React.FC = () => {
         sx={{
           minHeight: "100vh",
           ...dashboardBackgroundSx,
-          paddingBottom: "88px",
+          paddingBottom: "calc(100px + env(safe-area-inset-bottom))",
         }}
       >
         <Box

@@ -270,7 +270,7 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
             onChange={handleTabChange}
             sx={{
               "& .MuiTabs-indicator": {
-                backgroundColor: "rgb(255, 31, 33)",
+                backgroundColor: "#ffffff",
               },
               "& .MuiTab-root": {
                 color: "rgba(255,255,255,0.6)",

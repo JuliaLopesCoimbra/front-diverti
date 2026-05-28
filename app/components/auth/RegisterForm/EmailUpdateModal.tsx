@@ -68,13 +68,13 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
                 borderColor: "rgba(255, 31, 33, 0.6)",
               },
               "&.Mui-focused fieldset": {
-                borderColor: "rgb(255, 31, 33)",
+                borderColor: "#ffffff",
               },
             },
             "& .MuiInputLabel-root": {
               color: "rgba(255, 120, 122, 0.95)",
               "&.Mui-focused": {
-                color: "rgb(255, 31, 33)",
+                color: "#ffffff",
               },
             },
           }}
@@ -98,13 +98,13 @@ const EmailUpdateModal: React.FC<EmailUpdateModalProps> = ({
           disabled={updating || !email}
           variant="contained"
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
-            color: "#fff",
+            backgroundColor: "#ffffff",
+            color: "#111111",
             fontWeight: 600,
             borderRadius: "14px",
             textTransform: "none",
             "&:hover": {
-              backgroundColor: "rgb(220, 20, 22)",
+              backgroundColor: "#e8e8e8",
             },
             "&:disabled": {
               backgroundColor: "rgba(255, 31, 33, 0.45)",

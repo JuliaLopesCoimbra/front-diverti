@@ -149,7 +149,7 @@ export default function InviteModal({
           variant="contained"
           startIcon={loading ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <PersonAdd />}
           sx={{
-            backgroundColor: "rgb(255, 31, 33)",
+            backgroundColor: "#ffffff",
             color: "#fff",
             fontWeight: 600,
             textTransform: "none",

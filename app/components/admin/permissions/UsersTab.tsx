@@ -75,7 +75,7 @@ export default function UsersTab({ onRevoke, onReactivate, refreshTrigger, searc
           {/* Loader para infinite scroll - só mostra se não estiver buscando */}
           {!searchTerm && hasMore && (
             <Box ref={loaderRef} sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              {loading && <CircularProgress sx={{ color: "#ffcc01" }} size={24} />}
+              {loading && <CircularProgress sx={{ color: "#7c3aed" }} size={24} />}
             </Box>
           )}
         </>

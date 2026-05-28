@@ -19,6 +19,7 @@ export interface CreateLiveStandData {
   name: string;
   description?: string;
   image?: File | null;
+  image_url?: string;
 }
 
 export interface UpdateLiveStandData {
@@ -26,6 +27,7 @@ export interface UpdateLiveStandData {
   description?: string;
   image?: File | null;
   remove_image?: boolean;
+  image_url?: string;
 }
 
 export const getLiveStandsByEvent = async (eventId: number): Promise<LiveStandResponse[]> => {
@@ -47,6 +49,9 @@ export const createLiveStand = async (data: CreateLiveStandData): Promise<LiveSt
   }
   if (data.image) {
     formData.append("image", data.image);
+  }
+  if (data.image_url) {
+    formData.append("image_url", data.image_url);
   }
 
   const response = await api.post<LiveStandResponse>("/admin/event-stands", formData, {
@@ -72,6 +77,9 @@ export const updateLiveStand = async (
   }
   if (data.image) {
     formData.append("image", data.image);
+  }
+  if (data.image_url !== undefined) {
+    formData.append("image_url", data.image_url);
   }
 
   const response = await api.put<LiveStandResponse>(`/admin/event-stands/${standId}`, formData, {

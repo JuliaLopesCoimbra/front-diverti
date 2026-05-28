@@ -41,7 +41,7 @@ export default function PermissionsTabs({ value, onChange, isAdminMaster }: Perm
             },
           },
           "& .MuiTabs-indicator": {
-            backgroundColor: "rgb(255, 31, 33)",
+            backgroundColor: "#ffffff",
             height: 3,
             borderRadius: "3px 3px 0 0",
           },

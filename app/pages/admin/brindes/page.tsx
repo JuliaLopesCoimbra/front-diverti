@@ -114,16 +114,11 @@ function normalizeRouletteEntry(entry: HistoryEntry): HistoryEntry {
 const analyticsMap: Record<string, StandAnalytics> = {
   coca: {
     color: "#CC0000",
-    totalBrindes: 500,
-    entradas: 500,
-    saidas: 312,
+    totalBrindes: 500, entradas: 500, saidas: 312,
     dailyActivity: [
-      { day: "Seg", entradas: 100, saidas: 48 },
-      { day: "Ter", entradas: 80,  saidas: 55 },
-      { day: "Qua", entradas: 120, saidas: 62 },
-      { day: "Qui", entradas: 0,   saidas: 71 },
-      { day: "Sex", entradas: 100, saidas: 38 },
-      { day: "Sab", entradas: 60,  saidas: 21 },
+      { day: "Seg", entradas: 100, saidas: 48 }, { day: "Ter", entradas: 80,  saidas: 55 },
+      { day: "Qua", entradas: 120, saidas: 62 }, { day: "Qui", entradas: 0,   saidas: 71 },
+      { day: "Sex", entradas: 100, saidas: 38 }, { day: "Sab", entradas: 60,  saidas: 21 },
       { day: "Dom", entradas: 40,  saidas: 17 },
     ],
     recentActivity: [
@@ -134,137 +129,268 @@ const analyticsMap: Record<string, StandAnalytics> = {
       { time: "Hoje 18:40", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
     ],
     hourActivity: [
-      { hour: "18h", count: 28 },
-      { hour: "19h", count: 45 },
-      { hour: "20h", count: 68 },
-      { hour: "21h", count: 82 },
-      { hour: "22h", count: 54 },
-      { hour: "23h", count: 35 },
+      { hour: "18h", count: 28 }, { hour: "19h", count: 45 }, { hour: "20h", count: 68 },
+      { hour: "21h", count: 82 }, { hour: "22h", count: 54 }, { hour: "23h", count: 35 },
     ],
     history: [
-      { id: 1,  date: "10/04/2026", time: "22:14", type: "saida",   source: "roleta", quantity: 3,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 2,  date: "10/04/2026", time: "21:52", type: "saida",   source: "roleta", quantity: 5,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 3,  date: "10/04/2026", time: "20:30", type: "entrada", source: "manual", quantity: 60, prize: "Copo Personalizado",  operator: "Admin", notes: "Reabastecimento noturno" },
-      { id: 4,  date: "10/04/2026", time: "19:11", type: "saida",   source: "roleta", quantity: 2,  prize: "Lata Colecionavel",   operator: "Sistema" },
-      { id: 5,  date: "10/04/2026", time: "18:40", type: "saida",   source: "roleta", quantity: 4,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 6,  date: "10/04/2026", time: "17:05", type: "saida",   source: "manual", quantity: 10, prize: "Lata Colecionavel",   operator: "Joao Silva", notes: "Distribuicao evento principal" },
-      { id: 7,  date: "09/04/2026", time: "23:15", type: "saida",   source: "roleta", quantity: 6,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 8,  date: "09/04/2026", time: "22:01", type: "saida",   source: "roleta", quantity: 3,  prize: "Lata Colecionavel",   operator: "Sistema" },
-      { id: 9,  date: "09/04/2026", time: "21:30", type: "entrada", source: "manual", quantity: 80, prize: "Copo Personalizado",  operator: "Admin", notes: "Lote 3 - Fornecedor Coca-Cola" },
-      { id: 10, date: "09/04/2026", time: "20:45", type: "saida",   source: "roleta", quantity: 7,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 11, date: "09/04/2026", time: "19:20", type: "saida",   source: "roleta", quantity: 4,  prize: "Lata Colecionavel",   operator: "Sistema" },
-      { id: 12, date: "09/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 100, prize: "Lata Colecionavel", operator: "Admin", notes: "Abertura do dia" },
-      { id: 13, date: "08/04/2026", time: "22:40", type: "saida",   source: "roleta", quantity: 5,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 14, date: "08/04/2026", time: "21:10", type: "saida",   source: "manual", quantity: 15, prize: "Copo Personalizado",  operator: "Maria Lima", notes: "Parceria palco Sunset" },
+      { id: 1,  date: "10/04/2026", time: "22:14", type: "saida",   source: "roleta", quantity: 3,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:52", type: "saida",   source: "roleta", quantity: 5,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "20:30", type: "entrada", source: "manual", quantity: 60,  prize: "Copo Personalizado", operator: "Admin", notes: "Reabastecimento noturno" },
+      { id: 4,  date: "10/04/2026", time: "19:11", type: "saida",   source: "roleta", quantity: 2,   prize: "Lata Colecionavel",  operator: "Sistema" },
+      { id: 5,  date: "10/04/2026", time: "18:40", type: "saida",   source: "roleta", quantity: 4,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 6,  date: "10/04/2026", time: "17:05", type: "saida",   source: "manual", quantity: 10,  prize: "Lata Colecionavel",  operator: "Joao Silva", notes: "Distribuicao evento principal" },
+      { id: 7,  date: "09/04/2026", time: "23:15", type: "saida",   source: "roleta", quantity: 6,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 8,  date: "09/04/2026", time: "22:01", type: "saida",   source: "roleta", quantity: 3,   prize: "Lata Colecionavel",  operator: "Sistema" },
+      { id: 9,  date: "09/04/2026", time: "21:30", type: "entrada", source: "manual", quantity: 80,  prize: "Copo Personalizado", operator: "Admin", notes: "Lote 3 - Fornecedor Coca-Cola" },
+      { id: 10, date: "09/04/2026", time: "20:45", type: "saida",   source: "roleta", quantity: 7,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 11, date: "09/04/2026", time: "19:20", type: "saida",   source: "roleta", quantity: 4,   prize: "Lata Colecionavel",  operator: "Sistema" },
+      { id: 12, date: "09/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 100, prize: "Lata Colecionavel",  operator: "Admin", notes: "Abertura do dia" },
+      { id: 13, date: "08/04/2026", time: "22:40", type: "saida",   source: "roleta", quantity: 5,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 14, date: "08/04/2026", time: "21:10", type: "saida",   source: "manual", quantity: 15,  prize: "Copo Personalizado", operator: "Maria Lima", notes: "Parceria palco Sunset" },
       { id: 15, date: "08/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 120, prize: "Copo Personalizado", operator: "Admin", notes: "Reabastecimento lote 2" },
-      { id: 16, date: "08/04/2026", time: "18:30", type: "saida",   source: "roleta", quantity: 8,  prize: "Lata Colecionavel",   operator: "Sistema" },
-      { id: 17, date: "07/04/2026", time: "23:50", type: "saida",   source: "roleta", quantity: 4,  prize: "Copo Personalizado",  operator: "Sistema" },
-      { id: 18, date: "07/04/2026", time: "22:30", type: "saida",   source: "roleta", quantity: 6,  prize: "Lata Colecionavel",   operator: "Sistema" },
+      { id: 16, date: "08/04/2026", time: "18:30", type: "saida",   source: "roleta", quantity: 8,   prize: "Lata Colecionavel",  operator: "Sistema" },
+      { id: 17, date: "07/04/2026", time: "23:50", type: "saida",   source: "roleta", quantity: 4,   prize: "Copo Personalizado", operator: "Sistema" },
+      { id: 18, date: "07/04/2026", time: "22:30", type: "saida",   source: "roleta", quantity: 6,   prize: "Lata Colecionavel",  operator: "Sistema" },
       { id: 19, date: "07/04/2026", time: "20:15", type: "entrada", source: "manual", quantity: 100, prize: "Copo Personalizado", operator: "Admin", notes: "Estoque inicial dia 4" },
       { id: 20, date: "07/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 40,  prize: "Lata Colecionavel",  operator: "Admin", notes: "Complemento de estoque" },
     ],
   },
-  "tic tac": {
-    color: "#00A651",
-    totalBrindes: 300,
-    entradas: 300,
-    saidas: 201,
+  vivo: {
+    color: "#6600CC",
+    totalBrindes: 350, entradas: 350, saidas: 198,
     dailyActivity: [
-      { day: "Seg", entradas: 60,  saidas: 31 },
-      { day: "Ter", entradas: 50,  saidas: 38 },
-      { day: "Qua", entradas: 80,  saidas: 42 },
-      { day: "Qui", entradas: 0,   saidas: 29 },
-      { day: "Sex", entradas: 60,  saidas: 33 },
-      { day: "Sab", entradas: 30,  saidas: 18 },
+      { day: "Seg", entradas: 70,  saidas: 28 }, { day: "Ter", entradas: 60,  saidas: 35 },
+      { day: "Qua", entradas: 80,  saidas: 41 }, { day: "Qui", entradas: 0,   saidas: 30 },
+      { day: "Sex", entradas: 80,  saidas: 27 }, { day: "Sab", entradas: 40,  saidas: 23 },
+      { day: "Dom", entradas: 20,  saidas: 14 },
+    ],
+    recentActivity: [
+      { time: "Hoje 22:05", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+      { time: "Hoje 21:33", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
+      { time: "Hoje 20:10", type: "entrada", quantity: 50, description: "Reabastecimento manual" },
+      { time: "Hoje 18:55", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+    ],
+    hourActivity: [
+      { hour: "18h", count: 22 }, { hour: "19h", count: 38 }, { hour: "20h", count: 55 },
+      { hour: "21h", count: 64 }, { hour: "22h", count: 43 }, { hour: "23h", count: 19 },
+    ],
+    history: [
+      { id: 1,  date: "10/04/2026", time: "22:05", type: "saida",   source: "roleta", quantity: 2,  prize: "Carregador Portatil",  operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:33", type: "saida",   source: "roleta", quantity: 4,  prize: "Chip Vivo Gratis",     operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "20:10", type: "entrada", source: "manual", quantity: 50, prize: "Carregador Portatil",  operator: "Admin", notes: "Reabastecimento" },
+      { id: 4,  date: "10/04/2026", time: "18:55", type: "saida",   source: "roleta", quantity: 3,  prize: "Chip Vivo Gratis",     operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "23:10", type: "saida",   source: "roleta", quantity: 5,  prize: "Carregador Portatil",  operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "21:00", type: "entrada", source: "manual", quantity: 80, prize: "Chip Vivo Gratis",     operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "19:30", type: "saida",   source: "roleta", quantity: 4,  prize: "Carregador Portatil",  operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "22:20", type: "saida",   source: "roleta", quantity: 3,  prize: "Chip Vivo Gratis",     operator: "Sistema" },
+      { id: 9,  date: "08/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 100, prize: "Carregador Portatil", operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "21:45", type: "saida",   source: "roleta", quantity: 6,  prize: "Carregador Portatil",  operator: "Sistema" },
+    ],
+  },
+  volkswagen: {
+    color: "#1D1D1B",
+    totalBrindes: 420, entradas: 420, saidas: 241,
+    dailyActivity: [
+      { day: "Seg", entradas: 80,  saidas: 33 }, { day: "Ter", entradas: 70,  saidas: 42 },
+      { day: "Qua", entradas: 100, saidas: 51 }, { day: "Qui", entradas: 0,   saidas: 38 },
+      { day: "Sex", entradas: 90,  saidas: 31 }, { day: "Sab", entradas: 50,  saidas: 28 },
+      { day: "Dom", entradas: 30,  saidas: 18 },
+    ],
+    recentActivity: [
+      { time: "Hoje 22:18", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+      { time: "Hoje 21:44", type: "saida",   quantity: 5,  description: "Resgate via roleta" },
+      { time: "Hoje 20:20", type: "entrada", quantity: 55, description: "Reabastecimento manual" },
+      { time: "Hoje 19:02", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+    ],
+    hourActivity: [
+      { hour: "18h", count: 25 }, { hour: "19h", count: 41 }, { hour: "20h", count: 62 },
+      { hour: "21h", count: 74 }, { hour: "22h", count: 49 }, { hour: "23h", count: 27 },
+    ],
+    history: [
+      { id: 1,  date: "10/04/2026", time: "22:18", type: "saida",   source: "roleta", quantity: 3,  prize: "Miniatura VW Fusca",    operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:44", type: "saida",   source: "roleta", quantity: 5,  prize: "Boné VW Racing",        operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "20:20", type: "entrada", source: "manual", quantity: 55, prize: "Miniatura VW Fusca",    operator: "Admin", notes: "Reabastecimento noturno" },
+      { id: 4,  date: "10/04/2026", time: "19:02", type: "saida",   source: "roleta", quantity: 2,  prize: "Boné VW Racing",        operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "22:55", type: "saida",   source: "roleta", quantity: 4,  prize: "Miniatura VW Fusca",    operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "21:10", type: "entrada", source: "manual", quantity: 90, prize: "Boné VW Racing",        operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "19:45", type: "saida",   source: "roleta", quantity: 7,  prize: "Miniatura VW Fusca",    operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "22:30", type: "saida",   source: "manual", quantity: 12, prize: "Boné VW Racing",        operator: "Carlos R.", notes: "Acao no palco" },
+      { id: 9,  date: "08/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 100, prize: "Miniatura VW Fusca",   operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "21:20", type: "saida",   source: "roleta", quantity: 5,  prize: "Miniatura VW Fusca",    operator: "Sistema" },
+    ],
+  },
+  fiat: {
+    color: "#C9151E",
+    totalBrindes: 280, entradas: 280, saidas: 155,
+    dailyActivity: [
+      { day: "Seg", entradas: 55,  saidas: 22 }, { day: "Ter", entradas: 45,  saidas: 28 },
+      { day: "Qua", entradas: 70,  saidas: 34 }, { day: "Qui", entradas: 0,   saidas: 19 },
+      { day: "Sex", entradas: 60,  saidas: 26 }, { day: "Sab", entradas: 30,  saidas: 16 },
       { day: "Dom", entradas: 20,  saidas: 10 },
     ],
     recentActivity: [
-      { time: "Hoje 22:01", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
-      { time: "Hoje 21:30", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
-      { time: "Hoje 20:15", type: "entrada", quantity: 30, description: "Reabastecimento manual" },
-      { time: "Hoje 19:44", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
+      { time: "Hoje 21:50", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+      { time: "Hoje 21:15", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+      { time: "Hoje 19:45", type: "entrada", quantity: 40, description: "Reabastecimento manual" },
+      { time: "Hoje 18:20", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
     ],
     hourActivity: [
-      { hour: "18h", count: 18 },
-      { hour: "19h", count: 32 },
-      { hour: "20h", count: 51 },
-      { hour: "21h", count: 60 },
-      { hour: "22h", count: 29 },
-      { hour: "23h", count: 11 },
+      { hour: "18h", count: 16 }, { hour: "19h", count: 29 }, { hour: "20h", count: 47 },
+      { hour: "21h", count: 58 }, { hour: "22h", count: 36 }, { hour: "23h", count: 14 },
     ],
     history: [
-      { id: 1,  date: "10/04/2026", time: "22:01", type: "saida",   source: "roleta", quantity: 2,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
-      { id: 2,  date: "10/04/2026", time: "21:30", type: "saida",   source: "roleta", quantity: 3,  prize: "Miniatura Tic Tac",     operator: "Sistema" },
-      { id: 3,  date: "10/04/2026", time: "20:15", type: "entrada", source: "manual", quantity: 30, prize: "Porta-chaves Tic Tac",  operator: "Admin", notes: "Reabastecimento" },
-      { id: 4,  date: "10/04/2026", time: "19:44", type: "saida",   source: "roleta", quantity: 4,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
-      { id: 5,  date: "10/04/2026", time: "18:20", type: "saida",   source: "manual", quantity: 5,  prize: "Miniatura Tic Tac",     operator: "Carlos Souza", notes: "Acao no palco" },
-      { id: 6,  date: "09/04/2026", time: "23:00", type: "saida",   source: "roleta", quantity: 3,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
-      { id: 7,  date: "09/04/2026", time: "21:45", type: "entrada", source: "manual", quantity: 50, prize: "Miniatura Tic Tac",     operator: "Admin", notes: "Lote 2" },
-      { id: 8,  date: "09/04/2026", time: "20:30", type: "saida",   source: "roleta", quantity: 5,  prize: "Miniatura Tic Tac",     operator: "Sistema" },
-      { id: 9,  date: "09/04/2026", time: "19:00", type: "saida",   source: "roleta", quantity: 4,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
-      { id: 10, date: "09/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 80, prize: "Porta-chaves Tic Tac",  operator: "Admin", notes: "Abertura" },
-      { id: 11, date: "08/04/2026", time: "22:30", type: "saida",   source: "roleta", quantity: 2,  prize: "Miniatura Tic Tac",     operator: "Sistema" },
-      { id: 12, date: "08/04/2026", time: "21:00", type: "saida",   source: "manual", quantity: 8,  prize: "Porta-chaves Tic Tac",  operator: "Ana Paula", notes: "Stand parceiro" },
-      { id: 13, date: "08/04/2026", time: "19:30", type: "entrada", source: "manual", quantity: 80, prize: "Miniatura Tic Tac",     operator: "Admin", notes: "Estoque inicial" },
-      { id: 14, date: "08/04/2026", time: "18:10", type: "saida",   source: "roleta", quantity: 6,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
-      { id: 15, date: "07/04/2026", time: "23:20", type: "saida",   source: "roleta", quantity: 3,  prize: "Miniatura Tic Tac",     operator: "Sistema" },
-      { id: 16, date: "07/04/2026", time: "21:00", type: "entrada", source: "manual", quantity: 60, prize: "Porta-chaves Tic Tac",  operator: "Admin", notes: "Reposicao dia 4" },
-      { id: 17, date: "07/04/2026", time: "19:30", type: "saida",   source: "roleta", quantity: 4,  prize: "Porta-chaves Tic Tac",  operator: "Sistema" },
+      { id: 1,  date: "10/04/2026", time: "21:50", type: "saida",   source: "roleta", quantity: 2,  prize: "Miniatura Fiat Pulse",  operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:15", type: "saida",   source: "roleta", quantity: 3,  prize: "Boné Fiat",            operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "19:45", type: "entrada", source: "manual", quantity: 40, prize: "Miniatura Fiat Pulse",  operator: "Admin", notes: "Reabastecimento" },
+      { id: 4,  date: "10/04/2026", time: "18:20", type: "saida",   source: "roleta", quantity: 4,  prize: "Boné Fiat",            operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "22:40", type: "saida",   source: "roleta", quantity: 3,  prize: "Miniatura Fiat Pulse",  operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "20:30", type: "entrada", source: "manual", quantity: 70, prize: "Boné Fiat",            operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "18:50", type: "saida",   source: "roleta", quantity: 5,  prize: "Miniatura Fiat Pulse",  operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "21:30", type: "saida",   source: "manual", quantity: 8,  prize: "Boné Fiat",            operator: "Ana M.", notes: "Stand parceiro" },
+      { id: 9,  date: "08/04/2026", time: "19:00", type: "entrada", source: "manual", quantity: 80, prize: "Miniatura Fiat Pulse",  operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "20:40", type: "saida",   source: "roleta", quantity: 4,  prize: "Miniatura Fiat Pulse",  operator: "Sistema" },
     ],
   },
-  bauducco: {
-    color: "#E8850C",
-    totalBrindes: 400,
-    entradas: 400,
-    saidas: 178,
+  sprite: {
+    color: "#00A651",
+    totalBrindes: 400, entradas: 400, saidas: 223,
     dailyActivity: [
-      { day: "Seg", entradas: 80,  saidas: 24 },
-      { day: "Ter", entradas: 70,  saidas: 31 },
-      { day: "Qua", entradas: 100, saidas: 38 },
-      { day: "Qui", entradas: 0,   saidas: 22 },
-      { day: "Sex", entradas: 80,  saidas: 29 },
-      { day: "Sab", entradas: 40,  saidas: 21 },
-      { day: "Dom", entradas: 30,  saidas: 13 },
+      { day: "Seg", entradas: 80,  saidas: 30 }, { day: "Ter", entradas: 65,  saidas: 38 },
+      { day: "Qua", entradas: 90,  saidas: 46 }, { day: "Qui", entradas: 0,   saidas: 32 },
+      { day: "Sex", entradas: 85,  saidas: 29 }, { day: "Sab", entradas: 50,  saidas: 27 },
+      { day: "Dom", entradas: 30,  saidas: 21 },
     ],
     recentActivity: [
-      { time: "Hoje 21:58", type: "saida",   quantity: 1,  description: "Resgate via roleta" },
-      { time: "Hoje 21:10", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
-      { time: "Hoje 20:00", type: "entrada", quantity: 40, description: "Reabastecimento manual" },
-      { time: "Hoje 18:33", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+      { time: "Hoje 22:10", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
+      { time: "Hoje 21:40", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+      { time: "Hoje 20:05", type: "entrada", quantity: 55, description: "Reabastecimento manual" },
+      { time: "Hoje 18:50", type: "saida",   quantity: 5,  description: "Resgate via roleta" },
     ],
     hourActivity: [
-      { hour: "18h", count: 14 },
-      { hour: "19h", count: 26 },
-      { hour: "20h", count: 44 },
-      { hour: "21h", count: 55 },
-      { hour: "22h", count: 26 },
-      { hour: "23h", count: 9 },
+      { hour: "18h", count: 20 }, { hour: "19h", count: 35 }, { hour: "20h", count: 58 },
+      { hour: "21h", count: 70 }, { hour: "22h", count: 47 }, { hour: "23h", count: 22 },
     ],
     history: [
-      { id: 1,  date: "10/04/2026", time: "21:58", type: "saida",   source: "roleta", quantity: 1,   prize: "Panetone Miniatura",  operator: "Sistema" },
-      { id: 2,  date: "10/04/2026", time: "21:10", type: "saida",   source: "roleta", quantity: 3,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 3,  date: "10/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 40,  prize: "Panetone Miniatura",  operator: "Admin", notes: "Reabastecimento" },
-      { id: 4,  date: "10/04/2026", time: "18:33", type: "saida",   source: "roleta", quantity: 2,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 5,  date: "10/04/2026", time: "17:15", type: "saida",   source: "manual", quantity: 8,   prize: "Panetone Miniatura",  operator: "Lucas Mota", notes: "Acao backstage" },
-      { id: 6,  date: "09/04/2026", time: "22:45", type: "saida",   source: "roleta", quantity: 4,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 7,  date: "09/04/2026", time: "21:20", type: "entrada", source: "manual", quantity: 60,  prize: "Cookie Bauducco",     operator: "Admin", notes: "Lote 3" },
-      { id: 8,  date: "09/04/2026", time: "20:10", type: "saida",   source: "roleta", quantity: 3,   prize: "Panetone Miniatura",  operator: "Sistema" },
-      { id: 9,  date: "09/04/2026", time: "19:05", type: "saida",   source: "roleta", quantity: 5,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 10, date: "09/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 100, prize: "Panetone Miniatura",  operator: "Admin", notes: "Abertura" },
-      { id: 11, date: "08/04/2026", time: "23:10", type: "saida",   source: "roleta", quantity: 2,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 12, date: "08/04/2026", time: "22:00", type: "saida",   source: "manual", quantity: 12,  prize: "Panetone Miniatura",  operator: "Pedro Nunes", notes: "Degustacao palco" },
-      { id: 13, date: "08/04/2026", time: "20:30", type: "entrada", source: "manual", quantity: 100, prize: "Cookie Bauducco",     operator: "Admin", notes: "Reabastecimento" },
-      { id: 14, date: "08/04/2026", time: "19:00", type: "saida",   source: "roleta", quantity: 6,   prize: "Panetone Miniatura",  operator: "Sistema" },
-      { id: 15, date: "07/04/2026", time: "23:30", type: "saida",   source: "roleta", quantity: 3,   prize: "Cookie Bauducco",     operator: "Sistema" },
-      { id: 16, date: "07/04/2026", time: "22:15", type: "saida",   source: "roleta", quantity: 4,   prize: "Panetone Miniatura",  operator: "Sistema" },
-      { id: 17, date: "07/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 100, prize: "Cookie Bauducco",     operator: "Admin", notes: "Estoque inicial" },
-      { id: 18, date: "07/04/2026", time: "18:00", type: "entrada", source: "manual", quantity: 100, prize: "Panetone Miniatura",  operator: "Admin", notes: "Estoque inicial" },
+      { id: 1,  date: "10/04/2026", time: "22:10", type: "saida",   source: "roleta", quantity: 4,  prize: "Lata Sprite Gelada",   operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:40", type: "saida",   source: "roleta", quantity: 3,  prize: "Copo Sprite",          operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "20:05", type: "entrada", source: "manual", quantity: 55, prize: "Lata Sprite Gelada",   operator: "Admin", notes: "Reabastecimento" },
+      { id: 4,  date: "10/04/2026", time: "18:50", type: "saida",   source: "roleta", quantity: 5,  prize: "Copo Sprite",          operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "23:05", type: "saida",   source: "roleta", quantity: 3,  prize: "Lata Sprite Gelada",   operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "21:20", type: "entrada", source: "manual", quantity: 100, prize: "Copo Sprite",         operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "19:10", type: "saida",   source: "roleta", quantity: 6,  prize: "Lata Sprite Gelada",   operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "22:15", type: "saida",   source: "manual", quantity: 10, prize: "Copo Sprite",          operator: "Pedro K.", notes: "Acao palco" },
+      { id: 9,  date: "08/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 100, prize: "Lata Sprite Gelada",  operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "21:50", type: "saida",   source: "roleta", quantity: 5,  prize: "Copo Sprite",          operator: "Sistema" },
+    ],
+  },
+  samsung: {
+    color: "#1428A0",
+    totalBrindes: 200, entradas: 200, saidas: 97,
+    dailyActivity: [
+      { day: "Seg", entradas: 40,  saidas: 13 }, { day: "Ter", entradas: 35,  saidas: 17 },
+      { day: "Qua", entradas: 50,  saidas: 21 }, { day: "Qui", entradas: 0,   saidas: 14 },
+      { day: "Sex", entradas: 40,  saidas: 12 }, { day: "Sab", entradas: 20,  saidas: 11 },
+      { day: "Dom", entradas: 15,  saidas: 9  },
+    ],
+    recentActivity: [
+      { time: "Hoje 22:00", type: "saida",   quantity: 1,  description: "Resgate via roleta" },
+      { time: "Hoje 21:22", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+      { time: "Hoje 19:30", type: "entrada", quantity: 30, description: "Reabastecimento manual" },
+      { time: "Hoje 18:15", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+    ],
+    hourActivity: [
+      { hour: "18h", count: 11 }, { hour: "19h", count: 19 }, { hour: "20h", count: 30 },
+      { hour: "21h", count: 37 }, { hour: "22h", count: 22 }, { hour: "23h", count: 9  },
+    ],
+    history: [
+      { id: 1,  date: "10/04/2026", time: "22:00", type: "saida",   source: "roleta", quantity: 1,  prize: "Fone Galaxy Buds",     operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:22", type: "saida",   source: "roleta", quantity: 2,  prize: "Carregador Samsung",   operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "19:30", type: "entrada", source: "manual", quantity: 30, prize: "Fone Galaxy Buds",     operator: "Admin", notes: "Reabastecimento" },
+      { id: 4,  date: "10/04/2026", time: "18:15", type: "saida",   source: "roleta", quantity: 3,  prize: "Carregador Samsung",   operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "22:50", type: "saida",   source: "roleta", quantity: 2,  prize: "Fone Galaxy Buds",     operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 50, prize: "Carregador Samsung",   operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "18:30", type: "saida",   source: "roleta", quantity: 4,  prize: "Fone Galaxy Buds",     operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "21:00", type: "saida",   source: "manual", quantity: 5,  prize: "Carregador Samsung",   operator: "Bia S.", notes: "Demonstracao" },
+      { id: 9,  date: "08/04/2026", time: "19:00", type: "entrada", source: "manual", quantity: 60, prize: "Fone Galaxy Buds",     operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "20:30", type: "saida",   source: "roleta", quantity: 3,  prize: "Fone Galaxy Buds",     operator: "Sistema" },
+    ],
+  },
+  ballantines: {
+    color: "#B8860B",
+    totalBrindes: 250, entradas: 250, saidas: 134,
+    dailyActivity: [
+      { day: "Seg", entradas: 50,  saidas: 18 }, { day: "Ter", entradas: 45,  saidas: 24 },
+      { day: "Qua", entradas: 60,  saidas: 29 }, { day: "Qui", entradas: 0,   saidas: 21 },
+      { day: "Sex", entradas: 55,  saidas: 17 }, { day: "Sab", entradas: 25,  saidas: 15 },
+      { day: "Dom", entradas: 15,  saidas: 10 },
+    ],
+    recentActivity: [
+      { time: "Hoje 22:08", type: "saida",   quantity: 2,  description: "Resgate via roleta" },
+      { time: "Hoje 21:35", type: "saida",   quantity: 3,  description: "Resgate via roleta" },
+      { time: "Hoje 20:00", type: "entrada", quantity: 40, description: "Reabastecimento manual" },
+      { time: "Hoje 18:45", type: "saida",   quantity: 4,  description: "Resgate via roleta" },
+    ],
+    hourActivity: [
+      { hour: "18h", count: 13 }, { hour: "19h", count: 24 }, { hour: "20h", count: 40 },
+      { hour: "21h", count: 52 }, { hour: "22h", count: 33 }, { hour: "23h", count: 16 },
+    ],
+    history: [
+      { id: 1,  date: "10/04/2026", time: "22:08", type: "saida",   source: "roleta", quantity: 2,  prize: "Copo Whisky Balantines", operator: "Sistema" },
+      { id: 2,  date: "10/04/2026", time: "21:35", type: "saida",   source: "roleta", quantity: 3,  prize: "Mini Garrafa 200ml",     operator: "Sistema" },
+      { id: 3,  date: "10/04/2026", time: "20:00", type: "entrada", source: "manual", quantity: 40, prize: "Copo Whisky Balantines", operator: "Admin", notes: "Reabastecimento" },
+      { id: 4,  date: "10/04/2026", time: "18:45", type: "saida",   source: "roleta", quantity: 4,  prize: "Mini Garrafa 200ml",     operator: "Sistema" },
+      { id: 5,  date: "09/04/2026", time: "22:30", type: "saida",   source: "roleta", quantity: 3,  prize: "Copo Whisky Balantines", operator: "Sistema" },
+      { id: 6,  date: "09/04/2026", time: "20:15", type: "entrada", source: "manual", quantity: 60, prize: "Mini Garrafa 200ml",     operator: "Admin", notes: "Lote 2" },
+      { id: 7,  date: "09/04/2026", time: "18:40", type: "saida",   source: "roleta", quantity: 5,  prize: "Copo Whisky Balantines", operator: "Sistema" },
+      { id: 8,  date: "08/04/2026", time: "21:45", type: "saida",   source: "manual", quantity: 6,  prize: "Mini Garrafa 200ml",     operator: "Rafael D.", notes: "Acao VIP" },
+      { id: 9,  date: "08/04/2026", time: "19:00", type: "entrada", source: "manual", quantity: 80, prize: "Copo Whisky Balantines", operator: "Admin", notes: "Estoque inicial" },
+      { id: 10, date: "07/04/2026", time: "21:00", type: "saida",   source: "roleta", quantity: 4,  prize: "Mini Garrafa 200ml",     operator: "Sistema" },
     ],
   },
 };
 
+const STAND_IMAGES: { keys: string[]; image: string }[] = [
+  {
+    keys: ["coca"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg",
+  },
+  {
+    keys: ["fiat"],
+    image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp",
+  },
+  {
+    keys: ["sprite"],
+    image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg",
+  },
+  {
+    keys: ["balatines", "ballantines"],
+    image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png",
+  },
+  {
+    keys: ["vivo"],
+    image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg",
+  },
+  {
+    keys: ["samsung"],
+    image: "https://t2.tudocdn.net/507931?w=1920",
+  },
+  {
+    keys: ["volkswagen", "volks", "vw"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg",
+  },
+];
+
+function getStandImage(name: string, backendImage?: string | null): string | null {
+  if (backendImage) return backendImage;
+  const lower = name.toLowerCase();
+  for (const { keys, image } of STAND_IMAGES) {
+    if (keys.some((k) => lower.includes(k))) return image;
+  }
+  return null;
+}
+
 const defaultAnalytics: StandAnalytics = {
-  color: "#ff1f21",
+  color: "#7c3aed",
   totalBrindes: 0,
   entradas: 0,
   saidas: 0,
@@ -307,7 +433,7 @@ function StatCard({ label, value, sub, icon, color }: {
           </Box>
           <Box sx={{
             width: 44, height: 44, borderRadius: "50%",
-            backgroundColor: color ? `${color}22` : "rgba(255,31,33,0.18)",
+            backgroundColor: color ? `${color}22` : "rgba(124,58,237,0.18)",
             display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
           }}>
             {icon}
@@ -398,15 +524,12 @@ export default function BrindesPage() {
   const router = useRouter();
   const { isAdmin, authReady } = useAuth();
 
-  // Stand list
   const [stands, setStands] = useState<LiveStandResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedStand, setSelectedStand] = useState<LiveStandResponse | null>(null);
 
-  // Dashboard tabs
   const [dashTab, setDashTab] = useState<"overview" | "add" | "history">("overview");
 
-  // Add-brinde form
   const [formType, setFormType] = useState<"entrada" | "saida">("entrada");
   const [formPrize, setFormPrize] = useState("");
   const [formQuantity, setFormQuantity] = useState(1);
@@ -415,7 +538,6 @@ export default function BrindesPage() {
   const [addedEntries, setAddedEntries] = useState<HistoryEntry[]>([]);
   const [nextId, setNextId] = useState(9000);
 
-  // History filters
   const [typeFilter, setTypeFilter] = useState<"all" | "entrada" | "saida">("all");
   const [sourceFilter, setSourceFilter] = useState<"all" | "manual" | "roleta">("all");
 
@@ -426,8 +548,10 @@ export default function BrindesPage() {
       try {
         const events = await getEvents(1, 0);
         if (!events.length) return;
-        const data = await getLiveStandsByEvent(events[0].id);
-        setStands(data);
+        const raw = await getLiveStandsByEvent(events[0].id);
+        const HIDDEN = ["bauducco", "tic tac", "tictac", "eisenbahn", "heinserberg", "piracanjuba"];
+        const filtered = raw.filter((s) => !HIDDEN.some((h) => s.name.toLowerCase().includes(h)));
+        setStands(filtered);
       } catch (err) {
         console.error("Erro ao carregar estandes:", err);
       } finally {
@@ -437,7 +561,6 @@ export default function BrindesPage() {
     load();
   }, [authReady, isAdmin]);
 
-  // Reset form & filters when switching stands
   useEffect(() => {
     setDashTab("overview");
     setAddedEntries([]);
@@ -458,7 +581,6 @@ export default function BrindesPage() {
 
   const baseAnalytics = selectedStand ? getAnalytics(selectedStand.name) : defaultAnalytics;
 
-  // Merge added entries into analytics totals
   const addedEntradas = addedEntries.filter(e => e.type === "entrada").reduce((s, e) => s + e.quantity, 0);
   const addedSaidas   = addedEntries.filter(e => e.type === "saida").reduce((s, e) => s + e.quantity, 0);
   const analytics: StandAnalytics = {
@@ -472,7 +594,6 @@ export default function BrindesPage() {
     ? ((analytics.saidas / analytics.entradas) * 100).toFixed(1)
     : "0";
 
-  // All history: newly added first, then mock
   const allHistory = [...addedEntries, ...baseAnalytics.history].map(normalizeRouletteEntry);
   const recentHistory = allHistory.slice(0, 5);
   const recentActivity = recentHistory.map((entry) => ({
@@ -533,17 +654,17 @@ export default function BrindesPage() {
             </IconButton>
             <Box sx={{
               width: 52, height: 52, borderRadius: "50%",
-              backgroundColor: "rgba(255,31,33,0.15)",
+              backgroundColor: "rgba(124,58,237,0.15)",
               display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
             }}>
-              <CardGiftcardIcon sx={{ color: "rgb(255,31,33)", fontSize: 28 }} />
+              <CardGiftcardIcon sx={{ color: "#ffffff", fontSize: 28 }} />
             </Box>
             <Box>
               <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.5rem", md: "1.9rem" } }}>
                 {selectedStand ? selectedStand.name : "Brindes"}
               </Typography>
               <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.55)", mt: 0.25 }}>
-                Rock in Rio
+                Circuito Sertanejo
               </Typography>
             </Box>
             {selectedStand && (
@@ -572,7 +693,7 @@ export default function BrindesPage() {
 
               {loading ? (
                 <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
-                  <CircularProgress sx={{ color: "#ff1f21" }} />
+                  <CircularProgress sx={{ color: "#7c3aed" }} />
                 </Box>
               ) : (
                 <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)" }, gap: 2.5 }}>
@@ -599,10 +720,10 @@ export default function BrindesPage() {
                         }}
                       >
                         <Box sx={{ height: 5, background: a.color }} />
-                        {stand.image_url ? (
+                        {getStandImage(stand.name, stand.image_url) ? (
                           <Box
                             component="img"
-                            src={stand.image_url}
+                            src={getStandImage(stand.name, stand.image_url)!}
                             alt={stand.name}
                             sx={{ width: "100%", height: 160, objectFit: "cover", display: "block" }}
                           />
@@ -650,7 +771,6 @@ export default function BrindesPage() {
           {/* ── Stand dashboard ── */}
           {selectedStand && (
             <Box>
-              {/* Tabs */}
               <Tabs
                 value={dashTab}
                 onChange={(_, v) => setDashTab(v)}
@@ -666,27 +786,12 @@ export default function BrindesPage() {
                     gap: 0.75,
                   },
                   "& .Mui-selected": { color: "#fff" },
-                  "& .MuiTabs-indicator": { backgroundColor: "#ff1f21", height: 3, borderRadius: "3px 3px 0 0" },
+                  "& .MuiTabs-indicator": { backgroundColor: "#ffffff", height: 3, borderRadius: "3px 3px 0 0" },
                 }}
               >
-                <Tab
-                  label="Visão Geral"
-                  value="overview"
-                  icon={<InventoryIcon sx={{ fontSize: 18 }} />}
-                  iconPosition="start"
-                />
-                <Tab
-                  label="Adicionar Brindes"
-                  value="add"
-                  icon={<AddCircleOutlineIcon sx={{ fontSize: 18 }} />}
-                  iconPosition="start"
-                />
-                <Tab
-                  label="Histórico"
-                  value="history"
-                  icon={<HistoryIcon sx={{ fontSize: 18 }} />}
-                  iconPosition="start"
-                />
+                <Tab label="Visão Geral"       value="overview" icon={<InventoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+                <Tab label="Adicionar Brindes" value="add"      icon={<AddCircleOutlineIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
+                <Tab label="Histórico"         value="history"  icon={<HistoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
               </Tabs>
 
               {/* ── Tab: Visao Geral ── */}
@@ -803,7 +908,6 @@ export default function BrindesPage() {
                       Registrar movimentação
                     </Typography>
 
-                    {/* Tipo: Entrada / Saida */}
                     <Box sx={{ mb: 3 }}>
                       <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", mb: 1.25, fontWeight: 600 }}>
                         Tipo de movimentação
@@ -838,7 +942,6 @@ export default function BrindesPage() {
                       </Box>
                     </Box>
 
-                    {/* Nome do brinde */}
                     <Box sx={{ mb: 3 }}>
                       <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", mb: 1.25, fontWeight: 600 }}>
                         Nome do brinde
@@ -862,7 +965,6 @@ export default function BrindesPage() {
                       />
                     </Box>
 
-                    {/* Quantidade */}
                     <Box sx={{ mb: 3 }}>
                       <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", mb: 1.25, fontWeight: 600 }}>
                         Quantidade
@@ -900,7 +1002,6 @@ export default function BrindesPage() {
                       </Box>
                     </Box>
 
-                    {/* Observacao */}
                     <Box sx={{ mb: 3.5 }}>
                       <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.85rem", mb: 1.25, fontWeight: 600 }}>
                         Observacao <Typography component="span" sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.78rem" }}>(opcional)</Typography>
@@ -926,7 +1027,6 @@ export default function BrindesPage() {
                       />
                     </Box>
 
-                    {/* Resumo */}
                     <Box sx={{
                       p: 2, mb: 3, borderRadius: 2,
                       backgroundColor: "rgba(255,255,255,0.04)",
@@ -965,15 +1065,15 @@ export default function BrindesPage() {
                       disabled={!formPrize.trim() || formQuantity < 1}
                       onClick={handleAddSubmit}
                       sx={{
-                        background: `linear-gradient(180deg, ${analytics.color} 0%, ${analytics.color}cc 100%)`,
-                        color: "#fff",
+                        backgroundColor: "#ffffff",
+                        color: "#111111",
                         fontWeight: 700,
                         borderRadius: 2,
                         textTransform: "none",
                         py: 1.5,
                         fontSize: "1rem",
                         "&:disabled": { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.25)" },
-                        "&:hover": { background: `linear-gradient(180deg, ${analytics.color}dd 0%, ${analytics.color}aa 100%)` },
+                        "&:hover": { backgroundColor: "#e8e8e8" },
                       }}
                     >
                       Registrar {formType === "entrada" ? "entrada" : "saida"} de {formQuantity} brinde{formQuantity !== 1 ? "s" : ""}
@@ -985,7 +1085,6 @@ export default function BrindesPage() {
               {/* ── Tab: Historico ── */}
               {dashTab === "history" && (
                 <Box>
-                  {/* Resumo rapido */}
                   <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 1.5, mb: 3 }}>
                     {[
                       { label: "Total entradas", value: analytics.entradas, color: "#4fc3f7" },
@@ -999,11 +1098,8 @@ export default function BrindesPage() {
                     ))}
                   </Box>
 
-                  {/* Filtros */}
                   <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 2.5 }}>
-                    <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", alignSelf: "center", mr: 0.5 }}>
-                      Tipo:
-                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", alignSelf: "center", mr: 0.5 }}>Tipo:</Typography>
                     {(["all", "entrada", "saida"] as const).map(f => (
                       <Chip
                         key={f}
@@ -1020,9 +1116,7 @@ export default function BrindesPage() {
                       />
                     ))}
                     <Box sx={{ width: 1, height: "auto" }} />
-                    <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", alignSelf: "center", mr: 0.5 }}>
-                      Origem:
-                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem", alignSelf: "center", mr: 0.5 }}>Origem:</Typography>
                     {(["all", "manual", "roleta"] as const).map(f => (
                       <Chip
                         key={f}
@@ -1040,12 +1134,10 @@ export default function BrindesPage() {
                     ))}
                   </Box>
 
-                  {/* Count */}
                   <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", mb: 1.5 }}>
                     {filteredHistory.length} registro{filteredHistory.length !== 1 ? "s" : ""}
                   </Typography>
 
-                  {/* List */}
                   <Paper sx={{ backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, overflow: "hidden" }}>
                     {filteredHistory.length === 0 ? (
                       <Box sx={{ py: 6, textAlign: "center" }}>

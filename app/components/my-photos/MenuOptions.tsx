@@ -95,7 +95,7 @@ export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
             >
               <Box
                 sx={{
-                  color: "rgb(255, 31, 33)",
+                  color: "#ffffff",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",

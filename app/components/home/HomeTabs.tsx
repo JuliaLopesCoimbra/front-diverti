@@ -1,5 +1,14 @@
-import { Box, Button } from "@mui/material";
+"use client";
+
+import { Box, Typography } from "@mui/material";
 import { useRef, useEffect, useCallback } from "react";
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import EventRoundedIcon from "@mui/icons-material/EventRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
+import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
+import MicExternalOnIcon from "@mui/icons-material/MicExternalOn";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 
 type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
 
@@ -7,6 +16,16 @@ interface Props {
   active: Tab;
   onChange: (tab: Tab) => void;
 }
+
+const tabs: { label: string; value: Tab; icon: React.ReactNode }[] = [
+  { label: "Feed",     value: "home",     icon: <HomeRoundedIcon        sx={{ fontSize: 17 }} /> },
+  { label: "Evento",   value: "eventos",  icon: <EventRoundedIcon       sx={{ fontSize: 17 }} /> },
+  { label: "Estandes", value: "estandes", icon: <StorefrontRoundedIcon  sx={{ fontSize: 17 }} /> },
+  { label: "Brindes",  value: "roleta",   icon: <CardGiftcardRoundedIcon sx={{ fontSize: 17 }} /> },
+  { label: "Mapa",     value: "mapa",     icon: <ExploreRoundedIcon     sx={{ fontSize: 17 }} /> },
+  { label: "Line Up",  value: "lineup",   icon: <MicExternalOnIcon      sx={{ fontSize: 17 }} /> },
+  { label: "Fotos",    value: "foto",     icon: <PhotoCameraRoundedIcon sx={{ fontSize: 17 }} /> },
+];
 
 const DRAG_THRESHOLD_PX = 5;
 
@@ -18,22 +37,20 @@ export default function HomeTabs({ active, onChange }: Props) {
   const rafIdRef = useRef<number | null>(null);
   const pendingScrollLeftRef = useRef<number>(0);
 
-  const tabs: { label: string; value: Tab }[] = [
-    { label: "Home", value: "home" },
-    { label: "Evento", value: "eventos" },
-    { label: "Estandes", value: "estandes" },
-    { label: "Brindes", value: "roleta" },
-    { label: "Mapa", value: "mapa" },
-    { label: "Line Up", value: "lineup" },
-    { label: "Photo Finder", value: "foto" },
-  ];
-
-  // Mesma largura e padding do conteúdo abaixo (ex.: lineup/datas) para alinhar início e fim
-
-  // Arrastar com o mouse no desktop: scroll instantâneo + rAF para fluidez
+  // Centraliza a tab ativa no scroll
   useEffect(() => {
     const container = scrollContainerRef.current;
+    if (!container) return;
+    const activeEl = container.querySelector<HTMLElement>("[data-active='true']");
+    if (!activeEl) return;
+    const containerRect = container.getBoundingClientRect();
+    const elRect = activeEl.getBoundingClientRect();
+    const offset = elRect.left - containerRect.left - containerRect.width / 2 + elRect.width / 2;
+    container.scrollBy({ left: offset, behavior: "smooth" });
+  }, [active]);
 
+  useEffect(() => {
+    const container = scrollContainerRef.current;
     const handleMouseMove = (e: MouseEvent) => {
       if (dragStartXRef.current === null || !container) return;
       const dx = dragStartXRef.current - e.clientX;
@@ -44,21 +61,14 @@ export default function HomeTabs({ active, onChange }: Props) {
       if (rafIdRef.current !== null) return;
       rafIdRef.current = requestAnimationFrame(() => {
         rafIdRef.current = null;
-        if (!scrollContainerRef.current) return;
-        scrollContainerRef.current.scrollLeft = pendingScrollLeftRef.current;
+        if (scrollContainerRef.current) scrollContainerRef.current.scrollLeft = pendingScrollLeftRef.current;
       });
     };
-
     const handleMouseUp = () => {
-      if (rafIdRef.current !== null) {
-        cancelAnimationFrame(rafIdRef.current);
-        rafIdRef.current = null;
-      }
-      const el = scrollContainerRef.current;
-      if (el) el.style.scrollBehavior = "";
+      if (rafIdRef.current !== null) { cancelAnimationFrame(rafIdRef.current); rafIdRef.current = null; }
+      if (scrollContainerRef.current) scrollContainerRef.current.style.scrollBehavior = "";
       dragStartXRef.current = null;
     };
-
     window.addEventListener("mousemove", handleMouseMove, { capture: true });
     window.addEventListener("mouseup", handleMouseUp, { capture: true });
     return () => {
@@ -72,50 +82,36 @@ export default function HomeTabs({ active, onChange }: Props) {
     if (e.button !== 0) return;
     const el = scrollContainerRef.current;
     if (!el) return;
-    el.style.scrollBehavior = "auto"; // scroll instantâneo durante o arraste
+    el.style.scrollBehavior = "auto";
     dragStartXRef.current = e.clientX;
     dragStartScrollLeftRef.current = el.scrollLeft;
     dragOccurredRef.current = false;
   }, []);
 
-  // Scroll horizontal com a roda do mouse
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     const handleWheel = (e: WheelEvent) => {
-      const hasHorizontalScroll = container.scrollWidth > container.clientWidth;
-      if (!hasHorizontalScroll) return;
-
+      if (container.scrollWidth <= container.clientWidth) return;
       const rect = container.getBoundingClientRect();
-      const isOverContainer =
-        e.clientX >= rect.left - 50 &&
-        e.clientX <= rect.right + 50 &&
-        e.clientY >= rect.top - 50 &&
-        e.clientY <= rect.bottom + 50;
-
-      if (isOverContainer) {
+      const over = e.clientX >= rect.left - 50 && e.clientX <= rect.right + 50 &&
+                   e.clientY >= rect.top - 50 && e.clientY <= rect.bottom + 50;
+      if (over) {
         e.preventDefault();
         e.stopPropagation();
-        const scrollAmount = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-        container.scrollLeft += scrollAmount;
+        container.scrollLeft += Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       }
     };
-
     container.addEventListener("wheel", handleWheel, { passive: false, capture: true });
-    return () => {
-      container.removeEventListener("wheel", handleWheel, { capture: true } as EventListenerOptions);
-    };
+    return () => container.removeEventListener("wheel", handleWheel, { capture: true } as EventListenerOptions);
   }, []);
 
   return (
     <Box
       sx={{
-        width: "100%",
-        maxWidth: 800,
-        mx: "auto",
-        px: { xs: 1, sm: 2 },
-        py: { xs: 2, md: 3 },
+        px: { xs: 1.5, md: 2 },
+        py: { xs: 1.2, md: 1.5 },
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >
       <Box
@@ -123,65 +119,60 @@ export default function HomeTabs({ active, onChange }: Props) {
         onMouseDown={handleContainerMouseDown}
         sx={{
           display: "flex",
-          gap: { xs: 1, md: 1.5, lg: 2 },
-          width: "100%",
+          gap: "6px",
           overflowX: "auto",
-          overflowY: "hidden",
-          scrollbarWidth: "none", // Firefox
-          "&::-webkit-scrollbar": {
-            display: "none", // Chrome, Safari, Edge
-          },
-          WebkitOverflowScrolling: "touch", // Smooth scrolling on iOS
-          scrollBehavior: "smooth", // restaurado no mouseup após arraste
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+          WebkitOverflowScrolling: "touch",
+          scrollBehavior: "smooth",
           cursor: "grab",
-          "&:active": {
-            cursor: "grabbing",
-          },
+          "&:active": { cursor: "grabbing" },
           userSelect: "none",
+          pb: 0.3,
         }}
       >
         {tabs.map((tab) => {
           const isActive = active === tab.value;
-
           return (
-            <Button
+            <Box
               key={tab.value}
+              data-active={isActive ? "true" : "false"}
               onClick={() => {
                 if (dragOccurredRef.current) return;
                 onChange(tab.value);
               }}
               sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                px: { xs: 1.4, md: 1.8 },
+                py: 0.9,
                 borderRadius: "999px",
-                textTransform: "none",
-                fontWeight: 600,
-                lineHeight: 1.2,
-                px: { xs: 1.5, md: 2, lg: 2.5 },
-                minHeight: { xs: 40, md: 44, lg: 48 },
-                height: { xs: 40, md: 44, lg: 48 },
-                width: { xs: 100, md: 120, lg: 140 },
-                minWidth: { xs: 100, md: 120, lg: 140 }, // Garante largura mínima
-                flexShrink: 0, // Previne que os botões encolham
-                fontSize: tab.value === "mapa" 
-                  ? { xs: "0.75rem", md: "0.875rem", lg: "0.9375rem" }
-                  : { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-                // Ativo com o vermelho oficial do tema
-                backgroundColor: isActive ? "primary.main" : "transparent",
-                color: "#fff",
-                border: `1px solid ${
-                  isActive ? "primary.main" : "#fff"
-                }`,
-
+                flexShrink: 0,
+                cursor: "pointer",
+                backgroundColor: isActive ? "#ffffff" : "rgba(255,255,255,0.05)",
+                color: isActive ? "#111111" : "rgba(255,255,255,0.45)",
+                border: `1px solid ${isActive ? "transparent" : "rgba(255,255,255,0.1)"}`,
+                transition: "all 0.2s ease",
                 "&:hover": {
-                  backgroundColor: isActive
-                    ? "primary.dark"
-                    : "rgba(255,255,255,0.1)",
-                  borderColor: isActive ? "primary.dark" : "#fff",
-                  fontWeight: 900,
+                  backgroundColor: isActive ? "#efefef" : "rgba(255,255,255,0.1)",
+                  color: isActive ? "#111111" : "rgba(255,255,255,0.8)",
                 },
+                "&:active": { transform: "scale(0.95)" },
               }}
             >
-              {tab.label}
-            </Button>
+              {tab.icon}
+              <Typography
+                sx={{
+                  fontSize: { xs: "12px", md: "13px" },
+                  fontWeight: isActive ? 700 : 500,
+                  whiteSpace: "nowrap",
+                  lineHeight: 1,
+                }}
+              >
+                {tab.label}
+              </Typography>
+            </Box>
           );
         })}
       </Box>

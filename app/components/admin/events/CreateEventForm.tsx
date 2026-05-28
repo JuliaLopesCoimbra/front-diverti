@@ -1248,7 +1248,7 @@ export default function CreateEventForm({ onSuccess }: CreateEventFormProps) {
             sx={{
               flex: 1,
               borderRadius: "999px",
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 600,
               py: 1.5,

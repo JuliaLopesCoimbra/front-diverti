@@ -6,13 +6,13 @@ import { ReactNode } from "react";
 const theme = createTheme({
   palette: {
     primary: {
-      main: "rgb(255, 31, 33)",
-      dark: "rgb(220, 20, 22)",
-      contrastText: "#fff",
+      main: "#ffffff",
+      dark: "#e8e8e8",
+      contrastText: "#111111",
     },
   },
   typography: {
-    fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    fontFamily: 'var(--font-montserrat), "Montserrat", sans-serif',
     h1: {
       fontSize: "2rem",
       fontWeight: 600,

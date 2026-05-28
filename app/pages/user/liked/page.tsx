@@ -631,7 +631,7 @@ export default function LikedPostsPage() {
                 <Chip
                   label={posts.length}
                   sx={{
-                    backgroundColor: "rgb(255, 31, 33)",
+                    backgroundColor: "#ffffff",
                     color: "#fff",
                     fontWeight: 700,
                     fontSize: "0.875rem",

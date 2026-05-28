@@ -119,7 +119,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           sx={{
@@ -138,7 +138,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -171,7 +171,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           sx={{
@@ -191,7 +191,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -228,7 +228,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           sx={{
@@ -248,7 +248,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -276,7 +276,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           sx={{
@@ -296,7 +296,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -331,7 +331,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           InputProps={{
@@ -400,7 +400,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
           }}
           FormHelperTextProps={{ sx: { color: "#ff6b6b" } }}
@@ -421,7 +421,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -450,7 +450,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               "&.Mui-focused": {
                 backgroundColor: "rgba(255, 255, 255, 0.15)",
                 "& fieldset": {
-                  borderColor: "rgb(255, 31, 33)",
+                  borderColor: "#ffffff",
                   borderWidth: "2px",
                 },
               },
@@ -459,7 +459,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               color: "rgba(255, 120, 122, 0.95)",
               fontSize: 13,
               transform: "translate(14px, -9px) scale(1)",
-              "&.Mui-focused": { color: "rgb(255, 31, 33)" },
+              "&.Mui-focused": { color: "#ffffff" },
             },
             "& .MuiSelect-icon": {
               color: "rgba(255, 120, 122, 0.95)",
@@ -520,7 +520,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               sx={{
                 color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "rgb(255, 31, 33)",
+                  color: "#ffffff",
                 },
               }}
             />
@@ -565,7 +565,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               sx={{
                 color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "rgb(255, 31, 33)",
+                  color: "#ffffff",
                 },
               }}
             />
@@ -607,7 +607,7 @@ const RegisterFormFields: React.FC<RegisterFormFieldsProps> = ({
               sx={{
                 color: "rgba(255, 120, 122, 0.95)",
                 "&.Mui-checked": {
-                  color: "rgb(255, 31, 33)",
+                  color: "#ffffff",
                 },
               }}
             />

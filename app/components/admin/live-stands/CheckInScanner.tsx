@@ -224,7 +224,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
       borderRadius: 2,
       "& fieldset": { borderColor: "rgba(255,255,255,0.15)" },
       "&:hover fieldset": { borderColor: "rgba(255,255,255,0.3)" },
-      "&.Mui-focused fieldset": { borderColor: "#ff1f21" },
+      "&.Mui-focused fieldset": { borderColor: "#ffffff" },
     },
     "& .MuiInputBase-input::placeholder": { color: "rgba(255,255,255,0.3)" },
     "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.55)" },
@@ -308,7 +308,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
         <Box
           component="img"
           src="/logo/rockinrio.png"
-          alt="Rock in Rio"
+          alt="Circuito Sertanejo"
           sx={{ height: { xs: 34, md: 42 }, objectFit: "contain" }}
         />
         <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: { xs: "1rem", md: "1.1rem" } }}>
@@ -351,15 +351,15 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
               <Box sx={{ position: "absolute", top: "14%", bottom: "14%", left: 0,   width: "12%", backgroundColor: "rgba(0,0,0,0.5)" }} />
               <Box sx={{ position: "absolute", top: "14%", bottom: "14%", right: 0,  width: "12%", backgroundColor: "rgba(0,0,0,0.5)" }} />
               {[
-                { top: "14%",    left: "12%",  borderTop:    "3px solid #ff1f21", borderLeft:   "3px solid #ff1f21" },
-                { top: "14%",    right: "12%", borderTop:    "3px solid #ff1f21", borderRight:  "3px solid #ff1f21" },
-                { bottom: "14%", left: "12%",  borderBottom: "3px solid #ff1f21", borderLeft:   "3px solid #ff1f21" },
-                { bottom: "14%", right: "12%", borderBottom: "3px solid #ff1f21", borderRight:  "3px solid #ff1f21" },
+                { top: "14%",    left: "12%",  borderTop:    "3px solid #ffffff", borderLeft:   "3px solid #ffffff" },
+                { top: "14%",    right: "12%", borderTop:    "3px solid #ffffff", borderRight:  "3px solid #ffffff" },
+                { bottom: "14%", left: "12%",  borderBottom: "3px solid #ffffff", borderLeft:   "3px solid #ffffff" },
+                { bottom: "14%", right: "12%", borderBottom: "3px solid #ffffff", borderRight:  "3px solid #ffffff" },
               ].map((s, i) => <Box key={i} sx={{ position: "absolute", width: 28, height: 28, ...s }} />)}
               <Box
                 sx={{
                   position: "absolute", left: "12%", right: "12%", height: 2,
-                  background: "linear-gradient(90deg, transparent, #ff1f21 30%, #ff6162 50%, #ff1f21 70%, transparent)",
+                  background: "linear-gradient(90deg, transparent, #ffffff 30%, #ff6162 50%, #ffffff 70%, transparent)",
                   boxShadow: "0 0 8px rgba(255,31,33,0.8)",
                   animation: "scanLine 1.8s ease-in-out infinite",
                   "@keyframes scanLine": { "0%": { top: "17%" }, "50%": { top: "80%" }, "100%": { top: "17%" } },
@@ -370,13 +370,13 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
 
           {cameraStatus === "loading" && (
             <Box sx={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.65)" }}>
-              <CircularProgress sx={{ color: "#ff1f21" }} />
+              <CircularProgress sx={{ color: "#ffffff" }} />
             </Box>
           )}
 
           {processingQR && (
             <Box sx={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1.5, backgroundColor: "rgba(0,0,0,0.8)" }}>
-              <CircularProgress sx={{ color: "#ff1f21" }} />
+              <CircularProgress sx={{ color: "#ffffff" }} />
               <Typography sx={{ color: "#fff", fontSize: "0.9rem" }}>Validando...</Typography>
             </Box>
           )}
@@ -415,7 +415,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
             onChange={(e) => { setPhoneQuery(e.target.value); setPhoneResult(null); }}
             InputProps={{
               endAdornment: loadingBookings
-                ? <CircularProgress size={18} sx={{ color: "#ff1f21", mr: 1 }} />
+                ? <CircularProgress size={18} sx={{ color: "#ffffff", mr: 1 }} />
                 : null,
             }}
             sx={inputSx}
@@ -468,7 +468,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
                   backgroundColor: "rgba(255,255,255,0.04)",
                 }}
               >
-                <Box sx={{ height: 4, backgroundColor: matchedBooking.checked_in_at ? "rgba(255,255,255,0.12)" : "#ff1f21" }} />
+                <Box sx={{ height: 4, backgroundColor: matchedBooking.checked_in_at ? "rgba(255,255,255,0.12)" : "#ffffff" }} />
 
                 <Box sx={{ p: 2.5, display: "flex", flexDirection: "column", gap: 2 }}>
                   {/* Avatar + name */}
@@ -478,7 +478,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
                       backgroundColor: "rgba(255,31,33,0.15)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                     }}>
-                      <PersonIcon sx={{ color: "#ff1f21", fontSize: 24 }} />
+                      <PersonIcon sx={{ color: "#ffffff", fontSize: 24 }} />
                     </Box>
                     <Box>
                       <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.05rem", lineHeight: 1.2 }}>
@@ -524,7 +524,7 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
                       disabled={checkingInId === matchedBooking.id}
                       onClick={() => handlePhoneCheckIn(matchedBooking)}
                       sx={{
-                        background: "linear-gradient(180deg, #ff2e30 0%, #ff1f21 100%)",
+                        background: "linear-gradient(180deg, #ff2e30 0%, #ffffff 100%)",
                         color: "#fff",
                         fontWeight: 700,
                         borderRadius: 2,

@@ -353,7 +353,7 @@ function EditNewsPageContent() {
                     variant="contained"
                     disabled={loading || !title.trim() || !content.trim() || (imagePreviews.length === 0 && images.length === 0) || !eventId || !newsId}
                     sx={{
-                      backgroundColor: "rgb(255, 31, 33)",
+                      backgroundColor: "#ffffff",
                       color: "#fff",
                       fontWeight: 700,
                       borderRadius: "12px",

@@ -5,6 +5,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -47,6 +48,11 @@ export default function BottomNav() {
     { path: "/pages/user/store", icon: <ShoppingBagIcon fontSize="inherit" /> },
     { path: "/pages/user/my-photos", icon: <PhotoLibraryIcon fontSize="inherit" /> },
   ];
+
+  const handleAddPost = () => {
+    const eventId = typeof window !== "undefined" ? localStorage.getItem("selectedEventId") : null;
+    router.push(eventId ? `/pages/news/create?eventId=${eventId}` : "/pages/news/create");
+  };
 
   return (
     <Box
@@ -91,9 +97,9 @@ export default function BottomNav() {
           transition: "padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), gap 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
-        {items.map((item) => {
+        {/* Home e Liked */}
+        {items.slice(0, 2).map((item) => {
           const isActive = pathname === item.path;
-
           return (
             <Box
               key={item.path}
@@ -125,7 +131,70 @@ export default function BottomNav() {
               }}
             >
               {item.icon}
-              {/* Indicador ativo */}
+              <Box
+                sx={{
+                  width: isActive ? (shrunk ? 14 : 18) : 0,
+                  height: 2.5,
+                  borderRadius: "999px",
+                  backgroundColor: "#ff2e30",
+                  boxShadow: isActive ? "0 0 6px rgba(255,46,48,0.8)" : "none",
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  opacity: isActive ? 1 : 0,
+                }}
+              />
+            </Box>
+          );
+        })}
+
+        {/* Botão + (adicionar post) */}
+        <Box
+          onClick={handleAddPost}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: shrunk ? 34 : 40,
+            height: shrunk ? 34 : 40,
+            borderRadius: "50%",
+            backgroundColor: "#ffffff",
+            color: "#111111",
+            fontSize: shrunk ? "20px" : "24px",
+            cursor: "pointer",
+            flexShrink: 0,
+            boxShadow: "0 2px 12px rgba(255,255,255,0.2)",
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            WebkitTapHighlightColor: "transparent",
+            "&:active": { transform: "scale(0.88)" },
+            "&:hover": { backgroundColor: "#e8e8e8" },
+          }}
+        >
+          <AddRoundedIcon fontSize="inherit" />
+        </Box>
+
+        {/* Store e My Photos */}
+        {items.slice(2).map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Box
+              key={item.path}
+              onClick={() => router.push(item.path)}
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "3px",
+                cursor: "pointer",
+                padding: shrunk ? "5px 10px" : "7px 14px",
+                borderRadius: "999px",
+                color: isActive ? "#ff2e30" : "rgba(255,255,255,0.45)",
+                fontSize: shrunk ? "18px" : "22px",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                WebkitTapHighlightColor: "transparent",
+                "&:active": { transform: "scale(0.9)" },
+              }}
+            >
+              {item.icon}
               <Box
                 sx={{
                   width: isActive ? (shrunk ? 14 : 18) : 0,

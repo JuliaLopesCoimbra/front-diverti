@@ -32,6 +32,66 @@ import {
   UserStandBooking,
 } from "@/app/services/liveStands/liveStandUserService";
 
+const STAND_IMAGES: { keys: string[]; image: string }[] = [
+  {
+    keys: ["coca"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg",
+  },
+  {
+    keys: ["fiat"],
+    image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp",
+  },
+  {
+    keys: ["sprite"],
+    image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg",
+  },
+  {
+    keys: ["balatines", "ballantines"],
+    image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png",
+  },
+  {
+    keys: ["eisenbahn"],
+    image: "https://www.meioemensagem.com.br/wp-content/uploads/2025/09/eisenbahn-thetown.jpg",
+  },
+  {
+    keys: ["vivo"],
+    image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg",
+  },
+  {
+    keys: ["samsung"],
+    image: "https://t2.tudocdn.net/507931?w=1920",
+  },
+  {
+    keys: ["volkswagen", "volks", "vw"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg",
+  },
+  {
+    keys: ["brahma"],
+    image: "https://www.brahma.com.br/wp-content/uploads/2024/09/brahma-estande.jpg",
+  },
+];
+
+const HIDDEN_STANDS = ["bauducco", "tic tac", "tictac", "piracanjuba", "eisenbahn"];
+const STAND_RENAME: { from: string[]; to: string }[] = [];
+
+function normalizeStand(stand: UserEventStand): UserEventStand {
+  const lower = stand.name.toLowerCase();
+  const rename = STAND_RENAME.find((r) => r.from.some((k) => lower.includes(k)));
+  const fallbackImage = (() => {
+    if (stand.image_url) return stand.image_url;
+    const nameLower = rename ? rename.to.toLowerCase() : lower;
+    for (const { keys, image } of STAND_IMAGES) {
+      if (keys.some((k) => nameLower.includes(k) || lower.includes(k))) return image;
+    }
+    return null;
+  })();
+  return {
+    ...stand,
+    name: rename ? rename.to : stand.name,
+    image_url: fallbackImage,
+  };
+}
+
 interface Props {
   eventId: number;
 }
@@ -50,7 +110,10 @@ export default function EventStands({ eventId }: Props) {
     try {
       setLoading(true);
       const data = await getUserEventStands(eventId);
-      setStands(data);
+      const filtered = data
+        .filter((s) => !HIDDEN_STANDS.some((h) => s.name.toLowerCase().includes(h)))
+        .map(normalizeStand);
+      setStands(filtered);
     } catch (error: any) {
       console.error("Erro ao carregar estandes para o usuario", error);
       showToast(error?.response?.data?.detail || "Erro ao carregar estandes", "error");
@@ -163,7 +226,7 @@ export default function EventStands({ eventId }: Props) {
   if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-        <CircularProgress sx={{ color: "#ffc91f" }} />
+        <CircularProgress sx={{ color: "#7c3aed" }} />
       </Box>
     );
   }
@@ -181,7 +244,7 @@ export default function EventStands({ eventId }: Props) {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-          <StorefrontIcon sx={{ color: "#ffc91f" }} />
+          <StorefrontIcon sx={{ color: "#7c3aed" }} />
           <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700 }}>
             Estandes
           </Typography>
@@ -395,11 +458,11 @@ export default function EventStands({ eventId }: Props) {
                                 sx={{
                                   textTransform: "none",
                                   minWidth: 180,
-                                  backgroundColor: session.is_booked ? "transparent" : "#ff1f21",
+                                  backgroundColor: session.is_booked ? "transparent" : "#ffffff",
                                   color: "#fff",
                                   borderColor: "rgba(255,255,255,0.3)",
                                   "&:hover": {
-                                    backgroundColor: session.is_booked ? "rgba(255,255,255,0.05)" : "#dc1416",
+                                    backgroundColor: session.is_booked ? "rgba(255,255,255,0.05)" : "#e8e8e8",
                                   },
                                   "&.Mui-disabled": {
                                     color: "rgba(255,255,255,0.45)",
@@ -460,7 +523,7 @@ export default function EventStands({ eventId }: Props) {
                 {bookingToShowQr.end_time ? ` - ${bookingToShowQr.end_time.substring(0, 5)}` : ""}
               </Typography>
 
-              <Typography sx={{ color: "#ffc91f", fontWeight: 700, mb: 2 }}>
+              <Typography sx={{ color: "#7c3aed", fontWeight: 700, mb: 2 }}>
                 Chegue com antecedência de 15 minutos antes do horário de inicio da sessão.
               </Typography>
 

@@ -399,7 +399,7 @@ const NotificationsPage: React.FC = () => {
                 fontSize: { xs: "0.875rem", sm: "1rem" },
               },
               "& .MuiTabs-indicator": {
-                backgroundColor: "rgb(255, 31, 33)",
+                backgroundColor: "#ffffff",
               },
             }}
           >
@@ -413,7 +413,7 @@ const NotificationsPage: React.FC = () => {
                       label={unreadCount}
                       size="small"
                       sx={{
-                        backgroundColor: "rgb(255, 31, 33)",
+                        backgroundColor: "#ffffff",
                         color: "#fff",
                         fontWeight: 700,
                         height: 20,
@@ -598,7 +598,7 @@ const NotificationsPage: React.FC = () => {
                                       width: 8,
                                       height: 8,
                                       borderRadius: "50%",
-                                      backgroundColor: "rgb(255, 31, 33)",
+                                      backgroundColor: "#ffffff",
                                       flexShrink: 0,
                                       mt: 0.5,
                                     }}
@@ -956,14 +956,14 @@ const NotificationsPage: React.FC = () => {
             disabled={saving}
             sx={{
               borderRadius: "999px",
-              backgroundColor: "rgb(255, 31, 33)",
-              color: "#fff",
+              backgroundColor: "#ffffff",
+              color: "#111111",
               fontWeight: 700,
               fontSize: { xs: "0.875rem", sm: "1.1rem" },
               py: { xs: 1, sm: 1.5 },
               textTransform: "none",
               "&:hover": {
-                backgroundColor: "rgb(220, 20, 22)",
+                backgroundColor: "#e8e8e8",
               },
               "&:disabled": {
                 backgroundColor: "rgba(255, 31, 33, 0.5)",

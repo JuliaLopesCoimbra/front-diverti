@@ -21,6 +21,7 @@ export interface LiveStandFormValues {
   description: string;
   image: File | null;
   removeImage: boolean;
+  imageUrl: string;
 }
 
 interface Props {
@@ -44,6 +45,7 @@ export default function LiveStandFormDialog({
   const [description, setDescription] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [imageUrl, setImageUrl] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function LiveStandFormDialog({
     setDescription(stand?.description ?? "");
     setImage(null);
     setRemoveImage(false);
+    setImageUrl(stand?.image_url ?? "");
   }, [open, stand]);
 
   useEffect(() => {
@@ -72,8 +75,8 @@ export default function LiveStandFormDialog({
       return;
     }
 
-    setPreviewUrl(stand?.image_url ?? null);
-  }, [image, removeImage, stand]);
+    setPreviewUrl(imageUrl || stand?.image_url || null);
+  }, [image, removeImage, stand, imageUrl]);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0] ?? null;
@@ -89,6 +92,7 @@ export default function LiveStandFormDialog({
       description: description.trim(),
       image,
       removeImage,
+      imageUrl: imageUrl.trim(),
     });
   };
 
@@ -144,8 +148,26 @@ export default function LiveStandFormDialog({
           }}
         />
 
+        <TextField
+          label="URL da foto (opcional)"
+          value={imageUrl}
+          onChange={(e) => { setImageUrl(e.target.value); if (e.target.value) setRemoveImage(false); }}
+          fullWidth
+          disabled={saving}
+          placeholder="https://..."
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              color: "#fff",
+              "& fieldset": { borderColor: "rgba(255,255,255,0.2)" },
+              "&:hover fieldset": { borderColor: "rgba(255,255,255,0.35)" },
+            },
+            "& .MuiInputLabel-root": { color: "rgba(255,255,255,0.7)" },
+            "& .MuiInputBase-input::placeholder": { color: "rgba(255,255,255,0.35)" },
+          }}
+        />
+
         <Button variant="outlined" component="label" disabled={saving} sx={{ textTransform: "none" }}>
-          {image ? "Trocar foto selecionada" : "Selecionar foto"}
+          {image ? "Trocar foto selecionada" : "Selecionar foto do computador"}
           <input hidden type="file" accept="image/*" onChange={handleFileChange} />
         </Button>
 
@@ -190,9 +212,10 @@ export default function LiveStandFormDialog({
           disabled={saving || !name.trim()}
           variant="contained"
           sx={{
-            backgroundColor: "#ff1f21",
+            backgroundColor: "#ffffff",
+            color: "#111111",
             textTransform: "none",
-            "&:hover": { backgroundColor: "#dc1416" },
+            "&:hover": { backgroundColor: "#e8e8e8" },
           }}
         >
           {saving ? "Salvando..." : mode === "create" ? "Criar estande" : "Salvar alteracoes"}

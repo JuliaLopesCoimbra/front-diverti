@@ -454,11 +454,12 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             size="large"
             fullWidth
             sx={{
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              background: "#ffffff",
+              color: "#111111",
               borderRadius: 2,
               py: 1.5,
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
             onClick={requestCamera}
@@ -500,7 +501,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               maxWidth: 320,
               margin: "0 auto",
               aspectRatio: "3 / 4",
-              border: "3px solid rgb(255, 31, 33)",
+              border: "3px solid #7c3aed",
               borderRadius: "50%",
               overflow: "hidden",
               background: "#d9d9d9",
@@ -606,7 +607,8 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               bottom: 20,
               left: "50%",
               transform: "translateX(-50%)",
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              background: "#ffffff",
+              color: "#111111",
               borderRadius: 2,
               px: 3,
               py: 1,
@@ -614,9 +616,9 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               fontWeight: 600,
               textTransform: "none",
               zIndex: 5,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
           >
@@ -780,11 +782,12 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             size="large"
             fullWidth
             sx={{
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
+              background: "#ffffff",
+              color: "#111111",
               borderRadius: 2,
               py: 1.5,
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
             onClick={() => {
@@ -961,11 +964,11 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
             variant="contained"
             startIcon={<DownloadIcon />}
             sx={{
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-              color: "#fff",
+              background: "#ffffff",
+              color: "#111111",
               fontWeight: 600,
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
           >

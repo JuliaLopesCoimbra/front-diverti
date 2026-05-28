@@ -305,17 +305,17 @@ const RegisterForm: React.FC = () => {
                 sx={{
                   mt: 4,
                   mb: 2,
-                  backgroundColor: "rgb(255, 31, 33)",
-                  color: "#fff",
+                  backgroundColor: "#ffffff",
+                  color: "#111111",
                   fontWeight: 700,
                   fontSize: "1rem",
                   padding: "14px",
                   borderRadius: "14px",
                   textTransform: "none",
-                  boxShadow: "0 4px 14px rgba(255, 31, 33, 0.35)",
+                  boxShadow: "0 4px 14px rgba(0,0,0,0.15)",
                   "&:hover": {
-                    backgroundColor: "rgb(220, 20, 22)",
-                    boxShadow: "0 6px 20px rgba(255, 31, 33, 0.45)",
+                    backgroundColor: "#e8e8e8",
+                    boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
                     transform: "translateY(-1px)",
                   },
                   "&:disabled": {

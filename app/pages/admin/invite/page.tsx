@@ -232,7 +232,7 @@ export default function InviteAdminPage() {
           disabled={loading || cooldown > 0}
           sx={{
             mt: 2,
-            backgroundColor: "rgb(255, 31, 33)",
+            backgroundColor: "#ffffff",
             color: "#fff",
             fontWeight: 600,
             borderRadius: "14px",

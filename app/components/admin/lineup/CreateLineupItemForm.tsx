@@ -53,13 +53,13 @@ const focusedInputSx = {
       borderColor: "rgba(255,255,255,0.3)",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "rgb(255, 31, 33)",
+      borderColor: "#ffffff",
     },
   },
   "& .MuiInputLabel-root": {
     color: "rgba(255,255,255,0.7)",
     "&.Mui-focused": {
-      color: "rgb(255, 31, 33)",
+      color: "#ffffff",
     },
   },
 };
@@ -446,7 +446,7 @@ export default function CreateLineupItemForm({
                 disabled={loading}
                 sx={{
                   flex: 1,
-                  backgroundColor: "rgb(255, 31, 33)",
+                  backgroundColor: "#ffffff",
                   color: "#fff",
                   fontWeight: 600,
                   "&:hover": {

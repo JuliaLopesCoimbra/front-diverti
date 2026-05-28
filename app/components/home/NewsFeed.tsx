@@ -4,14 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardMedia,
-  CardContent,
   Skeleton,
   Button,
-  Divider,
   Avatar,
 } from "@mui/material";
+import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
+import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
 import { useAuth } from "@/app/context/AuthContext";
 import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
@@ -19,7 +17,6 @@ import { EventResponse } from "@/app/services/events/eventAppService";
 import EmptyNews from "./EmptyNews";
 import { useRouter } from "next/navigation";
 import PendingPostsNotification from "@/app/components/admin/pending-posts/PendingPostsNotification";
-import AdBanner from "../ads/AdBanner";
 
 interface Props {
   eventId: number;
@@ -59,7 +56,7 @@ function formatDate(dateString: string): string {
 }
 
 export default function NewsFeed({ eventId, event }: Props) {
-  const { role, isAdminMaster, isSubadmin, canCreatePost, authVersion } = useAuth();
+  const { isAdminMaster, isSubadmin, authVersion } = useAuth();
   const router = useRouter();
   
   const { getCache, setCache } = useFeedCache();
@@ -74,9 +71,7 @@ export default function NewsFeed({ eventId, event }: Props) {
   const loaderRef = useRef<HTMLDivElement | null>(null);
   
   const canApprovePosts = isAdminMaster || isSubadmin;
-  const canAccessLiveStands = isAdminMaster || role === "admin";
   const isEventActive = event ? event.is_active === true : true;
-  const showActionButtons = isEventActive && (canCreatePost || canAccessLiveStands);
 
   const loadNews = async (reset = false) => {
     if (loading) return;
@@ -343,10 +338,8 @@ export default function NewsFeed({ eventId, event }: Props) {
     });
   }, [news, eventId, router]);
 
-  const [featured, ...others] = news;
-
   const handleNewsClick = (newsItem: NewsResponse) => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       sessionStorage.setItem(`news-preview-${newsItem.id}`, JSON.stringify(newsItem));
     }
     router.push(`/pages/news/${newsItem.id}?eventId=${eventId}`);
@@ -358,269 +351,37 @@ export default function NewsFeed({ eventId, event }: Props) {
 
   return (
     <Box
-      padding={{ xs: 2, md: 3, lg: 4 }}
       sx={{
-        maxWidth: { xs: "100%", md: "800px", lg: "900px" },
-        margin: { xs: 0, md: "0 auto" },
-        width: { xs: "100%", md: "100%" },
+        px: { xs: 1.5, md: 2 },
+        pt: { xs: 1.5, md: 2 },
+        maxWidth: { xs: "100%", md: "600px" },
+        margin: "0 auto",
+        width: "100%",
       }}
     >
-      {showActionButtons && (
-        <Box display="flex" justifyContent="flex-end" alignItems="center" gap={2} marginBottom={2}>
-          {canApprovePosts && isEventActive && <PendingPostsNotification eventId={eventId} />}
-          {canAccessLiveStands && (
-            <Button
-              variant="outlined"
-              onClick={() => router.push(`/pages/admin/live-stands?eventId=${eventId}`)}
-              sx={{
-                color: "#fff",
-                borderColor: "rgba(255,255,255,0.35)",
-                fontWeight: 600,
-                borderRadius: "14px",
-                textTransform: "none",
-                "&:hover": {
-                  borderColor: "rgba(255,255,255,0.6)",
-                  backgroundColor: "rgba(255,255,255,0.08)",
-                },
-              }}
-            >
-              Dashboard de estandes
-            </Button>
-          )}
-          {canCreatePost && (
-          <Button
-            variant="contained"
-            onClick={() => router.push(`/pages/news/create?eventId=${eventId}`)}
-            sx={{
-              backgroundColor: "rgb(255, 31, 33)",
-              color: "#fff",
-              fontWeight: 600,
-              borderRadius: "14px",
-              textTransform: "none",
-              "&:hover": {
-                backgroundColor: "rgb(220, 20, 22)",
-              },
-            }}
-          >
-            + Adicionar post
-          </Button>
-          )}
+      {/* Botões de admin */}
+      {canApprovePosts && isEventActive && (
+        <Box display="flex" justifyContent="flex-end" mb={2}>
+          <PendingPostsNotification eventId={eventId} />
         </Box>
       )}
 
-      {loading && news.length === 0 && <FeaturedNewsSkeleton />}
+      {loading && news.length === 0 && (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {[1, 2, 3].map((i) => <PostSkeleton key={i} />)}
+        </Box>
+      )}
 
       {!loading && news.length === 0 && <EmptyNews />}
 
       {news.length > 0 && (
-        <>
-          {featured && (
-            <Card
-              onClick={() => handleNewsClick(featured)}
-              sx={{
-                backgroundColor: "transparent",
-                boxShadow: "none",
-                color: "#fff",
-                cursor: "pointer",
-                transition: "opacity 0.2s",
-                maxWidth: "100%",
-                boxSizing: "border-box",
-                "&:hover": {
-                  opacity: 0.8,
-                },
-              }}
-            >
-              {featured.images && featured.images.length > 0 && (
-                <CardMedia
-                  component="img"
-                  image={featured.images[0].image_url}
-                  alt={featured.title}
-                  sx={{
-                    width: "100%",
-                    aspectRatio: "1 / 1",
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-              <CardContent sx={{ padding: { xs: 2, md: 2.5, lg: 3 }, maxWidth: "100%", boxSizing: "border-box" }}>
-                <Typography
-                  variant="h6"
-                  fontWeight={700}
-                  sx={{ 
-                    color: "#fff",
-                    fontSize: { xs: "1.25rem", md: "1.5rem", lg: "1.75rem" },
-                    wordWrap: "break-word",
-                    overflowWrap: "break-word",
-                    maxWidth: "100%",
-                    hyphens: "auto",
-                  }}
-                >
-                  {featured.title}
-                </Typography>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {news.map((item) => (
+            <PostCard key={item.id} item={item} onPress={() => handleNewsClick(item)} />
+          ))}
 
-                <Typography
-                  variant="body2"
-                  sx={{ 
-                    color: "rgba(255,255,255,0.7)", 
-                    marginTop: 1,
-                    fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-                  }}
-                >
-                  {formatDate(featured.created_at)}
-                </Typography>
-
-                {featured.author && (
-                  <Box display="flex" alignItems="center" gap={1} marginTop={1}>
-                    <Avatar
-                      src={featured.author.profile_photo || undefined}
-                      alt={featured.author.name || "Autor"}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        bgcolor: "rgba(255,255,255,0.2)",
-                      }}
-                    />
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "rgba(255,255,255,0.7)", fontSize: 12 }}
-                    >
-                      {featured.author.name || "Autor desconhecido"}
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          )}
-          <Divider
-            sx={{
-              borderColor: "rgba(255,255,255,0.35)",
-              borderWidth: "1px",
-              marginY: 1.5,
-            }}
-          />
-          <Box display="flex" flexDirection="column">
-            {others.map((item, index) => (
-              <Box key={item.id}>
-                <Card
-                  onClick={() => handleNewsClick(item)}
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    backgroundColor: "transparent",
-                    boxShadow: "none",
-                    color: "#fff",
-                    paddingBottom: 1,
-                    cursor: "pointer",
-                    transition: "opacity 0.2s",
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    "&:hover": {
-                      opacity: 0.8,
-                    },
-                  }}
-                >
-                  {item.images && item.images.length > 0 && (
-                    <CardMedia
-                      component="img"
-                      image={item.images[0].image_url}
-                      alt={item.title}
-                      sx={{
-                        width: { xs: 100, md: 120, lg: 140 },
-                        height: { xs: 100, md: 120, lg: 140 },
-                        borderRadius: 1,
-                        objectFit: "cover",
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-
-                  <CardContent sx={{ padding: { xs: 1, md: 1.5, lg: 2 }, maxWidth: "100%", boxSizing: "border-box", minWidth: 0, flex: 1 }}>
-                    <Typography 
-                      fontWeight={600} 
-                      sx={{ 
-                        color: "#fff",
-                        fontSize: { xs: "0.875rem", md: "1rem", lg: "1.125rem" },
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        maxWidth: "100%",
-                        hyphens: "auto",
-                      }}
-                    >
-                      {item.title}
-                    </Typography>
-
-                    <Typography
-                      sx={{ 
-                        color: "rgba(255,255,255,0.6)",
-                        fontSize: { xs: 12, md: 13, lg: 14 },
-                      }}
-                    >
-                      {formatDate(item.created_at)}
-                    </Typography>
-
-                    {item.author && (
-                      <Box display="flex" alignItems="center" gap={1} marginTop={0.5}>
-                        <Avatar
-                          src={item.author.profile_photo || undefined}
-                          alt={item.author.name || "Autor"}
-                          sx={{
-                            width: 20,
-                            height: 20,
-                            bgcolor: "rgba(255,255,255,0.2)",
-                          }}
-                        />
-                        <Typography
-                          fontSize={11}
-                          sx={{ color: "rgba(255,255,255,0.6)" }}
-                        >
-                          {item.author.name || "Autor desconhecido"}
-                        </Typography>
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {/* Linha separadora */}
-                {index !== others.length - 1 && (
-                  <Divider
-                    sx={{
-                      borderColor: "rgba(255,255,255,0.15)",
-                      marginY: 1,
-                    }}
-                  />
-                )}
-
-                {/* CTVAd a cada 3 posts */}
-                {(index + 1) % 3 === 0 && index !== others.length - 1 && (
-                  <>
-                    <Box
-                      sx={{
-                        "& > div": {
-                          mx: "0 !important",
-                          maxWidth: "100% !important",
-                          width: "100% !important",
-                        },
-                      }}
-                    >
-                      <AdBanner eventId={eventId} />
-                    </Box>
-                    <Divider
-                      sx={{
-                        borderColor: "rgba(255,255,255,0.15)",
-                        marginY: 1,
-                      }}
-                    />
-                  </>
-                )}
-              </Box>
-            ))}
-
-            {loading &&
-              Array.from({ length: 2 }).map((_, i) => (
-                <NewsItemSkeleton key={i} />
-              ))}
-          </Box>
-        </>
+          {loading && Array.from({ length: 2 }).map((_, i) => <PostSkeleton key={`sk-${i}`} />)}
+        </Box>
       )}
 
       {hasMore && <div ref={loaderRef} />}
@@ -628,65 +389,157 @@ export default function NewsFeed({ eventId, event }: Props) {
   );
 }
 
-function FeaturedNewsSkeleton() {
+/* ---------- Card individual de post ---------- */
+function PostCard({ item, onPress }: { item: NewsResponse; onPress: () => void }) {
+  const hasImage = item.images && item.images.length > 0;
+
   return (
-    <Card
+    <Box
       sx={{
-        marginBottom: 3,
-        backgroundColor: "#0f0f0f",
-        borderRadius: 2,
+        borderRadius: "18px",
+        overflow: "hidden",
+        backgroundColor: "rgba(255,255,255,0.05)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        cursor: "pointer",
+        transition: "transform 0.18s ease, box-shadow 0.18s ease",
+        "&:hover": {
+          transform: "translateY(-2px)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        },
+        "&:active": { transform: "scale(0.99)" },
       }}
     >
-      <Skeleton
-        variant="rectangular"
-        sx={{
-          width: "100%",
-          aspectRatio: "1 / 1",
-          bgcolor: "#2a2a2a",
-        }}
-      />
+      {/* Header do post */}
+      <Box
+        sx={{ display: "flex", alignItems: "center", gap: 1.2, px: 1.5, pt: 1.5, pb: hasImage ? 1 : 0 }}
+        onClick={onPress}
+      >
+        <Avatar
+          src={item.author?.profile_photo || undefined}
+          alt={item.author?.name || "Autor"}
+          sx={{ width: 36, height: 36, bgcolor: "rgba(255,255,255,0.15)", fontSize: 14, fontWeight: 700, flexShrink: 0 }}
+        >
+          {!item.author?.profile_photo && (item.author?.name?.[0] || "?").toUpperCase()}
+        </Avatar>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: 13, lineHeight: 1.2 }} noWrap>
+            {item.author?.name || "Autor desconhecido"}
+          </Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: 11, lineHeight: 1.2 }}>
+            {formatDate(item.created_at)}
+          </Typography>
+        </Box>
+      </Box>
 
-      <CardContent>
-        <Skeleton height={28} width="80%" sx={{ bgcolor: "#2a2a2a" }} />
+      {/* Imagem */}
+      {hasImage && (
+        <Box onClick={onPress} sx={{ position: "relative", width: "100%", aspectRatio: "3/4", overflow: "hidden" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={item.images[0].image_url}
+            alt={item.title}
+            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          />
+        </Box>
+      )}
 
-        <Skeleton
-          height={18}
-          width="40%"
-          sx={{ bgcolor: "#2a2a2a", marginTop: 1 }}
-        />
-      </CardContent>
-    </Card>
+      {/* Rodapé: título + ações */}
+      <Box sx={{ display: "flex", alignItems: "stretch", px: 1.5, pt: 1.2, pb: 1.5, gap: 1 }}>
+        {/* Título */}
+        <Box sx={{ flex: 1, minWidth: 0 }} onClick={onPress}>
+          <Typography
+            sx={{
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: { xs: 14, md: 15 },
+              lineHeight: 1.4,
+              wordBreak: "break-word",
+            }}
+          >
+            {item.title}
+          </Typography>
+          {item.content && (
+            <Typography
+              sx={{
+                color: "rgba(255,255,255,0.5)",
+                fontSize: 12,
+                mt: 0.4,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {item.content}
+            </Typography>
+          )}
+        </Box>
+
+        {/* Ações — lateral direita */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1.8,
+            pl: 1,
+            borderLeft: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          <Box
+            onClick={onPress}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 0.3,
+              cursor: "pointer",
+              "&:hover svg": { color: "#ff4d6d" },
+              "&:active": { transform: "scale(0.88)" },
+              transition: "transform 0.15s",
+            }}
+          >
+            <FavoriteBorderRoundedIcon sx={{ fontSize: 22, color: "rgba(255,255,255,0.55)", transition: "color 0.2s" }} />
+          </Box>
+          <Box
+            onClick={onPress}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 0.3,
+              cursor: "pointer",
+              "&:hover svg": { color: "#60a5fa" },
+              "&:active": { transform: "scale(0.88)" },
+              transition: "transform 0.15s",
+            }}
+          >
+            <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 21, color: "rgba(255,255,255,0.55)", transition: "color 0.2s" }} />
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
-function NewsItemSkeleton() {
+/* ---------- Skeleton ---------- */
+function PostSkeleton() {
   return (
-    <Card
-      sx={{
-        display: "flex",
-        gap: 2,
-        padding: 1,
-        backgroundColor: "#0f0f0f",
-        borderRadius: 2,
-      }}
-    >
-      <Skeleton
-        variant="rectangular"
-        width={100}
-        height={100}
-        sx={{ bgcolor: "#2a2a2a", borderRadius: 1 }}
-      />
-
-      <CardContent sx={{ padding: 1, width: "100%" }}>
-        <Skeleton height={20} width="90%" sx={{ bgcolor: "#2a2a2a" }} />
-
-        <Skeleton
-          height={14}
-          width="40%"
-          sx={{ bgcolor: "#2a2a2a", marginTop: 1 }}
-        />
-      </CardContent>
-    </Card>
+    <Box sx={{ borderRadius: "18px", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.2, p: 1.5 }}>
+        <Skeleton variant="circular" width={36} height={36} sx={{ bgcolor: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
+        <Box sx={{ flex: 1 }}>
+          <Skeleton variant="text" width="40%" height={14} sx={{ bgcolor: "rgba(255,255,255,0.08)" }} />
+          <Skeleton variant="text" width="25%" height={12} sx={{ bgcolor: "rgba(255,255,255,0.06)" }} />
+        </Box>
+      </Box>
+      <Skeleton variant="rectangular" sx={{ width: "100%", aspectRatio: "4/3", bgcolor: "rgba(255,255,255,0.08)" }} />
+      <Box sx={{ p: 1.5 }}>
+        <Skeleton variant="text" width="80%" height={18} sx={{ bgcolor: "rgba(255,255,255,0.08)" }} />
+        <Skeleton variant="text" width="55%" height={14} sx={{ bgcolor: "rgba(255,255,255,0.06)", mt: 0.5 }} />
+      </Box>
+    </Box>
   );
 }
 

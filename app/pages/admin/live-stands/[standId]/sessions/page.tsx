@@ -453,7 +453,7 @@ export default function LiveStandSessionsPage() {
                   setFormOpen(true);
                 }}
                 sx={{
-                  backgroundColor: "#ff1f21",
+                  backgroundColor: "#ffffff",
                   textTransform: "none",
                   fontWeight: 700,
                   borderRadius: 2,

@@ -1325,7 +1325,7 @@ export default function EditEventForm({
             disabled={loading || !title.trim() || !description.trim() || !location.trim() || !startDate || !endDate}
             sx={{
               flex: 1,
-              backgroundColor: "rgb(255, 31, 33)",
+              backgroundColor: "#ffffff",
               color: "#fff",
               fontWeight: 600,
               textTransform: "none",

@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Button, Card, CardContent, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Dialog, DialogContent, IconButton, Skeleton, Typography } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import AdBanner from "@/app/components/ads/AdBanner";
 import { getPrizesByEvent, PrizeResponse } from "@/app/services/roulette/rouletteService";
 import VideoModal from "@/app/components/home/VideoModal";
@@ -19,6 +21,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
   const [prizes, setPrizes] = useState<PrizeResponse[]>([]);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const [selectedPrize, setSelectedPrize] = useState<PrizeResponse | null>(null);
 
   useEffect(() => {
     const key = `roulette-spin-count-${eventId}`;
@@ -39,8 +42,9 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
           .filter(
             (prize) =>
               prize.is_active &&
-              prize.name.trim().toLowerCase() !== "não foi dessa vez" &&
-              prize.name.trim().toLowerCase() !== "nao foi dessa vez"
+              !prize.name.trim().toLowerCase().includes("não foi") &&
+              !prize.name.trim().toLowerCase().includes("nao foi") &&
+              !prize.name.trim().toLowerCase().includes("tente novamente")
           )
           .sort((a, b) => a.position - b.position);
 
@@ -223,8 +227,8 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
             onClick={() => setShowVideo(true)}
             sx={{
               alignSelf: "stretch",
-              background: "linear-gradient(180deg, rgb(255, 46, 48) 0%, rgb(255, 31, 33) 100%)",
-              color: "#fff",
+              background: "#ffffff",
+              color: "#111111",
               fontWeight: 700,
               borderRadius: "14px",
               textTransform: "none",
@@ -232,7 +236,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
               py: 1.6,
               fontSize: { xs: "1.05rem", md: "1.1rem" },
               "&:hover": {
-                background: "linear-gradient(180deg, rgb(255, 61, 63) 0%, rgb(220, 20, 22) 100%)",
+                background: "#e8e8e8",
               },
             }}
           >
@@ -314,15 +318,17 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
                 {prizes.map((prize) => (
                   <Box
                     key={prize.id}
+                    onClick={() => setSelectedPrize(prize)}
                     sx={{
                       borderRadius: 3,
                       p: 1.5,
                       background: "rgba(255,255,255,0.05)",
                       border: "1px solid rgba(255,255,255,0.08)",
+                      cursor: "pointer",
                       transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
                       "&:hover": {
                         transform: "translateY(-4px)",
-                        borderColor: "rgba(255, 31, 33, 0.45)",
+                        borderColor: "rgba(255,255,255,0.35)",
                         boxShadow: "0 12px 24px rgba(0,0,0,0.25)",
                       },
                     }}
@@ -389,6 +395,96 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
           onComplete={handleVideoComplete}
         />
       )}
+
+      <Dialog
+        open={Boolean(selectedPrize)}
+        onClose={() => setSelectedPrize(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: "rgba(15,15,20,0.97)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 4,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogContent sx={{ p: 0 }}>
+          <IconButton
+            onClick={() => setSelectedPrize(null)}
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+              zIndex: 10,
+              color: "#fff",
+              backgroundColor: "rgba(0,0,0,0.45)",
+              "&:hover": { backgroundColor: "rgba(0,0,0,0.65)" },
+            }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+
+          {/* Imagem do brinde */}
+          <Box
+            sx={{
+              width: "100%",
+              aspectRatio: "1 / 1",
+              background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+            }}
+          >
+            {selectedPrize?.image_url ? (
+              <Box
+                component="img"
+                src={selectedPrize.image_url}
+                alt={selectedPrize?.name}
+                sx={{ width: "75%", height: "75%", objectFit: "contain" }}
+              />
+            ) : (
+              <CardGiftcardIcon sx={{ fontSize: 80, color: "rgba(255,255,255,0.25)" }} />
+            )}
+          </Box>
+
+          {/* Info */}
+          <Box sx={{ p: 3 }}>
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: "1.25rem",
+                lineHeight: 1.2,
+                mb: 2,
+              }}
+            >
+              {selectedPrize?.name}
+            </Typography>
+
+
+            <Button
+              fullWidth
+              onClick={() => setSelectedPrize(null)}
+              sx={{
+                mt: 2.5,
+                backgroundColor: "#ffffff",
+                color: "#111111",
+                fontWeight: 700,
+                borderRadius: "12px",
+                textTransform: "none",
+                py: 1.4,
+                "&:hover": { backgroundColor: "#e8e8e8" },
+              }}
+            >
+              Fechar
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

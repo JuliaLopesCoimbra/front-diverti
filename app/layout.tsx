@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Roboto, Inter } from "next/font/google";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider } from './context/AuthContext';
@@ -8,27 +8,21 @@ import EmotionCacheProvider from './lib/emotion-cache';
 import ThemeProvider from './lib/theme-provider';
 import ScrollRestorer from './components/layout/ScrollRestorer';
 
-const roboto = Roboto({
-  variable: "--font-roboto",
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "700"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Rock In Rio - Application Event",
+  title: "Circuito Sertanejo - Application Event",
   manifest: "/manifest.json",
   icons: {
-    icon: "/logo/logo-rockinrio.jpg",
-    apple: "/logo/logo-rockinrio.jpg",
+    icon: "/logo/logo-circuito.png",
+    apple: "/logo/logo-circuito.png",
   },
   appleWebApp: {
-    title: "N1 App",
+    title: "Circuito Sertanejo App",
     statusBarStyle: "default",
     capable: true,
   },
@@ -50,8 +44,8 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body
-        className={`${roboto.variable} ${inter.variable} antialiased`}
-        style={{ fontFamily: 'var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+        className={`${montserrat.variable} antialiased`}
+        style={{ fontFamily: 'var(--font-montserrat), "Montserrat", sans-serif' }}
       >
         <EmotionCacheProvider>
           <ThemeProvider>
