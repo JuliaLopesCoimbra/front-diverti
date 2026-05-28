@@ -15,10 +15,18 @@ const CX = 250;
 const CY = 275;
 const RADIUS = 215;
 const SPIN_MS = 4000;
-const IMG_HALF = 42; // half-size of logo square in each segment
+const LOGO_R = 28;
 
-// alternating white / off-white for visual separation between slices
-const SEG_FILLS = ["#ffffff", "#f2f2f2"];
+const SEG_COLORS = [
+  "#c62828",
+  "#e65100",
+  "#f9a825",
+  "#2e7d32",
+  "#1565c0",
+  "#6a1b9a",
+  "#00695c",
+  "#1a1a2e",
+];
 
 const PRIZE_IMAGES: { keys: string[]; image: string }[] = [
   { keys: ["coca"],                       image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg" },
@@ -88,25 +96,22 @@ export default function Roulette() {
           )
           .sort((a, b) => a.position - b.position);
 
-        // Mantém apenas prêmios que batem com uma marca conhecida, 1 por marca
         const seenBrand = new Set<string>();
         const unique = filtered.filter((p) => {
           const lower = p.name.toLowerCase();
           const brand = PRIZE_IMAGES.find(({ keys }) => keys.some((k) => lower.includes(k)));
-          if (!brand) return false; // descarta qualquer prêmio sem marca conhecida
+          if (!brand) return false;
           if (seenBrand.has(brand.keys[0])) return false;
           seenBrand.add(brand.keys[0]);
           return true;
         });
 
-        // Swap Fiat ↔ Samsung
         const fiatIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("fiat"));
         const samsungIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("samsung"));
         if (fiatIdx >= 0 && samsungIdx >= 0) {
           [unique[fiatIdx], unique[samsungIdx]] = [unique[samsungIdx], unique[fiatIdx]];
         }
 
-        // Swap Vivo ↔ Volkswagen
         const vivoIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("vivo"));
         const volksIdx = unique.findIndex((p) => {
           const n = p.name.trim().toLowerCase();
@@ -155,13 +160,11 @@ export default function Roulette() {
         : 0;
 
       const SEG_ANGLE = 360 / segments.length;
-      // Para o ponteiro (mundo 0°) apontar pro segmento i, R = 360 - segCenterAngle
       const segCenterAngle = segIndex * SEG_ANGLE + SEG_ANGLE / 2;
       const targetAngle = (360 - segCenterAngle) % 360;
       const currentAngle = rotation % 360;
       const delta = ((targetAngle - currentAngle) + 360) % 360;
       const newRotation = rotation + 5 * 360 + (delta === 0 ? 360 : delta);
-
 
       setTransitioning(true);
       setRotation(newRotation);
@@ -188,15 +191,7 @@ export default function Roulette() {
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          ...dashboardBackgroundSx,
-          minHeight: "100dvh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ ...dashboardBackgroundSx, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
           <Skeleton variant="circular" width={300} height={300} sx={{ bgcolor: "rgba(255,255,255,0.1)" }} />
           <Skeleton variant="rectangular" width={200} height={52} sx={{ bgcolor: "rgba(255,255,255,0.1)", borderRadius: "999px" }} />
@@ -207,16 +202,7 @@ export default function Roulette() {
 
   if (error) {
     return (
-      <Box
-        sx={{
-          ...dashboardBackgroundSx,
-          minHeight: "100dvh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: 2,
-        }}
-      >
+      <Box sx={{ ...dashboardBackgroundSx, minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", px: 2 }}>
         <Box sx={{ textAlign: "center" }}>
           <Typography color="white" sx={{ mb: 3 }}>{error}</Typography>
           <Button
@@ -233,7 +219,6 @@ export default function Roulette() {
   // ── Wheel ─────────────────────────────────────────────────────────────────
 
   const SEG_ANGLE = 360 / segments.length;
-  const wheelSize = { xs: "min(88vw, 360px)", md: "460px" };
 
   return (
     <Box
@@ -246,59 +231,137 @@ export default function Roulette() {
         justifyContent: "center",
         px: 2,
         py: 4,
+        overflow: "hidden",
+        "@keyframes btnPulse": {
+          "0%, 100%": {
+            transform: "scale(1)",
+            boxShadow: "0 8px 28px rgba(0,0,0,0.45), 0 0 0 3px rgba(255,215,0,0.25)",
+          },
+          "50%": {
+            transform: "scale(1.04)",
+            boxShadow: "0 12px 36px rgba(0,0,0,0.55), 0 0 0 5px rgba(255,215,0,0.45)",
+          },
+        },
       }}
     >
+      {/* Ambient red glow behind wheel */}
+      <Box
+        sx={{
+          position: "absolute",
+          width: { xs: "75vw", md: "520px" },
+          height: { xs: "75vw", md: "520px" },
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(255,31,33,0.13) 0%, transparent 70%)",
+          pointerEvents: "none",
+        }}
+      />
+
       <Typography
         sx={{
-          fontSize: "0.72rem",
+          fontSize: "0.68rem",
           fontWeight: 700,
-          letterSpacing: "0.2em",
+          letterSpacing: "0.3em",
           textTransform: "uppercase",
-          color: "rgba(255,255,255,0.55)",
-          mb: 2,
+          color: "rgba(255,255,255,0.4)",
+          mb: 1,
+          zIndex: 1,
         }}
       >
-        Boa sorte!
+        ✦ &nbsp; Boa sorte &nbsp; ✦
       </Typography>
 
       <Typography
         sx={{
           color: "#fff",
           fontWeight: 900,
-          fontSize: { xs: "1.5rem", md: "2rem" },
-          lineHeight: 1.15,
+          fontSize: { xs: "1.55rem", md: "2rem" },
+          lineHeight: 1.2,
           textAlign: "center",
           mb: { xs: 3, md: 4 },
+          textShadow: "0 2px 24px rgba(0,0,0,0.6)",
+          zIndex: 1,
         }}
       >
-        Gire e ganhe um<br />brinde exclusivo!
+        Gire e ganhe um{" "}
+        <Box component="span" sx={{ color: "#FFD700" }}>
+          brinde exclusivo!
+        </Box>
       </Typography>
 
-      {/* Wheel container */}
+      {/* Wheel */}
       <Box
         sx={{
           position: "relative",
-          width: wheelSize,
-          mb: { xs: 5, md: 6 },
+          width: { xs: "min(88vw, 360px)", md: "460px" },
+          mb: { xs: 4, md: 5 },
           flexShrink: 0,
-          filter: "drop-shadow(0 12px 32px rgba(0,0,0,0.6))",
+          zIndex: 1,
+          filter: "drop-shadow(0 20px 48px rgba(0,0,0,0.7))",
         }}
       >
-        <svg viewBox="0 0 500 545" width="100%" style={{ display: "block" }}>
+        <svg
+          viewBox="0 0 500 550"
+          width="100%"
+          style={{ display: "block", overflow: "visible" }}
+        >
           <defs>
-            <filter id="ptr-shadow" x="-100%" y="-100%" width="300%" height="300%">
-              <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.8)" />
+            {/* Single shared circular clip — applied via translate groups, so it resolves in local space */}
+            <clipPath id={`logo-round-${eventId}`}>
+              <circle cx="0" cy="0" r={LOGO_R} />
+            </clipPath>
+
+            <filter id="ptr-glow" x="-120%" y="-120%" width="340%" height="340%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="hub-glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
           </defs>
 
-          {/* Static pointer — downward triangle above wheel */}
+          {/* ── Static outer decorative ring + lights (do not rotate) ── */}
+          <circle cx={CX} cy={CY} r={RADIUS + 16} fill="none" stroke="#c9a227" strokeWidth="5" />
+          <circle cx={CX} cy={CY} r={RADIUS + 21} fill="none" stroke="rgba(255,215,0,0.18)" strokeWidth="2" />
+
+          {Array.from({ length: 20 }).map((_, li) => {
+            const ang = (li * 360) / 20;
+            const { x: lx, y: ly } = toCart(ang, RADIUS + 28);
+            const isBig = li % 2 === 0;
+            return (
+              <circle
+                key={`light-${li}`}
+                cx={lx.toFixed(2)}
+                cy={ly.toFixed(2)}
+                r={isBig ? 5.5 : 3.8}
+                fill={isBig ? "#FFD700" : "#ffffff"}
+                opacity={isBig ? 0.95 : 0.75}
+              />
+            );
+          })}
+
+          {/* ── Red pointer triangle ── */}
           <polygon
-            points={`${CX},${CY - RADIUS + 2} ${CX - 17},${CY - RADIUS - 30} ${CX + 17},${CY - RADIUS - 30}`}
-            fill="#ffffff"
-            filter="url(#ptr-shadow)"
+            points={`${CX},${CY - RADIUS + 2} ${CX - 19},${CY - RADIUS - 40} ${CX + 19},${CY - RADIUS - 40}`}
+            fill="#FF1F21"
+            filter="url(#ptr-glow)"
+          />
+          <polygon
+            points={`${CX},${CY - RADIUS + 2} ${CX - 19},${CY - RADIUS - 40} ${CX + 19},${CY - RADIUS - 40}`}
+            fill="none"
+            stroke="rgba(255,255,255,0.75)"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
           />
 
-          {/* Rotating wheel */}
+          {/* ── Rotating wheel group ── */}
           <g
             style={{
               transformOrigin: `${CX}px ${CY}px`,
@@ -308,56 +371,73 @@ export default function Roulette() {
                 : "none",
             }}
           >
-            {/* Slices */}
             {segments.map((seg, i) => {
               const start = i * SEG_ANGLE;
               const end = (i + 1) * SEG_ANGLE;
               const mid = start + SEG_ANGLE / 2;
               const isTryAgain = seg.id === -1;
-              const { x: tx, y: ty } = toCart(mid, RADIUS * 0.60);
-
-              // Text rotation (only used for "Tente novamente")
+              const { x: tx, y: ty } = toCart(mid, RADIUS * 0.61);
               const textRot = mid > 90 && mid < 270 ? mid - 180 : mid;
+              const segColor = SEG_COLORS[i % SEG_COLORS.length];
 
               return (
                 <g key={i}>
+                  {/* Colored segment slice */}
                   <path
                     d={slicePath(start, end)}
-                    fill={SEG_FILLS[i % 2]}
-                    stroke="rgba(0,0,0,0.1)"
+                    fill={segColor}
+                    stroke="rgba(0,0,0,0.2)"
                     strokeWidth="1.5"
+                  />
+                  {/* Subtle highlight overlay on each slice */}
+                  <path
+                    d={slicePath(start, end)}
+                    fill="rgba(255,255,255,0.055)"
+                    style={{ pointerEvents: "none" }}
                   />
 
                   {!isTryAgain && seg.image_url ? (
-                    /* Logo image — square, centered in segment, transparent bg shows cleanly on white */
+                    /* Round logo — translate group so clip path resolves in local space */
                     (() => {
-                      const name = seg.name.trim().toLowerCase();
-                      const half = name.includes("fiat") || name.includes("coca") || name.includes("vivo") ? 28 : IMG_HALF;
+                      const isWide = seg.name.trim().toLowerCase().includes("samsung");
                       return (
-                        <image
-                          href={seg.image_url}
-                          x={(tx - half).toFixed(2)}
-                          y={(ty - half).toFixed(2)}
-                          width={half * 2}
-                          height={half * 2}
-                          preserveAspectRatio="xMidYMid meet"
-                        />
+                        <g transform={`translate(${tx.toFixed(2)},${ty.toFixed(2)})`}>
+                          <circle cx="0" cy="0" r={LOGO_R + 7} fill="rgba(255,255,255,0.1)" />
+                          <circle cx="0" cy="0" r={LOGO_R + 3} fill="white" />
+                          <image
+                            href={seg.image_url}
+                            x={-LOGO_R}
+                            y={-LOGO_R}
+                            width={LOGO_R * 2}
+                            height={LOGO_R * 2}
+                            clipPath={`url(#logo-round-${eventId})`}
+                            preserveAspectRatio={isWide ? "xMidYMid meet" : "xMidYMid slice"}
+                          />
+                        </g>
                       );
                     })()
                   ) : (
-                    /* Text for "Tente novamente" or prize without image */
                     <g transform={`translate(${tx.toFixed(2)},${ty.toFixed(2)}) rotate(${textRot})`}>
                       {isTryAgain ? (
                         <>
-                          <text x="0" y="-7" textAnchor="middle" fill="rgba(0,0,0,0.45)" fontSize="11" fontWeight="700" fontFamily="system-ui,sans-serif">
+                          <text x="0" y="-8" textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="11" fontWeight="700" fontFamily="system-ui,sans-serif">
                             Tente
                           </text>
-                          <text x="0" y="8" textAnchor="middle" fill="rgba(0,0,0,0.45)" fontSize="11" fontWeight="700" fontFamily="system-ui,sans-serif">
+                          <text x="0" y="7" textAnchor="middle" fill="rgba(255,255,255,0.9)" fontSize="11" fontWeight="700" fontFamily="system-ui,sans-serif">
                             novamente
                           </text>
                         </>
                       ) : (
-                        <text x="0" y="0" textAnchor="middle" dominantBaseline="middle" fill="rgba(0,0,0,0.7)" fontSize="12" fontWeight="700" fontFamily="system-ui,sans-serif">
+                        <text
+                          x="0"
+                          y="0"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fill="white"
+                          fontSize="12"
+                          fontWeight="700"
+                          fontFamily="system-ui,sans-serif"
+                        >
                           {seg.name.length > 14 ? seg.name.slice(0, 13) + "…" : seg.name}
                         </text>
                       )}
@@ -367,13 +447,24 @@ export default function Roulette() {
               );
             })}
 
-            {/* Outer border ring */}
-            <circle cx={CX} cy={CY} r={RADIUS} fill="none" stroke="#2a2a2a" strokeWidth="7" />
-            <circle cx={CX} cy={CY} r={RADIUS - 5} fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="1" />
+            {/* Inner wheel border */}
+            <circle cx={CX} cy={CY} r={RADIUS} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
 
             {/* Center hub */}
-            <circle cx={CX} cy={CY} r="30" fill="#1a1a1a" stroke="#444" strokeWidth="2" />
-            <circle cx={CX} cy={CY} r="16" fill="#111" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+            <circle cx={CX} cy={CY} r="46" fill="#0d0d0d" stroke="#c9a227" strokeWidth="4" filter="url(#hub-glow)" />
+            <circle cx={CX} cy={CY} r="36" fill="#161616" stroke="rgba(255,215,0,0.35)" strokeWidth="2" />
+            <circle cx={CX} cy={CY} r="23" fill="#0d0d0d" />
+            <text
+              x={CX}
+              y={CY + 8}
+              textAnchor="middle"
+              fill="#FFD700"
+              fontSize="24"
+              fontWeight="900"
+              fontFamily="system-ui,sans-serif"
+            >
+              ★
+            </text>
           </g>
         </svg>
       </Box>
@@ -390,24 +481,26 @@ export default function Roulette() {
           fontWeight: 800,
           borderRadius: "999px",
           textTransform: "none",
-          px: { xs: 6, md: 8 },
-          py: { xs: 1.6, md: 1.8 },
+          px: { xs: 7, md: 9 },
+          py: { xs: 1.8, md: 2 },
           fontSize: { xs: "1.05rem", md: "1.15rem" },
-          letterSpacing: "0.05em",
-          boxShadow: "0 8px 28px rgba(0,0,0,0.45)",
-          transition: "transform 0.2s ease",
+          letterSpacing: "0.04em",
+          animation: !spinning ? "btnPulse 2.5s ease-in-out infinite" : "none",
+          zIndex: 1,
           "&:hover": {
             backgroundColor: "#e8e8e8",
-            transform: "scale(1.05)",
+            animation: "none",
+            transform: "scale(1.06)",
           },
           "&:disabled": {
             background: "rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.35)",
+            color: "rgba(255,255,255,0.3)",
+            animation: "none",
             boxShadow: "none",
           },
         }}
       >
-        {spinning ? "Girando..." : "Girar"}
+        {spinning ? "Girando..." : "Girar roleta"}
       </Button>
 
       {spinning && (
@@ -416,10 +509,11 @@ export default function Roulette() {
             mt: 2,
             color: "rgba(255,255,255,0.45)",
             fontSize: "0.8rem",
-            letterSpacing: "0.06em",
+            letterSpacing: "0.1em",
+            zIndex: 1,
           }}
         >
-          Aguarde o resultado...
+          ✦ Aguarde o resultado... ✦
         </Typography>
       )}
     </Box>
