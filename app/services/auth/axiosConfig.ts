@@ -51,7 +51,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken = localStorage.getItem("access_token");
+      const accessToken = localStorage.getItem("circuito_access_token");
       if (accessToken) {
         config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${accessToken}`;
@@ -83,7 +83,7 @@ api.interceptors.response.use(
       const refreshToken = getCookie("refresh_token");
 
       if (!refreshToken) {
-        localStorage.removeItem("access_token");
+        localStorage.removeItem("circuito_access_token");
         if (!originalRequest._background) {
           window.dispatchEvent(new CustomEvent("auth:force-logout"));
         }
@@ -115,7 +115,7 @@ api.interceptors.response.use(
 
         const { access_token, refresh_token } = response.data;
 
-        localStorage.setItem("access_token", access_token);
+        localStorage.setItem("circuito_access_token", access_token);
         document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
 
         processQueue(null, access_token);
@@ -125,7 +125,7 @@ api.interceptors.response.use(
       } catch (err) {
         processQueue(err, null);
 
-        localStorage.removeItem("access_token");
+        localStorage.removeItem("circuito_access_token");
         document.cookie =
           "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 

@@ -57,7 +57,7 @@ function CreateNewsPageContent() {
         }
 
         // Tenta pegar do localStorage
-        const savedEventId = localStorage.getItem("selectedEventId");
+        const savedEventId = localStorage.getItem("circuito_selectedEventId");
         if (savedEventId) {
           const id = parseInt(savedEventId, 10);
           const savedEvent = data.find((e) => e.id === id);

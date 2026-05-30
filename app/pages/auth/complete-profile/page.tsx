@@ -104,7 +104,7 @@ function CompleteProfileContent() {
       login(access_token, refresh_token);
       
       // Salvar tokens
-      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("circuito_access_token", access_token);
       document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
 
       showToast("Perfil completado com sucesso! Redirecionando...", "success");

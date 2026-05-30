@@ -15,7 +15,7 @@ import RejectedPosts from "@/app/components/my-posts/RejectedPosts";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 type ViewMode = "menu" | "posts" | "rejected" | "photos";
-const STORAGE_KEY = "selectedEventId";
+const STORAGE_KEY = "circuito_selectedEventId";
 
 export default function MyPhotosPage() {
   const router = useRouter();

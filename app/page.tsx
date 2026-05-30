@@ -82,7 +82,7 @@ const LoginForm: React.FC = () => {
       showToast("Login realizado com sucesso!", "success");
       const { access_token, refresh_token } = response;
       login(access_token, refresh_token);
-      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("circuito_access_token", access_token);
       document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
       router.push("/pages/user/home");
     } catch (err: unknown) {

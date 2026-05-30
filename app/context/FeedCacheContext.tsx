@@ -22,7 +22,7 @@ const FeedCacheContext = createContext<FeedCacheContextType | undefined>(
   undefined
 );
 
-const STORAGE_KEY = 'n1-feed-cache';
+const STORAGE_KEY = 'circuito-feed-cache';
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 HORAS (igual Instagram/TikTok)
 
 /**

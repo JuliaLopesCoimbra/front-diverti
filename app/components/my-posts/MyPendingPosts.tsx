@@ -77,7 +77,7 @@ export default function MyPendingPosts({ hideTitle = false }: MyPendingPostsProp
     const nextOffset = reset ? 0 : offset;
     
     // Obtém o eventId do localStorage (evento selecionado no ambiente)
-    const selectedEventId = localStorage.getItem("selectedEventId");
+    const selectedEventId = localStorage.getItem("circuito_selectedEventId");
     const eventId = selectedEventId ? parseInt(selectedEventId, 10) : undefined;
 
     try {

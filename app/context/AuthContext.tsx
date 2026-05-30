@@ -50,7 +50,7 @@ function getInitialAuthState() {
     return { isAuthenticated: false, role: null };
   }
 
-  const token = localStorage.getItem("access_token");
+  const token = localStorage.getItem("circuito_access_token");
   if (!token) {
     return { isAuthenticated: false, role: null };
   }
@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   /* Escuta evento do interceptor axios para logout sem hard reload */
   useEffect(() => {
     const handleForceLogout = () => {
-      localStorage.removeItem("access_token");
+      localStorage.removeItem("circuito_access_token");
       document.cookie = "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       setIsAuthenticated(false);
       setRole(null);
@@ -114,7 +114,7 @@ const login = useCallback(
       const decoded = jwtDecode<TokenPayload>(accessToken);
 
       // Salva tokens no localStorage e cookie
-      localStorage.setItem("access_token", accessToken);
+      localStorage.setItem("circuito_access_token", accessToken);
       document.cookie = `refresh_token=${refreshToken}; path=/; secure`;
 
       // Garante que o role seja definido (pode ser undefined em tokens antigos)
@@ -134,7 +134,7 @@ const login = useCallback(
 );
 
   const logout = useCallback(() => {
-    localStorage.removeItem("access_token");
+    localStorage.removeItem("circuito_access_token");
     document.cookie =
       "refresh_token=; path=/; secure; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 
@@ -145,7 +145,7 @@ const login = useCallback(
   }, []);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("circuito_access_token");
 
     if (!token) {
       setIsAuthenticated(false);

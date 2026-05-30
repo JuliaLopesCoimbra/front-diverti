@@ -23,9 +23,9 @@ import { useToast } from "@/app/context/ToastContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 
-const STORAGE_KEY = "selectedEventId";
-const SCROLL_KEY = "homeScrollY";
-const TAB_KEY = "homeActiveTab";
+const STORAGE_KEY = "circuito_selectedEventId";
+const SCROLL_KEY = "circuito_homeScrollY";
+const TAB_KEY = "circuito_homeActiveTab";
 
 type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
 

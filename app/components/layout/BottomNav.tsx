@@ -50,7 +50,7 @@ export default function BottomNav() {
   ];
 
   const handleAddPost = () => {
-    const eventId = typeof window !== "undefined" ? localStorage.getItem("selectedEventId") : null;
+    const eventId = typeof window !== "undefined" ? localStorage.getItem("circuito_selectedEventId") : null;
     router.push(eventId ? `/pages/news/create?eventId=${eventId}` : "/pages/news/create");
   };
 

@@ -25,7 +25,7 @@ import { getProductsByEvent, ProductEventResponse } from "@/app/services/product
 import { useToast } from "@/app/context/ToastContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
-const STORAGE_KEY = "selectedEventId";
+const STORAGE_KEY = "circuito_selectedEventId";
 
 export default function StorePage() {
   const router = useRouter();
