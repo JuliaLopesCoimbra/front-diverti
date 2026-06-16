@@ -28,6 +28,46 @@ import LiveStandFormDialog, {
   LiveStandFormValues,
 } from "@/app/components/admin/live-stands/LiveStandFormDialog";
 
+const STAND_IMAGES: { keys: string[]; image: string }[] = [
+  {
+    keys: ["coca"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg",
+  },
+  {
+    keys: ["fiat"],
+    image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp",
+  },
+  {
+    keys: ["sprite"],
+    image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg",
+  },
+  {
+    keys: ["ballantine", "balatine"],
+    image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png",
+  },
+  {
+    keys: ["vivo"],
+    image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg",
+  },
+  {
+    keys: ["samsung"],
+    image: "https://t2.tudocdn.net/507931?w=1920",
+  },
+  {
+    keys: ["volkswagen", "volks", "vw"],
+    image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg",
+  },
+];
+
+function getStandFallbackImage(name: string, backendUrl?: string | null): string | null {
+  if (backendUrl) return backendUrl;
+  const lower = name.toLowerCase();
+  for (const { keys, image } of STAND_IMAGES) {
+    if (keys.some((k) => lower.includes(k))) return image;
+  }
+  return null;
+}
+
 function LiveStandsPageLoading() {
   return (
     <Box
@@ -83,8 +123,9 @@ function LiveStandsPageContent() {
         return;
       }
 
+      const HIDDEN = ["bauducco", "tic tac", "tictac", "eisenbahn", "piracanjuba"];
       const eventStands = await getLiveStandsByEvent(selectedEvent.id);
-      setStands(eventStands);
+      setStands(eventStands.filter((s) => !HIDDEN.some((h) => s.name.toLowerCase().includes(h))));
     } catch (error: any) {
       console.error("Erro ao carregar estandes", error);
       showToast(error?.response?.data?.detail || "Erro ao carregar estandes", "error");
@@ -198,6 +239,15 @@ function LiveStandsPageContent() {
           )}
         </Box>
 
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.5 }}>
+            Estandes ao vivo
+          </Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.92rem" }}>
+            Veja os agendamentos de cada estande
+          </Typography>
+        </Box>
+
         {!event ? (
           <Paper
             sx={{
@@ -242,10 +292,10 @@ function LiveStandsPageContent() {
                   cursor: "pointer",
                 }}
               >
-                {stand.image_url ? (
+                {getStandFallbackImage(stand.name, stand.image_url) ? (
                   <Box
                     component="img"
-                    src={stand.image_url}
+                    src={getStandFallbackImage(stand.name, stand.image_url)!}
                     alt={stand.name}
                     sx={{
                       width: "100%",
@@ -261,15 +311,21 @@ function LiveStandsPageContent() {
                       width: "100%",
                       height: { xs: 240, md: 360, lg: 420 },
                       borderRadius: 3,
-                      backgroundColor: "rgba(255,255,255,0.06)",
+                      backgroundColor: "rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.15)",
                       display: "flex",
+                      flexDirection: "column",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "rgba(255,255,255,0.45)",
-                      fontSize: { xs: 16, md: 18 },
+                      gap: 1,
                     }}
                   >
-                    Sem foto
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.2rem", md: "1.5rem" } }}>
+                      {stand.name}
+                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem" }}>
+                      Sem foto
+                    </Typography>
                   </Box>
                 )}
 

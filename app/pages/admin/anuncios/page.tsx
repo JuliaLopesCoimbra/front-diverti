@@ -841,11 +841,9 @@ export default function AdminAdsPage() {
         <Paper
           sx={{
             p: { xs: 3, md: 4 },
-            backgroundColor: "rgba(26, 26, 26, 0.95)",
-            backdropFilter: "blur(20px)",
-            borderRadius: 4,
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+            backgroundColor: "transparent",
+            boxShadow: "none",
+            border: "none",
           }}
         >
           {/* Header */}

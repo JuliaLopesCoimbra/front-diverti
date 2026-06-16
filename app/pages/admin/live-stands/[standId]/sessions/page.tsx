@@ -393,9 +393,9 @@ export default function LiveStandSessionsPage() {
         <Paper
           sx={{
             p: { xs: 2, md: 4 },
-            backgroundColor: "rgba(26,26,26,0.95)",
-            borderRadius: { xs: 3, md: 4 },
-            border: "1px solid rgba(255,255,255,0.1)",
+            backgroundColor: "transparent",
+            boxShadow: "none",
+            border: "none",
           }}
         >
           <Button
@@ -454,10 +454,12 @@ export default function LiveStandSessionsPage() {
                 }}
                 sx={{
                   backgroundColor: "#ffffff",
+                  color: "#111111",
                   textTransform: "none",
                   fontWeight: 700,
                   borderRadius: 2,
                   flex: { xs: 1, sm: "none" },
+                  "&:hover": { backgroundColor: "#e8e8e8" },
                 }}
               >
                 Nova sessão
@@ -1006,6 +1008,13 @@ export default function LiveStandSessionsPage() {
                                 variant={booking.checked_in_at ? "outlined" : "contained"}
                                 disabled={Boolean(booking.checked_in_at) || checkingInBookingId === booking.id}
                                 onClick={() => handleCheckInBooking(booking.id)}
+                                sx={{
+                                  textTransform: "none",
+                                  fontWeight: 700,
+                                  ...(booking.checked_in_at
+                                    ? { color: "rgba(255,255,255,0.5)", borderColor: "rgba(255,255,255,0.2)" }
+                                    : { backgroundColor: "#ffffff", color: "#111111", "&:hover": { backgroundColor: "#e8e8e8" } }),
+                                }}
                               >
                                 {booking.checked_in_at
                                   ? "Confirmado"

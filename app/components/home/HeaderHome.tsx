@@ -420,23 +420,21 @@ export default function HomeHeader({
 
         {/* DIREITA */}
         <Box display="flex" alignItems="center" gap={1.2}>
-          {activeTab === "estandes" && (
-            <IconButton
-              onClick={() => router.push("/pages/user/stand-bookings")}
-              sx={{
-                color: "rgba(255,255,255,0.75)",
-                width: 38,
-                height: 38,
-                backgroundColor: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                borderRadius: "12px",
-                transition: "all 0.2s",
-                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)", color: "#fff" },
-              }}
-            >
-              <StorefrontRoundedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          )}
+          <IconButton
+            onClick={() => router.push("/pages/user/stand-bookings")}
+            sx={{
+              color: "rgba(255,255,255,0.75)",
+              width: 38,
+              height: 38,
+              backgroundColor: "rgba(255,255,255,0.06)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: "12px",
+              transition: "all 0.2s",
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.12)", color: "#fff" },
+            }}
+          >
+            <StorefrontRoundedIcon sx={{ fontSize: 20 }} />
+          </IconButton>
           <IconButton
             onClick={(e) => setNotificationsAnchorEl(e.currentTarget)}
             sx={{

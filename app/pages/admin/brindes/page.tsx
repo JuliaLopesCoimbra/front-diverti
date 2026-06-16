@@ -489,9 +489,14 @@ function HistoryRow({ entry, color }: { entry: HistoryEntry; color: string }) {
             {entry.prize}
           </Typography>
           {entry.user && (
-            <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.75rem", mt: 0.35, lineHeight: 1.45 }}>
-              {entry.user.name} · {entry.user.email} · CPF {entry.user.cpf}
-            </Typography>
+            <Box sx={{ mt: 0.35 }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.75rem", lineHeight: 1.45 }}>
+                {entry.user.name}
+              </Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.72rem", lineHeight: 1.45, wordBreak: "break-all" }}>
+                {entry.user.email} · CPF {entry.user.cpf}
+              </Typography>
+            </Box>
           )}
           {entry.notes && (
             <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mt: 0.25 }}>
@@ -636,42 +641,42 @@ export default function BrindesPage() {
     <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, py: { xs: 2, md: 4 }, px: { xs: 2, md: 0 } }}>
       <Container maxWidth="lg">
         <Paper sx={{
-          p: { xs: 3, md: 4 },
-          backgroundColor: "rgba(26,26,26,0.95)",
-          backdropFilter: "blur(20px)",
-          borderRadius: 4,
-          border: "1px solid rgba(255,255,255,0.1)",
-          boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+          p: { xs: 1.5, md: 4 },
+          backgroundColor: "transparent",
+          boxShadow: "none",
+          border: "none",
         }}>
 
           {/* ── Header ── */}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4 }}>
-            <IconButton
-              onClick={() => selectedStand ? setSelectedStand(null) : router.back()}
-              sx={{ color: "#fff", "&:hover": { backgroundColor: "rgba(255,255,255,0.08)" } }}
-            >
-              <ArrowBackIcon />
-            </IconButton>
-            <Box sx={{
-              width: 52, height: 52, borderRadius: "50%",
-              backgroundColor: "rgba(124,58,237,0.15)",
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              <CardGiftcardIcon sx={{ color: "#ffffff", fontSize: 28 }} />
-            </Box>
-            <Box>
-              <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.5rem", md: "1.9rem" } }}>
-                {selectedStand ? selectedStand.name : "Brindes"}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.55)", mt: 0.25 }}>
-                Circuito Sertanejo
-              </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 4, flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0 }}>
+              <IconButton
+                onClick={() => selectedStand ? setSelectedStand(null) : router.back()}
+                sx={{ color: "#fff", "&:hover": { backgroundColor: "rgba(255,255,255,0.08)" }, flexShrink: 0 }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+              <Box sx={{
+                width: 44, height: 44, borderRadius: "50%",
+                backgroundColor: "rgba(124,58,237,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              }}>
+                <CardGiftcardIcon sx={{ color: "#ffffff", fontSize: 24 }} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h4" sx={{ color: "#fff", fontWeight: 700, fontSize: { xs: "1.25rem", md: "1.9rem" }, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {selectedStand ? selectedStand.name : "Brindes"}
+                </Typography>
+                <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.55)", mt: 0.25 }}>
+                  Circuito Sertanejo
+                </Typography>
+              </Box>
             </Box>
             {selectedStand && (
               <Chip
                 label={selectedStand.name}
                 sx={{
-                  ml: "auto",
+                  display: { xs: "none", sm: "flex" },
                   color: "#fff",
                   backgroundColor: `${analytics.color}33`,
                   border: `1px solid ${analytics.color}66`,
@@ -738,12 +743,12 @@ export default function BrindesPage() {
                           </Typography>
                           <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1, mb: 1.5 }}>
                             {[
-                              { label: "Total",      value: a.totalBrindes },
-                              { label: "Saidas",     value: a.saidas },
-                              { label: "Disponivel", value: disp },
+                              { label: "Total",  value: a.totalBrindes },
+                              { label: "Saídas", value: a.saidas },
+                              { label: "Disp.",  value: disp },
                             ].map((m) => (
                               <Box key={m.label} sx={{ textAlign: "center", background: "rgba(255,255,255,0.04)", borderRadius: 2, p: 1 }}>
-                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.68rem" }}>{m.label}</Typography>
+                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.68rem", whiteSpace: "nowrap" }}>{m.label}</Typography>
                                 <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>{m.value}</Typography>
                               </Box>
                             ))}
@@ -774,6 +779,9 @@ export default function BrindesPage() {
               <Tabs
                 value={dashTab}
                 onChange={(_, v) => setDashTab(v)}
+                variant="scrollable"
+                scrollButtons="auto"
+                allowScrollButtonsMobile
                 sx={{
                   mb: 3,
                   borderBottom: "1px solid rgba(255,255,255,0.1)",
@@ -781,12 +789,14 @@ export default function BrindesPage() {
                     color: "rgba(255,255,255,0.45)",
                     textTransform: "none",
                     fontWeight: 600,
-                    fontSize: "0.92rem",
+                    fontSize: { xs: "0.8rem", sm: "0.92rem" },
                     minHeight: 48,
                     gap: 0.75,
+                    px: { xs: 1.5, sm: 2 },
                   },
                   "& .Mui-selected": { color: "#fff" },
                   "& .MuiTabs-indicator": { backgroundColor: "#ffffff", height: 3, borderRadius: "3px 3px 0 0" },
+                  "& .MuiTabScrollButton-root": { color: "rgba(255,255,255,0.5)" },
                 }}
               >
                 <Tab label="Visão Geral"       value="overview" icon={<InventoryIcon sx={{ fontSize: 18 }} />} iconPosition="start" />
@@ -857,24 +867,24 @@ export default function BrindesPage() {
                     <Box sx={{ display: "grid", gap: 1.5 }}>
                       {recentActivity.map((item, i) => (
                         <Box key={i}>
-                          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-                              <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, backgroundColor: item.type === "entrada" ? "#4fc3f7" : analytics.color }} />
-                              <Box>
+                          <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1.5 }}>
+                            <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, minWidth: 0, flex: 1 }}>
+                              <Box sx={{ width: 8, height: 8, borderRadius: "50%", flexShrink: 0, mt: "6px", backgroundColor: item.type === "entrada" ? "#4fc3f7" : analytics.color }} />
+                              <Box sx={{ minWidth: 0 }}>
                                 <Typography sx={{ color: "#fff", fontSize: "0.88rem", fontWeight: 600 }}>
                                   {item.type === "entrada" ? `+${item.quantity} entrada` : `-${item.quantity} saida`}{item.quantity !== 1 ? "s" : ""}
                                 </Typography>
-                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>
+                                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem", wordBreak: "break-word" }}>
                                   {item.description} · {item.prize}
                                 </Typography>
                                 {item.user && (
-                                  <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.74rem" }}>
-                                    {item.user.name} · {item.user.email} · CPF {item.user.cpf}
+                                  <Typography sx={{ color: "rgba(255,255,255,0.58)", fontSize: "0.74rem", wordBreak: "break-all" }}>
+                                    {item.user.name} · {item.user.email}
                                   </Typography>
                                 )}
                               </Box>
                             </Box>
-                            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", whiteSpace: "nowrap" }}>{item.time}</Typography>
+                            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", whiteSpace: "nowrap", flexShrink: 0 }}>{item.time}</Typography>
                           </Box>
                           {i < recentActivity.length - 1 && (
                             <Divider sx={{ borderColor: "rgba(255,255,255,0.06)", mt: 1.5 }} />
@@ -903,7 +913,7 @@ export default function BrindesPage() {
                     </Box>
                   )}
 
-                  <Paper sx={{ p: 3, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
+                  <Paper sx={{ p: { xs: 2, md: 3 }, backgroundColor: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3 }}>
                     <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "1.05rem", mb: 3 }}>
                       Registrar movimentação
                     </Typography>
@@ -1085,7 +1095,7 @@ export default function BrindesPage() {
               {/* ── Tab: Historico ── */}
               {dashTab === "history" && (
                 <Box>
-                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 1.5, mb: 3 }}>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1.5, mb: 3 }}>
                     {[
                       { label: "Total entradas", value: analytics.entradas, color: "#4fc3f7" },
                       { label: "Total saidas",   value: analytics.saidas,   color: analytics.color },
