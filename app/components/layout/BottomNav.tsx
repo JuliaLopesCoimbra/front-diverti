@@ -8,10 +8,12 @@ import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function BottomNav() {
   const router = useRouter();
   const pathname = usePathname();
+  const { canCreatePost } = useAuth();
   const LAST_PATH_KEY = "bottomNavLastPath";
 
   const [shrunk, setShrunk] = useState(false);
@@ -146,8 +148,8 @@ export default function BottomNav() {
           );
         })}
 
-        {/* Botão + (adicionar post) */}
-        <Box
+        {/* Botão + (adicionar post) — só para admin/patrocinador */}
+        {canCreatePost && <Box
           onClick={handleAddPost}
           sx={{
             display: "flex",
@@ -169,7 +171,7 @@ export default function BottomNav() {
           }}
         >
           <AddRoundedIcon fontSize="inherit" />
-        </Box>
+        </Box>}
 
         {/* Store e My Photos */}
         {items.slice(2).map((item) => {

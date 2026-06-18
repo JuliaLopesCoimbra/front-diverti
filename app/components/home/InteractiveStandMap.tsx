@@ -262,17 +262,50 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
 
   const handleBooking = async (e: MouseEvent<HTMLButtonElement>, sessionId: number) => {
     e.stopPropagation();
-    // Stand mock (id negativo) — agendamento real ainda não disponível
+
+    const sessionSnapshot = stands.flatMap((s) => s.sessions).find((s) => s.id === sessionId);
+    const standForSession = stands.find((s) => s.sessions.some((sess) => sess.id === sessionId));
+
+    // Stand mock (id negativo) — simula booking localmente sem chamar API
     if (sessionId < 0) {
-      showToast("Agendamento disponível em breve para este estande!", "info");
+      if (!sessionSnapshot || !standForSession) return;
+      const queuePosition = isQueueStand(standForSession.name) ? sessionSnapshot.booked_slots + 1 : undefined;
+      const mockBooking: UserStandBooking = {
+        id: sessionId,
+        user_id: 0,
+        stand_session_id: sessionId,
+        created_at: new Date().toISOString(),
+        stand_id: standForSession.id,
+        stand_name: standForSession.name,
+        stand_image_url: standForSession.image_url,
+        event_id: standForSession.event_id,
+        event_title: null,
+        session_date: sessionSnapshot.session_date,
+        start_time: sessionSnapshot.start_time,
+        end_time: sessionSnapshot.end_time ?? null,
+        booking_open_time: null,
+        status: "confirmed",
+        qr_token: `MOCK-${standForSession.name.toUpperCase()}-${sessionId}`,
+        queue_position: queuePosition ?? null,
+      };
+      if (queuePosition !== undefined && typeof window !== "undefined") {
+        localStorage.setItem(`stand_queue_pos_${mockBooking.id}`, String(queuePosition));
+      }
+      // Persiste no localStorage para a página de agendamentos exibir
+      if (typeof window !== "undefined") {
+        const stored: UserStandBooking[] = JSON.parse(localStorage.getItem("mock_stand_bookings") ?? "[]");
+        const alreadyBooked = stored.some((b) => b.stand_session_id === mockBooking.stand_session_id);
+        if (!alreadyBooked) {
+          localStorage.setItem("mock_stand_bookings", JSON.stringify([...stored, mockBooking]));
+        }
+      }
+      applyBooked(mockBooking);
+      setBookingToShowQr(mockBooking);
       return;
     }
+
     setBookingSessionId(sessionId);
     try {
-      // Capture booked_slots before booking to compute queue position
-      const sessionSnapshot = stands
-        .flatMap((s) => s.sessions)
-        .find((s) => s.id === sessionId);
       const queuePosition = sessionSnapshot ? sessionSnapshot.booked_slots + 1 : undefined;
 
       const booking = await createUserStandBooking(sessionId);
@@ -280,7 +313,6 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
       // Attach position locally (API may or may not return it)
       if (queuePosition !== undefined && isQueueStand(booking.stand_name)) {
         booking.queue_position = queuePosition;
-        // Persist so the stand-bookings page can display it without re-fetching
         if (typeof window !== "undefined") {
           localStorage.setItem(`stand_queue_pos_${booking.id}`, String(queuePosition));
         }
@@ -497,18 +529,37 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
 
       {/* Stand cards */}
       <Box sx={{ mt: 3 }}>
-        <Typography
-          sx={{
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "0.7rem",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            letterSpacing: "0.08em",
-            mb: 1.5,
-          }}
-        >
-          Estandes disponíveis
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.5 }}>
+          <Typography
+            sx={{
+              color: "rgba(255,255,255,0.5)",
+              fontSize: "0.7rem",
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+            }}
+          >
+            Estandes disponíveis
+          </Typography>
+          <Button
+            size="small"
+            onClick={() => router.push("/pages/user/stand-bookings")}
+            sx={{
+              color: "#fff",
+              backgroundColor: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.15)",
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              fontSize: "0.72rem",
+              px: 1.5,
+              py: 0.5,
+              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" },
+            }}
+          >
+            Meus agendamentos
+          </Button>
+        </Box>
         <Box
           sx={{
             display: "grid",

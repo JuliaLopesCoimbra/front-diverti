@@ -30,6 +30,14 @@ import {
   getMyStandBookings,
   UserStandBooking,
 } from "@/app/services/liveStands/liveStandUserService";
+import { BRAND_DEFAULT_PHOTO } from "@/app/services/campaigns/mockData";
+
+const BRAND_KEYS = Object.keys(BRAND_DEFAULT_PHOTO);
+function brandPhotoFromName(name: string): string | null {
+  const lower = name.toLowerCase();
+  const match = BRAND_KEYS.find((k) => lower.includes(k));
+  return match ? BRAND_DEFAULT_PHOTO[match] : null;
+}
 
 const QUEUE_STAND_KEYS = ["tic tac", "tictac", "bauducco"];
 function isQueueStand(name: string) {
@@ -80,7 +88,14 @@ export default function UserStandBookingsPage() {
     try {
       setLoading(true);
       const data = await getMyStandBookings();
-      const enriched = data.map((b) => {
+      const mockStored: UserStandBooking[] = typeof window !== "undefined"
+        ? JSON.parse(localStorage.getItem("mock_stand_bookings") ?? "[]")
+        : [];
+      // Mescla: API primeiro, mock só se não há booking real para a mesma sessão
+      const apiSessionIds = new Set(data.map((b) => b.stand_session_id));
+      const mockOnly = mockStored.filter((b) => !apiSessionIds.has(b.stand_session_id));
+      const merged = [...data, ...mockOnly];
+      const enriched = merged.map((b) => {
         if (isQueueStand(b.stand_name) && b.queue_position == null) {
           const pos = getStoredQueuePos(b.id);
           if (pos != null) return { ...b, queue_position: pos };
@@ -103,6 +118,17 @@ export default function UserStandBookingsPage() {
     try {
       setCancelling(true);
       const id = bookingToCancel.id;
+      // Booking mock (id negativo) — remove só do localStorage
+      if (id < 0) {
+        if (typeof window !== "undefined") {
+          const stored: UserStandBooking[] = JSON.parse(localStorage.getItem("mock_stand_bookings") ?? "[]");
+          localStorage.setItem("mock_stand_bookings", JSON.stringify(stored.filter((b) => b.id !== id)));
+        }
+        setBookings((prev) => prev.filter((b) => b.id !== id));
+        showToast("Agendamento cancelado com sucesso", "success");
+        setBookingToCancel(null);
+        return;
+      }
       await cancelMyStandBooking(id);
       setBookings((prev) => prev.filter((b) => b.id !== id));
       if (bookingToShowQr?.id === id) setBookingToShowQr(null);
@@ -220,6 +246,8 @@ export default function UserStandBookingsPage() {
               const { label: sLabel, color: sColor } = statusLabel(booking.status);
               const isCancelled = booking.status === "cancelled";
 
+              const coverImg = booking.stand_image_url || brandPhotoFromName(booking.stand_name);
+
               return (
                 <Box
                   key={booking.id}
@@ -232,11 +260,11 @@ export default function UserStandBookingsPage() {
                     transition: "opacity 0.2s",
                   }}
                 >
-                  {/* Stand image */}
-                  {booking.stand_image_url ? (
-                    <Box sx={{ position: "relative", width: "100%", height: 140 }}>
+                  {/* Stand image / brand logo */}
+                  {coverImg ? (
+                    <Box sx={{ position: "relative", width: "100%", height: 140, backgroundColor: "#000" }}>
                       <img
-                        src={booking.stand_image_url}
+                        src={coverImg}
                         alt={booking.stand_name}
                         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                       />
