@@ -296,7 +296,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
 
       {showVideo && (
         <VideoModal
-          src="/video/coca.mp4"
+          src="/video/anuncio.mp4"
           onComplete={handleVideoComplete}
         />
       )}
