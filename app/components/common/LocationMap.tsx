@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-// ─── Polígono simplificado do Brasil ─────────────────────────────────────────
+// ─── Coordenadas ──────────────────────────────────────────────────────────────
 
 const BRAZIL_LATLNGS: [number, number][] = [
   [-4.39,-51.20],[-1.76,-50.07],[0.64,-51.08],[1.55,-50.08],[3.48,-51.53],
@@ -19,8 +19,6 @@ const BRAZIL_LATLNGS: [number, number][] = [
   [-8.81,-35.18],[-5.78,-35.22],[-2.90,-41.72],[-2.54,-44.33],
   [-1.00,-48.00],[-4.39,-51.20],
 ];
-
-// ─── Coordenadas ──────────────────────────────────────────────────────────────
 
 export const STATE_CAPITALS: Record<string, [number, number]> = {
   AC: [-9.9748,  -67.8243], AL: [ -9.6658, -35.7353], AM: [ -3.1317, -60.0217],
@@ -47,8 +45,6 @@ export const REGIAO_RADIUS_M: Record<string, number> = {
   Sudeste: 500_000, Sul: 450_000,
 };
 
-// ─── Tipos ────────────────────────────────────────────────────────────────────
-
 export interface CityRadius { city: string; radius: number; lat?: number; lng?: number; maxRadius?: number; }
 type LocationMode = "brasil" | "regioes" | "estados" | "cidades";
 
@@ -59,7 +55,36 @@ interface Props {
   cidades: CityRadius[];
 }
 
-// ─── Componente ───────────────────────────────────────────────────────────────
+// Carrega Leaflet do CDN e retorna o objeto L global
+function loadLeaflet(): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).L) { resolve((window as any).L); return; }
+
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    if (!document.getElementById("leaflet-js")) {
+      const script = document.createElement("script");
+      script.id = "leaflet-js";
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = () => resolve((window as any).L); // eslint-disable-line @typescript-eslint/no-explicit-any
+      script.onerror = reject;
+      document.head.appendChild(script);
+    } else {
+      // script já existe mas ainda carregando — aguarda
+      const wait = setInterval(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        if ((window as any).L) { clearInterval(wait); resolve((window as any).L); }
+      }, 50);
+    }
+  });
+}
 
 export default function LocationMap({ mode, regioes, estados, cidades }: Props) {
   const containerRef  = useRef<HTMLDivElement>(null);
@@ -68,80 +93,49 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layerGroupRef = useRef<any>(null);
 
-  // Inicializa o mapa uma única vez (leaflet carregado dinamicamente)
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     let destroyed = false;
 
-    const init = async () => {
-      // Injeta CSS do leaflet via <link> — evita qualquer resolução em build time
-      if (!document.getElementById("leaflet-css")) {
-        const link = document.createElement("link");
-        link.id = "leaflet-css";
-        link.rel = "stylesheet";
-        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-        document.head.appendChild(link);
-      }
-
-      // Importa leaflet só no browser, nunca em build time
-      const L = (await import("leaflet")).default;
-
+    loadLeaflet().then((L: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (destroyed || !containerRef.current) return;
-
-      const map = L.map(containerRef.current, {
-        center: [-15, -52], zoom: 4,
-        scrollWheelZoom: true, zoomControl: true,
-      });
+      const map = L.map(containerRef.current, { center: [-15, -52], zoom: 4, scrollWheelZoom: true });
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
         maxZoom: 18,
       }).addTo(map);
       layerGroupRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
-    };
-
-    init();
+    }).catch(() => {});
 
     return () => {
       destroyed = true;
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-        layerGroupRef.current = null;
-      }
+      if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; layerGroupRef.current = null; }
     };
   }, []);
 
-  // Atualiza camadas sempre que as props mudam
   useEffect(() => {
     const map = mapRef.current;
     const lg  = layerGroupRef.current;
-    if (!map || !lg) return;
-
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let L: any;
-    try { L = require("leaflet"); } catch { return; }
+    const L   = (window as any).L;
+    if (!map || !lg || !L) return;
 
     lg.clearLayers();
     const yellow = "#ffcc01";
 
     if (mode === "brasil") {
-      L.polygon(BRAZIL_LATLNGS, {
-        color: yellow, fillColor: yellow, fillOpacity: 0.1, weight: 2, dashArray: "8 5",
-      }).addTo(lg);
+      L.polygon(BRAZIL_LATLNGS, { color: yellow, fillColor: yellow, fillOpacity: 0.1, weight: 2, dashArray: "8 5" }).addTo(lg);
       map.fitBounds(L.latLngBounds(BRAZIL_LATLNGS), { padding: [20, 20] });
     }
 
     if (mode === "regioes" && regioes.length > 0) {
       const pts: [number, number][] = [];
       regioes.forEach((r) => {
-        const center = REGIAO_CENTERS[r];
-        if (!center) return;
+        const center = REGIAO_CENTERS[r]; if (!center) return;
         L.circle(center, { radius: REGIAO_RADIUS_M[r] ?? 700_000, color: yellow, fillColor: yellow, fillOpacity: 0.13, weight: 2 }).addTo(lg);
-        L.marker(center, {
-          icon: L.divIcon({ className: "", iconSize: [0, 0],
-            html: `<div style="background:#ffcc01;color:#111;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px #0007">${r}</div>` }),
-        }).addTo(lg);
+        L.marker(center, { icon: L.divIcon({ className: "", iconSize: [0, 0],
+          html: `<div style="background:#ffcc01;color:#111;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px #0007">${r}</div>` }) }).addTo(lg);
         pts.push(center);
       });
       if (pts.length === 1) map.setView(pts[0], 5);
@@ -151,11 +145,9 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
     if (mode === "estados" && estados.length > 0) {
       const pts: [number, number][] = [];
       estados.forEach((uf) => {
-        const pos = STATE_CAPITALS[uf];
-        if (!pos) return;
+        const pos = STATE_CAPITALS[uf]; if (!pos) return;
         L.circleMarker(pos, { radius: 9, color: yellow, fillColor: yellow, fillOpacity: 0.8, weight: 2 })
-          .bindTooltip(uf, { permanent: true, direction: "top", offset: [0, -8], className: "leaflet-tooltip-diverti" })
-          .addTo(lg);
+          .bindTooltip(uf, { permanent: true, direction: "top", offset: [0, -8], className: "leaflet-tooltip-diverti" }).addTo(lg);
         pts.push(pos);
       });
       if (pts.length === 1) map.setView(pts[0], 7);
@@ -164,45 +156,33 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
     }
 
     if (mode === "cidades") {
-      const allPts: [number, number][] = [];
-      const centers: [number, number][] = [];
+      const allPts: [number, number][] = [], centers: [number, number][] = [];
       cidades.forEach(({ city, radius, lat, lng }) => {
         if (lat == null || lng == null) return;
         const pos: [number, number] = [lat, lng];
         const r_m = radius * 1000;
         L.circle(pos, { radius: r_m, color: yellow, fillColor: yellow, fillOpacity: 0.13, weight: 2 }).addTo(lg);
         L.circleMarker(pos, { radius: 6, color: yellow, fillColor: "#fff", fillOpacity: 1, weight: 2 })
-          .bindTooltip(`<b>${city}</b><br>${radius} km`, { direction: "top" })
-          .addTo(lg);
+          .bindTooltip(`<b>${city}</b><br>${radius} km`, { direction: "top" }).addTo(lg);
         centers.push(pos);
-        const deg = r_m / 111_320;
-        const degLng = deg / Math.cos((lat * Math.PI) / 180);
+        const deg = r_m / 111_320, degLng = deg / Math.cos((lat * Math.PI) / 180);
         allPts.push([lat + deg, lng], [lat - deg, lng], [lat, lng + degLng], [lat, lng - degLng]);
       });
       if (allPts.length > 0) {
         const maxRadius = Math.max(...cidades.filter(c => c.lat != null).map(c => c.radius));
         const maxZoom = maxRadius <= 5 ? 13 : maxRadius <= 20 ? 12 : maxRadius <= 100 ? 10 : 8;
         map.fitBounds(L.latLngBounds(allPts).pad(0.3), { maxZoom });
-      } else if (centers.length > 0) {
-        map.setView(centers[0], 10);
-      } else {
-        map.setView([-15, -52], 4);
-      }
+      } else if (centers.length > 0) { map.setView(centers[0], 10); }
+      else { map.setView([-15, -52], 4); }
     }
   }, [mode, regioes, estados, cidades]);
 
   return (
     <div style={{ position: "relative" }}>
-      <div
-        ref={containerRef}
-        style={{ height: 320, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)" }}
-      />
+      <div ref={containerRef} style={{ height: 320, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)" }} />
       <style>{`
-        .leaflet-tooltip-diverti {
-          background: #ffcc01; color: #111; border: none; font-weight: 700;
-          font-size: 11px; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 8px #0006;
-        }
-        .leaflet-tooltip-diverti::before { display: none; }
+        .leaflet-tooltip-diverti { background:#ffcc01;color:#111;border:none;font-weight:700;font-size:11px;padding:2px 6px;border-radius:4px;box-shadow:0 2px 8px #0006; }
+        .leaflet-tooltip-diverti::before { display:none; }
       `}</style>
     </div>
   );
