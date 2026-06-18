@@ -23,8 +23,6 @@ import {
   Tooltip as RechartTooltip, ResponsiveContainer, Legend,
 } from "recharts";
 
-const CPC_PRICE = 0.14;
-const CPV_PRICE = 0.1;
 
 function statusChip(status: string) {
   const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -47,8 +45,7 @@ function statusChip(status: string) {
 
 function CampaignCard({ c }: { c: Campaign }) {
   const router = useRouter();
-  const rate = c.ad_type === "CPC" ? CPC_PRICE : CPV_PRICE;
-  const estimated = (c.target_units * rate).toFixed(2);
+  const estimated = (c.budget_value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const created = new Date(c.created_at).toLocaleDateString("pt-BR");
   const isVideo = c.creative_url ? /\.(mp4|mov|webm)$/i.test(c.creative_url) : false;
 
@@ -229,7 +226,7 @@ export default function PatrocinadorHomePage() {
             .filter((r) => r.interações > 0);
 
           // Summary numbers
-          const totalInvested = campaigns.reduce((s, c) => s + (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.gasto, 0), 0);
+          const totalInvested = campaigns.reduce((s, c) => s + (c.budget_value ?? 0), 0);
           const totalUnits    = campaigns.reduce((s, c) => s + (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.units, 0), 0);
           const activeCnt     = campaigns.filter((c) => c.status === "active").length;
           const avgProgress   = campaigns.length > 0
