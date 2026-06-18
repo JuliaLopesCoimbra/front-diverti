@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ─── Coordenadas ──────────────────────────────────────────────────────────────
 
@@ -94,6 +94,7 @@ export default function LocationMap({ mode, regioes, estados, cidades, bairros =
   const mapRef        = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layerGroupRef = useRef<any>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -108,6 +109,7 @@ export default function LocationMap({ mode, regioes, estados, cidades, bairros =
       }).addTo(map);
       layerGroupRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
+      setMapReady(true);
     }).catch(() => {});
 
     return () => {
@@ -198,7 +200,7 @@ export default function LocationMap({ mode, regioes, estados, cidades, bairros =
       } else if (centers.length > 0) { map.setView(centers[0], 13); }
       else { map.setView([-15, -52], 4); }
     }
-  }, [mode, regioes, estados, cidades, bairros]);
+  }, [mode, regioes, estados, cidades, bairros, mapReady]);
 
   return (
     <div style={{ position: "relative" }}>
