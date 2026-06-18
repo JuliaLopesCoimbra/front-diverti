@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 
 // ─── Polígono simplificado do Brasil ─────────────────────────────────────────
 
-const BRAZIL_LATLNGS: L.LatLngTuple[] = [
+const BRAZIL_LATLNGS: [number, number][] = [
   [-4.39,-51.20],[-1.76,-50.07],[0.64,-51.08],[1.55,-50.08],[3.48,-51.53],
   [4.22,-54.26],[4.84,-60.20],[3.88,-63.82],[2.72,-66.27],[1.41,-68.68],
   [-0.11,-70.13],[-0.86,-72.08],[-2.14,-75.57],[-4.22,-74.00],[-6.11,-73.02],
@@ -61,37 +59,48 @@ interface Props {
   cidades: CityRadius[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function makeDivIcon(html: string) {
-  return L.divIcon({ className: "", html, iconSize: [0, 0] });
-}
-
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function LocationMap({ mode, regioes, estados, cidades }: Props) {
-  const containerRef   = useRef<HTMLDivElement>(null);
-  const mapRef         = useRef<L.Map | null>(null);
-  const layerGroupRef  = useRef<L.LayerGroup | null>(null);
+  const containerRef  = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapRef        = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const layerGroupRef = useRef<any>(null);
 
-  // Inicializa o mapa uma única vez
+  // Inicializa o mapa uma única vez (leaflet carregado dinamicamente)
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      center: [-15, -52], zoom: 4,
-      scrollWheelZoom: true, zoomControl: true,
-    });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
-      maxZoom: 18,
-    }).addTo(map);
-    layerGroupRef.current = L.layerGroup().addTo(map);
-    mapRef.current = map;
+    let destroyed = false;
+
+    const init = async () => {
+      // Importa leaflet só no browser, nunca em build time
+      const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
+
+      if (destroyed || !containerRef.current) return;
+
+      const map = L.map(containerRef.current, {
+        center: [-15, -52], zoom: 4,
+        scrollWheelZoom: true, zoomControl: true,
+      });
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(map);
+      layerGroupRef.current = L.layerGroup().addTo(map);
+      mapRef.current = map;
+    };
+
+    init();
 
     return () => {
-      map.remove();
-      mapRef.current = null;
-      layerGroupRef.current = null;
+      destroyed = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        layerGroupRef.current = null;
+      }
     };
   }, []);
 
@@ -101,74 +110,68 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
     const lg  = layerGroupRef.current;
     if (!map || !lg) return;
 
-    lg.clearLayers();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let L: any;
+    try { L = require("leaflet"); } catch { return; }
 
+    lg.clearLayers();
     const yellow = "#ffcc01";
 
     if (mode === "brasil") {
       L.polygon(BRAZIL_LATLNGS, {
-        color: yellow, fillColor: yellow,
-        fillOpacity: 0.1, weight: 2, dashArray: "8 5",
+        color: yellow, fillColor: yellow, fillOpacity: 0.1, weight: 2, dashArray: "8 5",
       }).addTo(lg);
       map.fitBounds(L.latLngBounds(BRAZIL_LATLNGS), { padding: [20, 20] });
     }
 
     if (mode === "regioes" && regioes.length > 0) {
-      const pts: L.LatLngTuple[] = [];
+      const pts: [number, number][] = [];
       regioes.forEach((r) => {
         const center = REGIAO_CENTERS[r];
         if (!center) return;
-        L.circle(center, {
-          radius: REGIAO_RADIUS_M[r] ?? 700_000,
-          color: yellow, fillColor: yellow, fillOpacity: 0.13, weight: 2,
-        }).addTo(lg);
+        L.circle(center, { radius: REGIAO_RADIUS_M[r] ?? 700_000, color: yellow, fillColor: yellow, fillOpacity: 0.13, weight: 2 }).addTo(lg);
         L.marker(center, {
-          icon: makeDivIcon(
-            `<div style="background:#ffcc01;color:#111;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px #0007">${r}</div>`
-          ),
+          icon: L.divIcon({ className: "", iconSize: [0, 0],
+            html: `<div style="background:#ffcc01;color:#111;font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;box-shadow:0 2px 8px #0007">${r}</div>` }),
         }).addTo(lg);
         pts.push(center);
       });
-      if (pts.length === 1) { map.setView(pts[0], 5); }
-      else if (pts.length > 1) { map.fitBounds(L.latLngBounds(pts).pad(0.4)); }
+      if (pts.length === 1) map.setView(pts[0], 5);
+      else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts).pad(0.4));
     }
 
     if (mode === "estados" && estados.length > 0) {
-      const pts: L.LatLngTuple[] = [];
+      const pts: [number, number][] = [];
       estados.forEach((uf) => {
         const pos = STATE_CAPITALS[uf];
         if (!pos) return;
         L.circleMarker(pos, { radius: 9, color: yellow, fillColor: yellow, fillOpacity: 0.8, weight: 2 })
-          .bindTooltip(uf, { permanent: true, direction: "top", offset: [0, -8],
-            className: "leaflet-tooltip-diverti" })
+          .bindTooltip(uf, { permanent: true, direction: "top", offset: [0, -8], className: "leaflet-tooltip-diverti" })
           .addTo(lg);
         pts.push(pos);
       });
-      if (pts.length === 1) { map.setView(pts[0], 7); }
-      else if (pts.length > 1) { map.fitBounds(L.latLngBounds(pts).pad(0.4)); }
-      else { map.setView([-15, -52], 4); }
+      if (pts.length === 1) map.setView(pts[0], 7);
+      else if (pts.length > 1) map.fitBounds(L.latLngBounds(pts).pad(0.4));
+      else map.setView([-15, -52], 4);
     }
 
     if (mode === "cidades") {
-      const centers: L.LatLngTuple[] = [];
-      const allPts: L.LatLngTuple[] = [];
+      const allPts: [number, number][] = [];
+      const centers: [number, number][] = [];
       cidades.forEach(({ city, radius, lat, lng }) => {
         if (lat == null || lng == null) return;
-        const pos: L.LatLngTuple = [lat, lng];
-        const r_m = radius * 1000; // km → metros
+        const pos: [number, number] = [lat, lng];
+        const r_m = radius * 1000;
         L.circle(pos, { radius: r_m, color: yellow, fillColor: yellow, fillOpacity: 0.13, weight: 2 }).addTo(lg);
         L.circleMarker(pos, { radius: 6, color: yellow, fillColor: "#fff", fillOpacity: 1, weight: 2 })
           .bindTooltip(`<b>${city}</b><br>${radius} km`, { direction: "top" })
           .addTo(lg);
         centers.push(pos);
-        // pontos nas bordas do círculo para o fitBounds englobar o círculo inteiro
         const deg = r_m / 111_320;
         const degLng = deg / Math.cos((lat * Math.PI) / 180);
         allPts.push([lat + deg, lng], [lat - deg, lng], [lat, lng + degLng], [lat, lng - degLng]);
       });
       if (allPts.length > 0) {
-        // maxZoom: garante que raios pequenos não zoem demais —
-        // zoom 13 ≈ área de ~5km visível, bom para ver a cidade ao redor do círculo
         const maxRadius = Math.max(...cidades.filter(c => c.lat != null).map(c => c.radius));
         const maxZoom = maxRadius <= 5 ? 13 : maxRadius <= 20 ? 12 : maxRadius <= 100 ? 10 : 8;
         map.fitBounds(L.latLngBounds(allPts).pad(0.3), { maxZoom });
@@ -182,7 +185,10 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
 
   return (
     <div style={{ position: "relative" }}>
-      <div ref={containerRef} style={{ height: 320, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)" }} />
+      <div
+        ref={containerRef}
+        style={{ height: 320, borderRadius: 12, overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)" }}
+      />
       <style>{`
         .leaflet-tooltip-diverti {
           background: #ffcc01; color: #111; border: none; font-weight: 700;
