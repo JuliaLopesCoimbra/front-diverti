@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, IconButton, Skeleton, Typography } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { Box, Button, Card, CardContent, Skeleton, Typography } from "@mui/material";
+import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
 import AdBanner from "@/app/components/ads/AdBanner";
 import { getPrizesByEvent } from "@/app/services/roulette/rouletteService";
 import VideoModal from "@/app/components/home/VideoModal";
@@ -40,8 +39,6 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
   const [spinCount, setSpinCount] = useState<number | null>(null);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
-  const [selectedCoupon, setSelectedCoupon] = useState<SponsorCoupon | null>(null);
-  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
     const key = `roulette-spin-count-${eventId}`;
@@ -139,7 +136,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
                 mb: 1,
               }}
             >
-              Ganhe cupons e<br />brindes das marcas!
+              Teste sua sorte!
             </Typography>
 
             <Box
@@ -235,6 +232,29 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
             Ganhar brinde
           </Button>
 
+          <Button
+            variant="outlined"
+            onClick={() => router.push("/pages/user/roulette/cupons")}
+            startIcon={<CardGiftcardRoundedIcon />}
+            sx={{
+              alignSelf: "stretch",
+              borderColor: "rgba(255,255,255,0.25)",
+              color: "#fff",
+              fontWeight: 700,
+              borderRadius: "14px",
+              textTransform: "none",
+              px: 4,
+              py: 1.4,
+              fontSize: { xs: "1rem", md: "1.05rem" },
+              "&:hover": {
+                borderColor: "rgba(255,255,255,0.5)",
+                background: "rgba(255,255,255,0.07)",
+              },
+            }}
+          >
+            Acesse seus cupons
+          </Button>
+
           {/* Cupons dos patrocinadores */}
           <Box
             sx={{
@@ -262,7 +282,6 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
                 {SPONSOR_COUPONS.map((coupon) => (
                   <Box
                     key={coupon.id}
-                    onClick={() => setSelectedCoupon(coupon)}
                     sx={{
                       display: "flex",
                       alignItems: "center",
@@ -271,9 +290,6 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
                       p: 1.5,
                       background: `linear-gradient(135deg, ${coupon.color}14, ${coupon.color}08)`,
                       border: `1px solid ${coupon.color}44`,
-                      cursor: "pointer",
-                      transition: "transform 0.18s, box-shadow 0.18s",
-                      "&:hover": { transform: "translateY(-2px)", boxShadow: `0 8px 24px ${coupon.color}33` },
                     }}
                   >
                     <Box
@@ -301,86 +317,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
         />
       )}
 
-      <Dialog
-        open={Boolean(selectedCoupon)}
-        onClose={() => { setSelectedCoupon(null); setCopiedCode(false); }}
-        maxWidth="xs"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: "rgba(15,15,20,0.97)",
-            backdropFilter: "blur(20px)",
-            border: selectedCoupon ? `1px solid ${selectedCoupon.color}44` : "1px solid rgba(255,255,255,0.12)",
-            borderRadius: 4,
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogContent sx={{ p: 0 }}>
-          <IconButton
-            onClick={() => { setSelectedCoupon(null); setCopiedCode(false); }}
-            sx={{ position: "absolute", top: 10, right: 10, zIndex: 10, color: "#fff", backgroundColor: "rgba(0,0,0,0.45)", "&:hover": { backgroundColor: "rgba(0,0,0,0.65)" } }}
-          >
-            <CloseIcon fontSize="small" />
-          </IconButton>
 
-          {selectedCoupon && (
-            <>
-              {/* Header com imagem */}
-              <Box sx={{ width: "100%", height: 160, background: `linear-gradient(135deg, ${selectedCoupon.color}22, ${selectedCoupon.color}08)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
-                <Box component="img" src={selectedCoupon.image} alt={selectedCoupon.name} sx={{ width: 110, height: 110, objectFit: "cover", borderRadius: 3, border: `2px solid ${selectedCoupon.color}66`, boxShadow: `0 0 32px ${selectedCoupon.color}44` }} />
-              </Box>
-
-              <Box sx={{ p: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                  <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.2rem" }}>{selectedCoupon.name}</Typography>
-                  <Chip label={selectedCoupon.tag} size="small" sx={{ backgroundColor: `${selectedCoupon.color}22`, color: selectedCoupon.color, fontWeight: 700, fontSize: "0.65rem", border: `1px solid ${selectedCoupon.color}44` }} />
-                </Box>
-                <Typography sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.9rem", mb: 2.5, lineHeight: 1.5 }}>{selectedCoupon.benefit}</Typography>
-
-                {/* Código do cupom */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    p: 2,
-                    borderRadius: 2.5,
-                    border: `2px dashed ${selectedCoupon.color}66`,
-                    background: `${selectedCoupon.color}0d`,
-                    mb: 1.5,
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedCoupon.code).catch(() => {});
-                    setCopiedCode(true);
-                    setTimeout(() => setCopiedCode(false), 2000);
-                  }}
-                >
-                  <Box>
-                    <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.3 }}>Código do cupom</Typography>
-                    <Typography sx={{ color: selectedCoupon.color, fontWeight: 900, fontSize: "1.3rem", letterSpacing: "0.1em" }}>{selectedCoupon.code}</Typography>
-                  </Box>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: copiedCode ? "#10b981" : "rgba(255,255,255,0.4)" }}>
-                    <ContentCopyIcon sx={{ fontSize: 18 }} />
-                    <Typography sx={{ fontSize: "0.72rem", fontWeight: 600 }}>{copiedCode ? "Copiado!" : "Copiar"}</Typography>
-                  </Box>
-                </Box>
-
-                <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.72rem", mb: 2.5, textAlign: "center" }}>{selectedCoupon.expiry}</Typography>
-
-                <Button
-                  fullWidth
-                  onClick={() => { setSelectedCoupon(null); setCopiedCode(false); }}
-                  sx={{ backgroundColor: "#ffffff", color: "#111111", fontWeight: 700, borderRadius: "12px", textTransform: "none", py: 1.4, "&:hover": { backgroundColor: "#e8e8e8" } }}
-                >
-                  Fechar
-                </Button>
-              </Box>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 };

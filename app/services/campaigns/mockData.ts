@@ -400,20 +400,24 @@ export function detectBrand(userName: string | null): string {
 
 // ─── Performance (mesma data para todos os IDs mockados) ─────────────────────
 
-function mapPerf(idBase: number): Record<number, PerformanceDay[]> {
+function scalePerf(arr: PerformanceDay[], s: number): PerformanceDay[] {
+  return arr.map(d => ({ ...d, units: Math.round(d.units * s), gasto: parseFloat((d.gasto * s).toFixed(2)) }));
+}
+
+function mapPerf(idBase: number, scale: number = 1): Record<number, PerformanceDay[]> {
   return {
-    [idBase + 0]: PERF_FINISHED_10D,
-    [idBase + 1]: PERF_FINISHED_7D,
-    [idBase + 2]: PERF_FINISHED_CPV,
+    [idBase + 0]: scalePerf(PERF_FINISHED_10D, scale),
+    [idBase + 1]: scalePerf(PERF_FINISHED_7D, scale),
+    [idBase + 2]: scalePerf(PERF_FINISHED_CPV, scale),
     [idBase + 3]: [],
-    [idBase + 4]: PERF_ACTIVE,
+    [idBase + 4]: scalePerf(PERF_ACTIVE, scale),
   };
 }
 
 export const MOCK_PERFORMANCE: Record<number, PerformanceDay[]> = {
-  ...mapPerf(9001),
-  ...mapPerf(9011),
-  ...mapPerf(9021),
-  ...mapPerf(9031),
-  ...mapPerf(9041),
+  ...mapPerf(9001, 1.00),   // Brahma
+  ...mapPerf(9011, 0.62),   // Sicoob
+  ...mapPerf(9021, 1.48),   // Volkswagen
+  ...mapPerf(9031, 0.85),   // Ballantines
+  ...mapPerf(9041, 1.30),   // Globo
 };

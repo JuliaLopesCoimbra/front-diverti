@@ -37,7 +37,7 @@ export default function FinanceiroPage() {
     <AdminMasterShell>
       <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 3, sm: 4 }, pb: 6 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Financeiro</Typography>
+          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Extrato</Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>Receita consolidada de todos os patrocinadores</Typography>
         </Box>
 

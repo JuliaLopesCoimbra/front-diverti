@@ -25,8 +25,8 @@ const SIDEBAR_W = 220;
 const NAV_ITEMS = [
   { label: "Dashboard",      icon: <DashboardIcon />, path: "/pages/admin-master/home"          },
   { label: "Eventos",        icon: <EventosIcon />,   path: "/pages/admin-master/eventos"       },
-  { label: "Usuários",       icon: <UsuariosIcon />,  path: "/pages/admin-master/usuarios"      },
-  { label: "Financeiro",     icon: <FinanceiroIcon />,path: "/pages/admin-master/financeiro"    },
+  { label: "Patrocinadores", icon: <UsuariosIcon />,  path: "/pages/admin-master/usuarios"      },
+  { label: "Extrato",        icon: <FinanceiroIcon />,path: "/pages/admin-master/financeiro"    },
   { label: "Configurações",  icon: <ConfigIcon />,    path: "/pages/admin-master/configuracoes" },
   { label: "Perfil",         icon: <PerfilIcon />,    path: "/pages/admin-master/perfil"        },
 ];

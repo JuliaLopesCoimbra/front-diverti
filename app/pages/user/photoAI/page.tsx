@@ -28,6 +28,7 @@ interface SearchResult {
   url: string;
   similarity?: number;
   label?: string;
+  mediaType?: "image" | "video";
 }
 
 interface PhotoAIPageProps {
@@ -363,6 +364,7 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
               url: m.image_url || m.url || m.image || "",
               similarity: m.similarity,
               label: m.name || m.external_image_id,
+              mediaType: (m.media_type === "video" ? "video" : "image") as "image" | "video",
             };
           })
           .filter((r: SearchResult) => {
@@ -828,16 +830,30 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
                     },
                   }}
                 >
-                  <img
-                    src={item.url}
-                    alt={item.label || `Foto ${idx + 1}`}
-                    style={{
-                      width: "100%",
-                      display: "block",
-                      aspectRatio: "3 / 4",
-                      objectFit: "cover",
-                    }}
-                  />
+                  {item.mediaType === "video" ? (
+                    <video
+                      src={item.url}
+                      controls
+                      style={{
+                        width: "100%",
+                        display: "block",
+                        aspectRatio: "3 / 4",
+                        objectFit: "cover",
+                        background: "#000",
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={item.url}
+                      alt={item.label || `Foto ${idx + 1}`}
+                      style={{
+                        width: "100%",
+                        display: "block",
+                        aspectRatio: "3 / 4",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
                 </Box>
               ))}
             </Box>
@@ -923,16 +939,30 @@ export default function PhotoAIPage({ eventId }: PhotoAIPageProps) {
                   boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
                 }}
               >
-                <img
-                  src={selectedPhoto.url}
-                  alt={selectedPhoto.label || "Foto selecionada"}
-                  style={{
-                    width: "100%",
-                    display: "block",
-                    aspectRatio: "3 / 4",
-                    objectFit: "cover",
-                  }}
-                />
+                {selectedPhoto.mediaType === "video" ? (
+                  <video
+                    src={selectedPhoto.url}
+                    controls
+                    style={{
+                      width: "100%",
+                      display: "block",
+                      aspectRatio: "3 / 4",
+                      objectFit: "cover",
+                      background: "#000",
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={selectedPhoto.url}
+                    alt={selectedPhoto.label || "Foto selecionada"}
+                    style={{
+                      width: "100%",
+                      display: "block",
+                      aspectRatio: "3 / 4",
+                      objectFit: "cover",
+                    }}
+                  />
+                )}
               </Box>
             )}
           </Box>

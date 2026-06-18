@@ -22,7 +22,7 @@ export async function searchFace(
 ): Promise<SearchFaceResponse> {
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("threshold", "70");
+  formData.append("threshold", "55");
   formData.append("max_faces", "100"); // mais faces para fotos de grupo
   if (collectionId) formData.append("collection_id", collectionId);
   if (eventId) formData.append("event_id", eventId.toString());

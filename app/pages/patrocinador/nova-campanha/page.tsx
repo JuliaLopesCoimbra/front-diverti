@@ -15,6 +15,7 @@ import {
   Close as CloseIcon, Add as AddIcon, Image as ImageIcon,
   Public as BrasilIcon, Map as MapIcon, LocationCity as CityIcon,
   Search as SearchIcon, CalendarToday as CalendarIcon,
+  HomeWork as BairroIcon,
 } from "@mui/icons-material";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
@@ -82,9 +83,10 @@ const TODOS_ESTADOS = Object.values(ESTADOS_POR_REGIAO).flat();
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
 type Gender = "todos" | "feminino" | "masculino" | "nao_binario";
-type LocationMode = "brasil" | "regioes" | "estados" | "cidades";
+type LocationMode = "brasil" | "regioes" | "estados" | "cidades" | "bairros";
 
 interface CityRadius { city: string; radius: number; lat?: number; lng?: number; maxRadius?: number; }
+interface BairroEntry { bairro: string; cidade: string; radius: number; lat?: number; lng?: number; }
 
 interface AdDraft {
   campaign_name: string; ad_type: "CPC" | "CPV";
@@ -95,6 +97,7 @@ interface AdDraft {
   location_regioes: string[];
   location_estados: string[];
   location_cidades: CityRadius[];
+  location_bairros: BairroEntry[];
   start_at: string; duration_days: string;
   budget_amount: string; budget_type: "diario" | "total";
 }
@@ -104,7 +107,9 @@ const emptyDraft = (): AdDraft => ({
   creative_url: "", creative_name: "", redirect_url: "",
   gender: "todos", age_min: 18, age_max: 65,
   hobbies: [], professions: [],
-  location_mode: "brasil", location_regioes: [], location_estados: [], location_cidades: [],
+  location_mode: "cidades", location_regioes: [], location_estados: [],
+  location_cidades: [{ city: "São Paulo, São Paulo", radius: 30, maxRadius: 80, lat: -23.5505, lng: -46.6333 }],
+  location_bairros: [],
   start_at: "", duration_days: "",
   budget_amount: "", budget_type: "total",
 });
@@ -116,19 +121,23 @@ function calcSurcharges(draft: AdDraft) {
   const _hobbies     = draft.hobbies ?? [];
   const _professions = draft.professions ?? [];
   const _cidades     = draft.location_cidades ?? [];
+  const _bairros     = draft.location_bairros ?? [];
   const _mode        = draft.location_mode ?? "brasil";
 
-  // +1% por hobbie, +1% por profissão, +2% por cidade, +0.2% por km de raio acima de 20km
+  // +1% por hobbie, +1% por profissão, +2% por cidade, +3% por bairro, +0.2% por km de raio acima de 20km
   const hobbySurcharge      = _hobbies.length;
   const professionSurcharge = _professions.length;
   const cidadesSurcharge    = _mode === "cidades" ? _cidades.length * 2 : 0;
+  const bairrosSurcharge    = _mode === "bairros" ? _bairros.length * 3 : 0;
   const avgRadius = _mode === "cidades" && _cidades.length > 0
-    ? _cidades.reduce((s, c) => s + c.radius, 0) / _cidades.length : 0;
-  const radiusSurcharge = parseFloat((Math.max(0, avgRadius - 20) * 0.2).toFixed(2));
+    ? _cidades.reduce((s, c) => s + c.radius, 0) / _cidades.length
+    : _mode === "bairros" && _bairros.length > 0
+    ? _bairros.reduce((s, b) => s + b.radius, 0) / _bairros.length : 0;
+  const radiusSurcharge = parseFloat((Math.max(0, avgRadius - 5) * 0.2).toFixed(2));
 
-  const totalSurchargePercent = hobbySurcharge + professionSurcharge + cidadesSurcharge + radiusSurcharge;
+  const totalSurchargePercent = hobbySurcharge + professionSurcharge + cidadesSurcharge + bairrosSurcharge + radiusSurcharge;
   const effectiveRate = rate * (1 + totalSurchargePercent / 100);
-  return { rate, hobbySurcharge, professionSurcharge, cidadesSurcharge, radiusSurcharge, totalSurchargePercent, effectiveRate };
+  return { rate, hobbySurcharge, professionSurcharge, cidadesSurcharge, bairrosSurcharge, radiusSurcharge, totalSurchargePercent, effectiveRate };
 }
 
 function locationSummary(draft: AdDraft): string {
@@ -136,10 +145,12 @@ function locationSummary(draft: AdDraft): string {
   const _regioes = draft.location_regioes ?? [];
   const _estados = draft.location_estados ?? [];
   const _cidades2 = draft.location_cidades ?? [];
+  const _bairros = draft.location_bairros ?? [];
   if (_mode === "brasil") return "Todo o Brasil";
   if (_mode === "regioes") return _regioes.length > 0 ? `Regiões: ${_regioes.join(", ")}` : "Nenhuma região selecionada";
   if (_mode === "estados") return _estados.length > 0 ? `${_estados.length} estado${_estados.length > 1 ? "s" : ""}` : "Nenhum estado selecionado";
   if (_mode === "cidades") return _cidades2.length > 0 ? `${_cidades2.length} cidade${_cidades2.length > 1 ? "s" : ""}` : "Nenhuma cidade adicionada";
+  if (_mode === "bairros") return _bairros.length > 0 ? `${_bairros.length} bairro${_bairros.length > 1 ? "s" : ""}` : "Nenhum bairro adicionado";
   return "";
 }
 
@@ -445,11 +456,20 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Bairro state
+  const [bairroInput, setBairroInput] = useState("");
+  const [bairroRadius, setBairroRadius] = useState(5);
+  const [bairroSuggestions, setBairroSuggestions] = useState<NominatimResult[]>([]);
+  const [bairroSearching, setBairroSearching] = useState(false);
+  const [showBairroDropdown, setShowBairroDropdown] = useState(false);
+  const bairroInputRef = useRef<HTMLInputElement>(null);
+
   // Defensive defaults
-  const location_regioes: string[]     = draft.location_regioes  ?? [];
-  const location_estados: string[]     = draft.location_estados  ?? [];
-  const location_cidades: CityRadius[] = draft.location_cidades  ?? [];
-  const location_mode: LocationMode    = draft.location_mode     ?? "brasil";
+  const location_regioes: string[]       = draft.location_regioes  ?? [];
+  const location_estados: string[]       = draft.location_estados  ?? [];
+  const location_cidades: CityRadius[]   = draft.location_cidades  ?? [];
+  const location_bairros: BairroEntry[]  = draft.location_bairros  ?? [];
+  const location_mode: LocationMode      = draft.location_mode     ?? "brasil";
 
   // Nominatim autocomplete — debounced 350ms
   useEffect(() => {
@@ -470,6 +490,31 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
     }, 350);
     return () => clearTimeout(timer);
   }, [cityInput]);
+
+  // Nominatim autocomplete para bairro — debounced 350ms
+  useEffect(() => {
+    if (bairroInput.length < 2) { setBairroSuggestions([]); setShowBairroDropdown(false); return; }
+    const timer = setTimeout(async () => {
+      setBairroSearching(true);
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bairroInput)}&countrycodes=br&limit=8&addressdetails=1`,
+          { headers: { "Accept-Language": "pt-BR" } }
+        );
+        const data: NominatimResult[] = await res.json();
+        const bairros = data.filter((r) =>
+          r.address.suburb != null || r.address.neighbourhood != null || r.address.quarter != null ||
+          ["suburb", "neighbourhood", "quarter", "residential"].includes(r.type)
+        );
+        // fallback sem cidades/municípios para não poluir
+        const fallback = data.filter((r) => !["city", "municipality", "administrative"].includes(r.type));
+        setBairroSuggestions(bairros.length > 0 ? bairros : fallback.slice(0, 5));
+        setShowBairroDropdown(true);
+      } catch { /* silently ignore */ }
+      finally { setBairroSearching(false); }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [bairroInput]);
 
   const formatSuggestion = (r: NominatimResult) => {
     const city = r.address.city ?? r.address.town ?? r.address.village ?? r.address.municipality;
@@ -512,6 +557,33 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
     set("location_cidades", location_cidades.map((c) => c.city === city ? { ...c, radius: newRadius } : c));
   };
 
+  const formatBairroSuggestion = (r: NominatimResult) => {
+    const bairro = r.address.suburb ?? r.address.neighbourhood ?? r.address.quarter ?? r.display_name.split(",")[0].trim();
+    const city = r.address.city ?? r.address.town ?? r.address.village ?? r.address.municipality ?? "";
+    return city ? `${bairro}, ${city}` : bairro;
+  };
+
+  const addBairroFromSuggestion = (r: NominatimResult) => {
+    const bairroName = r.address.suburb ?? r.address.neighbourhood ?? r.address.quarter ?? r.display_name.split(",")[0].trim();
+    const cityName = r.address.city ?? r.address.town ?? r.address.village ?? r.address.municipality ?? "";
+    if (location_bairros.some((b) => b.bairro.toLowerCase() === bairroName.toLowerCase() && b.cidade.toLowerCase() === cityName.toLowerCase())) return;
+    set("location_bairros", [...location_bairros, {
+      bairro: bairroName, cidade: cityName, radius: bairroRadius,
+      lat: parseFloat(r.lat), lng: parseFloat(r.lon),
+    }]);
+    setBairroInput("");
+    setBairroSuggestions([]);
+    setShowBairroDropdown(false);
+  };
+
+  const removeBairro = (bairro: string, cidade: string) => {
+    set("location_bairros", location_bairros.filter((b) => !(b.bairro === bairro && b.cidade === cidade)));
+  };
+
+  const updateBairroRadius = (bairro: string, cidade: string, newRadius: number) => {
+    set("location_bairros", location_bairros.map((b) => b.bairro === bairro && b.cidade === cidade ? { ...b, radius: newRadius } : b));
+  };
+
   const toggleRegiao = (r: string) => {
     set("location_regioes", location_regioes.includes(r) ? location_regioes.filter((x) => x !== r) : [...location_regioes, r]);
   };
@@ -529,10 +601,11 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
   };
 
   const modes: { value: LocationMode; label: string; desc: string; Icon: React.ElementType }[] = [
-    { value: "brasil",  label: "Todo o Brasil",  desc: "Alcance nacional sem restrições",                Icon: BrasilIcon  },
-    { value: "regioes", label: "Por Região",      desc: "Selecione uma ou mais regiões do país",          Icon: MapIcon     },
-    { value: "estados", label: "Por Estado",      desc: "Selecione estados específicos",                  Icon: LocationIcon},
-    { value: "cidades", label: "Por Cidade",      desc: "Adicione cidades com raio de cobertura próprio", Icon: CityIcon    },
+    { value: "brasil",  label: "Todo o Brasil",  desc: "Alcance nacional sem restrições",                  Icon: BrasilIcon  },
+    { value: "regioes", label: "Por Região",      desc: "Selecione uma ou mais regiões do país",            Icon: MapIcon     },
+    { value: "estados", label: "Por Estado",      desc: "Selecione estados específicos",                    Icon: LocationIcon},
+    { value: "cidades", label: "Por Cidade",      desc: "Adicione cidades com raio de cobertura próprio",   Icon: CityIcon    },
+    { value: "bairros", label: "Por Bairro",      desc: "Segmente por bairros de cidades específicas",      Icon: BairroIcon  },
   ];
 
   return (
@@ -735,6 +808,110 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
           ) : (
             <Box sx={{ textAlign: "center", py: 3, border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 2, mb: 1 }}>
               <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.82rem" }}>Nenhuma cidade adicionada ainda</Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
+      {/* Por Bairro — autocomplete + raio */}
+      {location_mode === "bairros" && (
+        <Box>
+          <Label>Buscar bairro</Label>
+
+          {/* Raio padrão para novo bairro */}
+          <Box sx={{ px: 0.5, mb: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 0.8 }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>Raio padrão para o próximo bairro</Typography>
+              <Typography sx={{ color: "#fff", fontWeight: 700 }}>{bairroRadius} km</Typography>
+            </Box>
+            <Slider value={bairroRadius} onChange={(_, v) => setBairroRadius(v as number)} min={1} max={30} step={1}
+              sx={{ color: "#ffcc01", "& .MuiSlider-thumb": { width: 18, height: 18 }, "& .MuiSlider-rail": { backgroundColor: "rgba(255,255,255,0.12)" } }}
+            />
+          </Box>
+
+          {/* Campo de busca com dropdown */}
+          <Box sx={{ position: "relative", mb: 2, zIndex: 1000 }}>
+            <TextField
+              inputRef={bairroInputRef}
+              placeholder="Digite o nome do bairro..."
+              value={bairroInput}
+              onChange={(e) => setBairroInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Escape") { setShowBairroDropdown(false); } }}
+              onBlur={() => setTimeout(() => setShowBairroDropdown(false), 150)}
+              onFocus={() => bairroSuggestions.length > 0 && setShowBairroDropdown(true)}
+              size="small" fullWidth autoComplete="off"
+              sx={{ ...fieldSx, "& .MuiOutlinedInput-root": { ...fieldSx["& .MuiOutlinedInput-root"], borderRadius: "10px" } }}
+              InputProps={{
+                startAdornment: bairroSearching
+                  ? <CircularProgress size={16} sx={{ color: "#ffcc01", mr: 1 }} />
+                  : <SearchIcon sx={{ color: "rgba(255,255,255,0.25)", mr: 1, fontSize: 18 }} />,
+              }}
+            />
+            {showBairroDropdown && bairroSuggestions.length > 0 && (
+              <Paper elevation={8} sx={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 1001, backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "10px", overflow: "hidden" }}>
+                <List dense disablePadding>
+                  {bairroSuggestions.map((r) => (
+                    <ListItem key={r.place_id} disablePadding>
+                      <ListItemButton
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => addBairroFromSuggestion(r)}
+                        sx={{ px: 2, py: 1, "&:hover": { backgroundColor: "rgba(255,204,1,0.08)" } }}>
+                        <BairroIcon sx={{ fontSize: 16, color: "#ffcc01", mr: 1.5, flexShrink: 0 }} />
+                        <ListItemText
+                          primary={formatBairroSuggestion(r)}
+                          secondary={r.display_name.split(",").slice(0, 3).join(",")}
+                          primaryTypographyProps={{ sx: { color: "#fff", fontSize: "0.88rem", fontWeight: 500 } }}
+                          secondaryTypographyProps={{ sx: { color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }}
+                        />
+                        <Chip label={`${bairroRadius}km`} size="small" sx={{ ml: 1, flexShrink: 0, backgroundColor: "rgba(255,204,1,0.12)", border: "1px solid rgba(255,204,1,0.3)", color: "#ffcc01", fontSize: "0.7rem" }} />
+                      </ListItemButton>
+                    </ListItem>
+                  ))}
+                </List>
+              </Paper>
+            )}
+          </Box>
+
+          {/* Bairros adicionados */}
+          {location_bairros.length > 0 ? (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              {location_bairros.map(({ bairro, cidade, radius }) => (
+                <Paper key={`${bairro}-${cidade}`} elevation={0} sx={{ px: 2, pt: 1.5, pb: 1.8, borderRadius: 2, backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1.2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <BairroIcon sx={{ fontSize: 16, color: "#ffcc01" }} />
+                      <Box>
+                        <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "0.9rem" }}>{bairro}</Typography>
+                        {cidade && <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem" }}>{cidade}</Typography>}
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Chip label={`${radius} km`} size="small"
+                        sx={{ backgroundColor: "rgba(255,204,1,0.12)", border: "1px solid rgba(255,204,1,0.3)", color: "#ffcc01", fontWeight: 700, fontSize: "0.75rem" }}
+                      />
+                      <IconButton size="small" onClick={() => removeBairro(bairro, cidade)} sx={{ color: "rgba(255,255,255,0.3)", "&:hover": { color: "#ef4444" } }}>
+                        <CloseIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </Box>
+                  </Box>
+                  <Box sx={{ px: 0.5 }}>
+                    <Slider
+                      value={radius}
+                      onChange={(_, v) => updateBairroRadius(bairro, cidade, v as number)}
+                      min={1} max={30} step={1}
+                      sx={{ color: "#ffcc01", py: 0.8, "& .MuiSlider-thumb": { width: 16, height: 16 }, "& .MuiSlider-rail": { backgroundColor: "rgba(255,255,255,0.1)" } }}
+                    />
+                    <Box sx={{ display: "flex", justifyContent: "space-between", mt: -0.5 }}>
+                      <Typography sx={{ color: "rgba(255,255,255,0.2)", fontSize: "0.62rem" }}>1 km</Typography>
+                      <Typography sx={{ color: "rgba(255,255,255,0.2)", fontSize: "0.62rem" }}>30 km</Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          ) : (
+            <Box sx={{ textAlign: "center", py: 3, border: "1px dashed rgba(255,255,255,0.1)", borderRadius: 2, mb: 1 }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.82rem" }}>Nenhum bairro adicionado ainda</Typography>
             </Box>
           )}
         </Box>
@@ -1056,8 +1233,7 @@ export default function NovaCampanhaPage() {
     professions: ["Agricultor / Fazendeiro", "Empresário", "Comerciante", "Autônomo"],
     location_mode: "cidades",
     location_cidades: [
-      { city: "Ribeirão Preto", radius: 30, lat: -21.1775, lng: -47.8103, maxRadius: 80 },
-      { city: "São Paulo",      radius: 40, lat: -23.5505, lng: -46.6333, maxRadius: 150 },
+      { city: "São Paulo", radius: 40, lat: -23.5505, lng: -46.6333, maxRadius: 150 },
     ],
     start_at: "2026-07-25",
     duration_days: "10",
@@ -1091,12 +1267,17 @@ export default function NovaCampanhaPage() {
       const loc = locationSummary(draft);
       const _lm = draft.location_mode ?? "brasil";
       const _lc = draft.location_cidades ?? [];
+      const _lb = draft.location_bairros ?? [];
       const addrField = _lm === "cidades" && _lc.length > 0
         ? _lc.map((c) => `${c.city} (${c.radius}km)`).join("; ")
-        : loc !== "Todo o Brasil" ? loc : undefined;
+        : _lm === "bairros" && _lb.length > 0
+          ? _lb.map((b) => `${b.bairro}${b.cidade ? `, ${b.cidade}` : ""} (${b.radius}km)`).join("; ")
+          : loc !== "Todo o Brasil" ? loc : undefined;
       const avgRadius = _lm === "cidades" && _lc.length > 0
         ? Math.round(_lc.reduce((s, c) => s + c.radius, 0) / _lc.length)
-        : undefined;
+        : _lm === "bairros" && _lb.length > 0
+          ? Math.round(_lb.reduce((s, b) => s + b.radius, 0) / _lb.length)
+          : undefined;
 
       const payload: CampaignPayload = {
         campaign_name: draft.campaign_name.trim(), ad_type: draft.ad_type,

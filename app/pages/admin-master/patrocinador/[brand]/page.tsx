@@ -15,11 +15,21 @@ import {
   Cancel as CancelIcon,
   AttachMoney as MoneyIcon,
   CalendarToday as CalendarIcon,
+  EmojiEvents as TrophyIcon,
+  Schedule as ScheduleIcon,
+  TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip,
+  ResponsiveContainer, Cell,
+} from "recharts";
 import AdminMasterShell from "@/app/components/AdminMasterShell";
 import {
   BRAND_MOCKS, BRAND_DEFAULT_PHOTO, MOCK_PERFORMANCE,
 } from "@/app/services/campaigns/mockData";
+
+const CHART_GRID_COLOR = "rgba(255,255,255,0.06)";
+const CHART_AXIS_COLOR = "rgba(255,255,255,0.25)";
 import { type Campaign } from "@/app/services/campaigns/campaignService";
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -170,6 +180,29 @@ export default function PatrocinadorDetailPage({ params }: { params: Promise<{ b
   const finished      = campaigns.filter((c) => c.status === "finished").length;
   const pending       = campaigns.filter((c) => c.status === "pending").length;
 
+  // Insights mock — seed baseado no nome da marca
+  const seed = brand.split("").reduce((s, ch) => s + ch.charCodeAt(0), 0);
+  const DOW_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+  const DOW_FULL   = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+  const dowData = DOW_LABELS.map((day, i) => ({
+    day,
+    units: Math.round(140 + Math.sin((i + seed) * 1.1) * 90 + (i === (seed % 7) ? 130 : 0) + (i === 5 ? 60 : 0)),
+  }));
+  const bestDow     = dowData.reduce((b, d) => d.units > b.units ? d : b);
+  const bestDowFull = DOW_FULL[DOW_LABELS.indexOf(bestDow.day)];
+  const hourData = Array.from({ length: 24 }, (_, h) => ({
+    hour: `${String(h).padStart(2, "0")}h`,
+    units: Math.round(
+      15 +
+      (h >= 7  && h <= 9  ? 55 : 0) +
+      (h >= 12 && h <= 14 ? 45 : 0) +
+      (h >= 18 && h <= 22 ? 90 : 0) +
+      Math.abs(Math.sin(h * 0.6 + seed) * 20)
+    ),
+  }));
+  const bestHour    = hourData.reduce((b, h) => h.units > b.units ? h : b);
+  const worstHour   = hourData.reduce((b, h) => h.units < b.units ? h : b);
+
   if (campaigns.length === 0) {
     return (
       <AdminMasterShell>
@@ -228,6 +261,110 @@ export default function PatrocinadorDetailPage({ params }: { params: Promise<{ b
               <Typography sx={{ color: s.color, fontWeight: 800, fontSize: "1.1rem", pl: 0.5 }}>{s.value}</Typography>
             </Paper>
           ))}
+        </Box>
+
+        {/* ── Insights ──────────────────────────────────────────────────────── */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <TrendingUpIcon sx={{ color: "rgba(255,204,1,0.7)", fontSize: 18 }} />
+          <Typography sx={{ color: "rgba(255,255,255,0.6)", fontWeight: 700, fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            Insights de Desempenho
+          </Typography>
+        </Box>
+
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" }, gap: 2, mb: 3 }}>
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(255,204,1,0.07)", border: "1px solid rgba(255,204,1,0.2)", borderRadius: 2.5, p: 2.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <TrophyIcon sx={{ color: "#ffcc01", fontSize: 18 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Melhor dia</Typography>
+            </Box>
+            <Typography sx={{ color: "#ffcc01", fontWeight: 900, fontSize: "1.4rem", lineHeight: 1 }}>{bestDow.day}</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem" }}>{bestDowFull} · {bestDow.units.toLocaleString("pt-BR")} interações</Typography>
+          </Paper>
+
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(99,102,241,0.07)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 2.5, p: 2.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <ScheduleIcon sx={{ color: "#818cf8", fontSize: 18 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Melhor horário</Typography>
+            </Box>
+            <Typography sx={{ color: "#818cf8", fontWeight: 900, fontSize: "1.4rem", lineHeight: 1 }}>{bestHour.hour}</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem" }}>Pico de {bestHour.units.toLocaleString("pt-BR")} interações</Typography>
+          </Paper>
+
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(16,185,129,0.07)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: 2.5, p: 2.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <TrendingUpIcon sx={{ color: "#10b981", fontSize: 18 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Média diária</Typography>
+            </Box>
+            <Typography sx={{ color: "#10b981", fontWeight: 900, fontSize: "1.4rem", lineHeight: 1 }}>
+              {Math.round(dowData.reduce((s, d) => s + d.units, 0) / 7).toLocaleString("pt-BR")}
+            </Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem" }}>interações por dia</Typography>
+          </Paper>
+
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 2.5, p: 2.5, display: "flex", flexDirection: "column", gap: 0.75 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <ScheduleIcon sx={{ color: "#f87171", fontSize: 18 }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>Horário fraco</Typography>
+            </Box>
+            <Typography sx={{ color: "#f87171", fontWeight: 900, fontSize: "1.4rem", lineHeight: 1 }}>{worstHour.hour}</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem" }}>Menor engajamento</Typography>
+          </Paper>
+        </Box>
+
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 3, mb: 5 }}>
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 2.5 }}>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem", mb: 0.4 }}>Desempenho por dia da semana</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", mb: 2 }}>
+              Melhor dia: <Box component="span" sx={{ color: "#ffcc01", fontWeight: 700 }}>{bestDowFull}</Box>
+            </Typography>
+            <Box sx={{ height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dowData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                  <XAxis dataKey="day" tick={{ fill: CHART_AXIS_COLOR, fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: CHART_AXIS_COLOR, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <RechartTooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+                    labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                    itemStyle={{ color: "#fff" }}
+                    formatter={(v) => [Number(v).toLocaleString("pt-BR"), "Interações"]}
+                  />
+                  <Bar dataKey="units" radius={[5, 5, 0, 0]}>
+                    {dowData.map((entry, i) => (
+                      <Cell key={i} fill={entry.day === bestDow.day ? "#ffcc01" : "rgba(255,204,1,0.22)"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
+
+          <Paper elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 2.5 }}>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem", mb: 0.4 }}>Desempenho por horário do dia</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", mb: 2 }}>
+              Pico às <Box component="span" sx={{ color: "#818cf8", fontWeight: 700 }}>{bestHour.hour}</Box>
+            </Typography>
+            <Box sx={{ height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={hourData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} />
+                  <XAxis dataKey="hour" tick={{ fill: CHART_AXIS_COLOR, fontSize: 10 }} axisLine={false} tickLine={false} interval={3} />
+                  <YAxis tick={{ fill: CHART_AXIS_COLOR, fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <RechartTooltip
+                    contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+                    labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                    itemStyle={{ color: "#fff" }}
+                    formatter={(v) => [Number(v).toLocaleString("pt-BR"), "Interações"]}
+                  />
+                  <Bar dataKey="units" radius={[3, 3, 0, 0]}>
+                    {hourData.map((entry, i) => (
+                      <Cell key={i} fill={entry.hour === bestHour.hour ? "#818cf8" : "rgba(99,102,241,0.3)"} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Paper>
         </Box>
 
         {/* Status filter chips */}

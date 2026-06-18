@@ -31,7 +31,7 @@ const STORAGE_KEY = "diverti_payment_payload";
 const MOCK_CARD = {
   id: "card_1",
   last4: "4242",
-  holder: "JULIA COIMBRA",
+  holder: "BRAHMA FINANCEIRO",
   expiry: "08/28",
 };
 
@@ -160,7 +160,7 @@ export default function PagamentoPage() {
     if (!data || !selectedCard) return;
     setPaying(true);
     try {
-      await createCampaign(data.payload);
+      await createCampaign({ ...data.payload, status: "pending" });
       sessionStorage.removeItem(STORAGE_KEY);
       setDone(true);
       setTimeout(() => router.push("/pages/patrocinador/home"), 1800);

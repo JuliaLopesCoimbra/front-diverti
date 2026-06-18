@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Typography, Button, Skeleton } from "@mui/material";
+import { Box, Typography, Button, IconButton, Skeleton } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 
 const pageBackgroundSx = {
   minHeight: "100vh",
@@ -52,6 +53,8 @@ const particleSx = [
   },
 ];
 
+const AD_SECONDS = 5;
+
 function PrizeWinContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -62,6 +65,30 @@ function PrizeWinContent() {
     position: string | null;
     event_id: string | null;
   } | null>(null);
+
+  const [showAd, setShowAd] = useState(false);
+  const [adDestination, setAdDestination] = useState<string>("/pages/user/roulette/cupons");
+  const [countdown, setCountdown] = useState(AD_SECONDS);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const handleShowAd = (destination: string) => {
+    setAdDestination(destination);
+    setShowAd(true);
+    setCountdown(AD_SECONDS);
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current!);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
 
   useEffect(() => {
     const prizeId = params.get("prize_id");
@@ -188,6 +215,7 @@ function PrizeWinContent() {
   }
 
   return (
+    <>
     <Box
       sx={{
         ...pageBackgroundSx,
@@ -371,8 +399,8 @@ function PrizeWinContent() {
             size="large"
             onClick={() =>
               isNoPrizeResult && prize?.event_id
-                ? router.push(`/pages/user/roulette/${prize.event_id}`)
-                : router.push("/pages/user/home?tab=roleta")
+                ? handleShowAd(`/pages/user/roulette/${prize.event_id}`)
+                : handleShowAd("/pages/user/roulette/cupons")
             }
             sx={{
               width: "100%",
@@ -384,9 +412,7 @@ function PrizeWinContent() {
               backgroundColor: "#ffffff",
               color: "#111111",
               boxShadow: "0 10px 24px rgba(0,0,0,0.2)",
-              "&:hover": {
-                backgroundColor: "#e8e8e8",
-              },
+              "&:hover": { backgroundColor: "#e8e8e8" },
             }}
           >
             {isNoPrizeResult ? "Tentar novamente" : "Resgatar cupom"}
@@ -394,18 +420,83 @@ function PrizeWinContent() {
 
           <Button
             onClick={() => router.push("/pages/user/home")}
-            sx={{
-              mt: 1.5,
-              color: "rgba(255,255,255,0.82)",
-              textTransform: "none",
-              fontWeight: 600,
-            }}
+            sx={{ mt: 1.5, color: "rgba(255,255,255,0.82)", textTransform: "none", fontWeight: 600 }}
           >
             Voltar
           </Button>
         </Box>
       </Box>
     </Box>
+
+    {/* ── Overlay de anúncio ── */}
+    {showAd && (
+      <Box
+        sx={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: "#000",
+        }}
+      >
+        <Box
+          component="img"
+          src="/globo/4.png"
+          alt="Anúncio"
+          sx={{
+            width: "100%",
+            height: "100%",
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
+
+        {/* Timer / botão fechar — canto inferior direito */}
+        <Box
+          sx={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+          }}
+        >
+          {countdown > 0 ? (
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: "50%",
+                background: "rgba(0,0,0,0.65)",
+                border: "2px solid rgba(255,255,255,0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1rem", lineHeight: 1 }}>
+                {countdown}
+              </Typography>
+            </Box>
+          ) : (
+            <IconButton
+              onClick={() => router.replace(adDestination)}
+              sx={{
+                width: 44,
+                height: 44,
+                background: "rgba(0,0,0,0.7)",
+                border: "2px solid rgba(255,255,255,0.5)",
+                color: "#fff",
+                "&:hover": { background: "rgba(0,0,0,0.9)" },
+              }}
+            >
+              <CloseIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          )}
+        </Box>
+      </Box>
+    )}
+    </>
   );
 }
 

@@ -32,7 +32,7 @@ export default function UsuariosPage() {
     <AdminMasterShell>
       <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 3, sm: 4 }, pb: 6 }}>
         <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Usuários</Typography>
+          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Patrocinadores</Typography>
           <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>Patrocinadores cadastrados na plataforma</Typography>
         </Box>
 

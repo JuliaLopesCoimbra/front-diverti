@@ -8,8 +8,6 @@ const MOCK_EVENTS = [
   { id: 1, name: "Festa do Peão de Barretos",     city: "Barretos, SP",     date: "2026-08-15", attendees: 180000, status: "upcoming" },
   { id: 2, name: "Rodeio de Americana",            city: "Americana, SP",    date: "2026-07-04", attendees: 95000,  status: "upcoming" },
   { id: 3, name: "Expogran Serra Gaúcha",          city: "Caxias do Sul, RS",date: "2026-09-20", attendees: 60000,  status: "upcoming" },
-  { id: 4, name: "Show Sertanejo Goiânia",         city: "Goiânia, GO",      date: "2026-05-10", attendees: 42000,  status: "finished" },
-  { id: 5, name: "Circuito Sertanejo Ribeirão",    city: "Ribeirão Preto, SP",date: "2026-06-01",attendees: 75000,  status: "finished" },
 ];
 
 const STATUS: Record<string, { label: string; color: string; bg: string }> = {

@@ -264,6 +264,8 @@ export default function AdminMasterHomePage() {
                 <YAxis tick={{ fill: CHART_AXIS, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `R$${v}`} />
                 <RechartTooltip
                   contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+                  labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                  itemStyle={{ color: "#fff" }}
                   formatter={(v) => [`R$ ${Number(v).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`, "Investido"]}
                 />
                 <Bar dataKey="investido" radius={[6, 6, 0, 0]}>
@@ -286,6 +288,8 @@ export default function AdminMasterHomePage() {
                 <YAxis tick={{ fill: CHART_AXIS, fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => v.toLocaleString("pt-BR")} />
                 <RechartTooltip
                   contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+                  labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                  itemStyle={{ color: "#fff" }}
                   formatter={(v) => [Number(v).toLocaleString("pt-BR"), "Interações"]}
                 />
                 <Bar dataKey="interacoes" radius={[6, 6, 0, 0]}>

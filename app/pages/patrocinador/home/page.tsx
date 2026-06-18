@@ -45,7 +45,11 @@ function statusChip(status: string) {
 
 function CampaignCard({ c }: { c: Campaign }) {
   const router = useRouter();
-  const estimated = (c.budget_value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const perf = MOCK_PERFORMANCE[c.id] ?? [];
+  const totalUnits = perf.reduce((s, d) => s + d.units, 0);
+  const totalGasto = perf.reduce((s, d) => s + d.gasto, 0);
+  // Campanhas reais sem dados de performance ainda: exibir o orçamento contratado
+  const displayGasto = totalGasto > 0 ? totalGasto : (c.budget_value ?? 0);
   const created = new Date(c.created_at).toLocaleDateString("pt-BR");
   const isVideo = c.creative_url ? /\.(mp4|mov|webm)$/i.test(c.creative_url) : false;
 
@@ -106,15 +110,17 @@ function CampaignCard({ c }: { c: Campaign }) {
         <Box sx={{ display: "flex", gap: 3 }}>
           <Box>
             <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", mb: 0.2 }}>
-              {c.ad_type === "CPC" ? "Cliques alvo" : "Views alvo"}
+              {c.ad_type === "CPC" ? "Cliques" : "Views"}
             </Typography>
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>
-              {c.target_units.toLocaleString("pt-BR")}
+              {totalUnits.toLocaleString("pt-BR")}
             </Typography>
           </Box>
           <Box>
-            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", mb: 0.2 }}>Investimento</Typography>
-            <Typography sx={{ color: "#ffcc01", fontWeight: 700, fontSize: "0.88rem" }}>R$ {estimated}</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.68rem", mb: 0.2 }}>Investido</Typography>
+            <Typography sx={{ color: "#ffcc01", fontWeight: 700, fontSize: "0.88rem" }}>
+              R$ {displayGasto.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </Typography>
           </Box>
           {c.duration_days && (
             <Box>
@@ -226,7 +232,10 @@ export default function PatrocinadorHomePage() {
             .filter((r) => r.interações > 0);
 
           // Summary numbers
-          const totalInvested = campaigns.reduce((s, c) => s + (c.budget_value ?? 0), 0);
+          const totalInvested = campaigns.reduce((s, c) => {
+            const gasto = (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.gasto, 0);
+            return s + (gasto > 0 ? gasto : (c.budget_value ?? 0));
+          }, 0);
           const totalUnits    = campaigns.reduce((s, c) => s + (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.units, 0), 0);
           const activeCnt     = campaigns.filter((c) => c.status === "active").length;
           const avgProgress   = campaigns.length > 0

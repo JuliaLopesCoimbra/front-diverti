@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { spinRoulette } from "@/app/services/roulette/rouletteService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
+import { saveWonCoupon } from "@/app/utils/rouletteHistory";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -120,9 +121,9 @@ export default function Roulette() {
       setRotation(newRotation);
 
       const landedSegment = WHEEL_SEGMENTS[segIndex];
+      if (!isTryAgain) saveWonCoupon(landedSegment.name);
       setTimeout(() => {
         setTransitioning(false);
-        setSpinning(false);
         const p = new URLSearchParams({
           prize_id: landedSegment.id.toString(),
           prize_name: landedSegment.name,
@@ -233,9 +234,9 @@ export default function Roulette() {
           zIndex: 1,
         }}
       >
-        Gire e ganhe um{" "}
+        Gire e teste sua{" "}
         <Box component="span" sx={{ color: "#FFD700" }}>
-          brinde exclusivo!
+          sorte!
         </Box>
       </Typography>
 

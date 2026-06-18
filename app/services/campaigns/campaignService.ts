@@ -21,6 +21,7 @@ export interface CampaignPayload {
   radius_km?: number;
   location_lat?: number;
   location_lng?: number;
+  status?: string;
 }
 
 export interface Campaign {
