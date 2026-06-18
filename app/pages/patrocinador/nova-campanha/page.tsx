@@ -434,7 +434,7 @@ interface NominatimResult {
   place_id: number; display_name: string; lat: string; lon: string;
   type: string; class: string;
   boundingbox?: [string, string, string, string]; // [s_lat, n_lat, w_lon, e_lon]
-  address: { city?: string; town?: string; village?: string; municipality?: string; state?: string; country?: string; };
+  address: { city?: string; town?: string; village?: string; municipality?: string; state?: string; country?: string; suburb?: string; neighbourhood?: string; quarter?: string; };
 }
 
 function calcCityMaxRadius(result: NominatimResult): number {
@@ -925,6 +925,7 @@ function Step4({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
           regioes={location_regioes}
           estados={location_estados}
           cidades={location_cidades}
+          bairros={location_bairros}
         />
       </Box>
     </Box>

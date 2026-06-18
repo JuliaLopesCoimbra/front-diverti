@@ -46,13 +46,15 @@ export const REGIAO_RADIUS_M: Record<string, number> = {
 };
 
 export interface CityRadius { city: string; radius: number; lat?: number; lng?: number; maxRadius?: number; }
-type LocationMode = "brasil" | "regioes" | "estados" | "cidades";
+export interface BairroEntry { bairro: string; cidade: string; radius: number; lat?: number; lng?: number; }
+type LocationMode = "brasil" | "regioes" | "estados" | "cidades" | "bairros";
 
 interface Props {
   mode: LocationMode;
   regioes: string[];
   estados: string[];
   cidades: CityRadius[];
+  bairros?: BairroEntry[];
 }
 
 // Carrega Leaflet do CDN e retorna o objeto L global
@@ -86,7 +88,7 @@ function loadLeaflet(): Promise<unknown> {
   });
 }
 
-export default function LocationMap({ mode, regioes, estados, cidades }: Props) {
+export default function LocationMap({ mode, regioes, estados, cidades, bairros = [] }: Props) {
   const containerRef  = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef        = useRef<any>(null);
@@ -175,7 +177,28 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
       } else if (centers.length > 0) { map.setView(centers[0], 10); }
       else { map.setView([-15, -52], 4); }
     }
-  }, [mode, regioes, estados, cidades]);
+
+    if (mode === "bairros") {
+      const allPts: [number, number][] = [], centers: [number, number][] = [];
+      bairros.forEach(({ bairro, cidade, radius, lat, lng }) => {
+        if (lat == null || lng == null) return;
+        const pos: [number, number] = [lat, lng];
+        const r_m = radius * 1000;
+        L.circle(pos, { radius: r_m, color: yellow, fillColor: yellow, fillOpacity: 0.18, weight: 2 }).addTo(lg);
+        L.circleMarker(pos, { radius: 6, color: yellow, fillColor: "#fff", fillOpacity: 1, weight: 2 })
+          .bindTooltip(`<b>${bairro}</b>${cidade ? `<br>${cidade}` : ""}<br>${radius} km`, { direction: "top" }).addTo(lg);
+        centers.push(pos);
+        const deg = r_m / 111_320, degLng = deg / Math.cos((lat * Math.PI) / 180);
+        allPts.push([lat + deg, lng], [lat - deg, lng], [lat, lng + degLng], [lat, lng - degLng]);
+      });
+      if (allPts.length > 0) {
+        const maxRadius = Math.max(...bairros.filter(b => b.lat != null).map(b => b.radius));
+        const maxZoom = maxRadius <= 3 ? 14 : maxRadius <= 10 ? 13 : maxRadius <= 20 ? 12 : 11;
+        map.fitBounds(L.latLngBounds(allPts).pad(0.3), { maxZoom });
+      } else if (centers.length > 0) { map.setView(centers[0], 13); }
+      else { map.setView([-15, -52], 4); }
+    }
+  }, [mode, regioes, estados, cidades, bairros]);
 
   return (
     <div style={{ position: "relative" }}>
