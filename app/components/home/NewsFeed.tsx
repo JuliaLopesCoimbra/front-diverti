@@ -15,6 +15,13 @@ import { useFeedCache } from "@/app/context/FeedCacheContext";
 import { getEventNews, NewsResponse } from "@/app/services/news/newsService";
 import { EventResponse } from "@/app/services/events/eventAppService";
 import EmptyNews from "./EmptyNews";
+
+const SPONSOR_ADS = [
+  "/brahma/1.png", "/brahma/2.png", "/brahma/3.png", "/brahma/4.png", "/brahma/5.png",
+  "/sicoob/1.png", "/sicoob/2.png", "/sicoob/3.png", "/sicoob/4.png", "/sicoob/5.png",
+  "/globo/1.png",  "/globo/2.png",  "/globo/3.png",  "/globo/4.png",  "/globo/5.png",
+  "/ballantines/1.png", "/ballantines/2.png", "/ballantines/3.png", "/ballantines/4.png", "/ballantines/5.png",
+];
 import { useRouter } from "next/navigation";
 import PendingPostsNotification from "@/app/components/admin/pending-posts/PendingPostsNotification";
 
@@ -56,21 +63,21 @@ function formatDate(dateString: string): string {
 }
 
 export default function NewsFeed({ eventId, event }: Props) {
-  const { isAdminMaster, isSubadmin, authVersion } = useAuth();
+  const { isAdminMaster, isAdmin, authVersion } = useAuth();
   const router = useRouter();
-  
+
   const { getCache, setCache } = useFeedCache();
   const cacheKey = `feed-event-${eventId}`;
   const [initialized, setInitialized] = useState(false);
-  
+
   const [news, setNews] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const loaderRef = useRef<HTMLDivElement | null>(null);
-  
-  const canApprovePosts = isAdminMaster || isSubadmin;
+
+  const canApprovePosts = isAdminMaster || isAdmin;
   const isEventActive = event ? event.is_active === true : true;
 
   const loadNews = async (reset = false) => {
@@ -376,8 +383,21 @@ export default function NewsFeed({ eventId, event }: Props) {
 
       {news.length > 0 && (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {news.map((item) => (
-            <PostCard key={item.id} item={item} onPress={() => handleNewsClick(item)} />
+          {news.map((item, index) => (
+            <Box key={item.id} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <PostCard item={item} onPress={() => handleNewsClick(item)} />
+              <Box
+                component="img"
+                src={SPONSOR_ADS[index % SPONSOR_ADS.length]}
+                alt="Anúncio"
+                sx={{
+                  width: "100%",
+                  borderRadius: "18px",
+                  display: "block",
+                  objectFit: "cover",
+                }}
+              />
+            </Box>
           ))}
 
           {loading && Array.from({ length: 2 }).map((_, i) => <PostSkeleton key={`sk-${i}`} />)}

@@ -16,7 +16,7 @@ import { Block, CheckCircle } from "@mui/icons-material";
 
 interface ConfirmAction {
   type: "revoke" | "reactivate";
-  userType: "subadmin" | "colunista" | "user";
+  userType: "admin" | "patrocinador" | "user";
   userId: number;
   userName: string;
 }

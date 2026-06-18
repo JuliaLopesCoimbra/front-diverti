@@ -51,7 +51,7 @@ export default function NewsDetailModal({
   onClose,
   onUpdate,
 }: Props) {
-  const { isAuthenticated, isAdmin, isColunista, canCreatePost } = useAuth();
+  const { isAuthenticated, isAdmin, isPatrocinador, canCreatePost } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -275,7 +275,7 @@ export default function NewsDetailModal({
             <Box display="flex" alignItems="center" gap={1}>
               {/* Botões de editar/excluir apenas para autor (admin ou colunista) */}
               {/* Colunistas não podem editar/excluir posts rejeitados (desativados) */}
-              {isAuthor && (isAdmin || (isColunista && news?.status !== "rejected")) && (
+              {isAuthor && (isAdmin || (isPatrocinador && news?.status !== "rejected")) && (
                 <>
                   <IconButton
                     onClick={() => setEditModalOpen(true)}

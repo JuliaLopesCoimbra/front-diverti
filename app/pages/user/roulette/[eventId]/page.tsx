@@ -3,10 +3,7 @@
 import { Box, Button, Skeleton, Typography } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  getPrizesByEvent,
-  spinRoulette,
-} from "@/app/services/roulette/rouletteService";
+import { spinRoulette } from "@/app/services/roulette/rouletteService";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -17,35 +14,26 @@ const RADIUS = 215;
 const SPIN_MS = 4000;
 const LOGO_R = 28;
 
+// 7 fatias fixas: 5 patrocinadores + 2 "Tente novamente"
+const WHEEL_SEGMENTS: Segment[] = [
+  { id: -1, name: "Brahma",           image_url: "/ads/2.png" },
+  { id: -6, name: "Tente novamente",  image_url: null },
+  { id: -2, name: "Sicoob",           image_url: "/ads/3.png" },
+  { id: -3, name: "Volkswagen",       image_url: "/ads/4.png" },
+  { id: -7, name: "Tente novamente",  image_url: null },
+  { id: -4, name: "Ballantines",      image_url: "/ads/5.png" },
+  { id: -5, name: "Globo",            image_url: "/ads/1.png" },
+];
+
 const SEG_COLORS = [
-  "#c62828",
-  "#e65100",
-  "#f9a825",
-  "#2e7d32",
-  "#1565c0",
-  "#6a1b9a",
-  "#00695c",
-  "#1a1a2e",
+  "#f59e0b", // Brahma
+  "#374151", // Tente novamente
+  "#10b981", // Sicoob
+  "#6366f1", // Volkswagen
+  "#1f2937", // Tente novamente
+  "#ec4899", // Ballantines
+  "#3b82f6", // Globo
 ];
-
-const PRIZE_IMAGES: { keys: string[]; image: string }[] = [
-  { keys: ["coca"],                       image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg" },
-  { keys: ["fiat"],                       image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp" },
-  { keys: ["sprite"],                     image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg" },
-  { keys: ["balatines", "ballantines"],   image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png" },
-  { keys: ["vivo"],                       image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg" },
-  { keys: ["samsung"],                    image: "https://t2.tudocdn.net/507931?w=1920" },
-  { keys: ["volkswagen", "volks", "vw"],  image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg" },
-];
-
-function getPrizeImage(name: string, backendImage?: string | null): string | null {
-  if (backendImage) return backendImage;
-  const lower = name.toLowerCase();
-  for (const { keys, image } of PRIZE_IMAGES) {
-    if (keys.some((k) => lower.includes(k))) return image;
-  }
-  return null;
-}
 
 // ── SVG helpers ───────────────────────────────────────────────────────────────
 
@@ -82,57 +70,9 @@ export default function Roulette() {
   const eventId = Number(params.eventId);
 
   useEffect(() => {
-    if (!eventId) return;
-    const load = async () => {
-      try {
-        const data = await getPrizesByEvent(eventId);
-        const filtered = data
-          .filter(
-            (p) =>
-              p.is_active &&
-              !p.name.trim().toLowerCase().includes("não foi") &&
-              !p.name.trim().toLowerCase().includes("nao foi") &&
-              !p.name.trim().toLowerCase().includes("tente novamente"),
-          )
-          .sort((a, b) => a.position - b.position);
-
-        const seenBrand = new Set<string>();
-        const unique = filtered.filter((p) => {
-          const lower = p.name.toLowerCase();
-          const brand = PRIZE_IMAGES.find(({ keys }) => keys.some((k) => lower.includes(k)));
-          if (!brand) return false;
-          if (seenBrand.has(brand.keys[0])) return false;
-          seenBrand.add(brand.keys[0]);
-          return true;
-        });
-
-        const fiatIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("fiat"));
-        const samsungIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("samsung"));
-        if (fiatIdx >= 0 && samsungIdx >= 0) {
-          [unique[fiatIdx], unique[samsungIdx]] = [unique[samsungIdx], unique[fiatIdx]];
-        }
-
-        const vivoIdx = unique.findIndex((p) => p.name.trim().toLowerCase().includes("vivo"));
-        const volksIdx = unique.findIndex((p) => {
-          const n = p.name.trim().toLowerCase();
-          return n.includes("volkswagen") || n.includes("volks") || n.includes("vw");
-        });
-        if (vivoIdx >= 0 && volksIdx >= 0) {
-          [unique[vivoIdx], unique[volksIdx]] = [unique[volksIdx], unique[vivoIdx]];
-        }
-
-        setSegments([
-          ...unique.slice(0, 7).map((p) => ({ id: p.id, name: p.name, image_url: getPrizeImage(p.name, p.image_url) })),
-          { id: -1, name: "Tente novamente", image_url: null },
-        ]);
-      } catch {
-        setError("Erro ao carregar roleta. Tente novamente.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [eventId]);
+    setSegments(WHEEL_SEGMENTS);
+    setLoading(false);
+  }, []);
 
   const handleSpin = async () => {
     if (spinning || segments.length === 0) return;
@@ -147,17 +87,27 @@ export default function Roulette() {
         String(Number(sessionStorage.getItem(countKey) ?? "0") + 1),
       );
 
+      const prizeName = result.prize.name.trim().toLowerCase();
       const isTryAgain =
-        result.prize.name.trim().toLowerCase().includes("não foi") ||
-        result.prize.name.trim().toLowerCase().includes("nao foi") ||
-        result.prize.name.trim().toLowerCase().includes("tente novamente");
+        prizeName.includes("não foi") ||
+        prizeName.includes("nao foi") ||
+        prizeName.includes("tente novamente");
 
-      const foundIdx = segments.findIndex((s) => s.id === result.prize.id);
-      const segIndex = isTryAgain
-        ? segments.length - 1
-        : foundIdx >= 0
-        ? foundIdx
-        : 0;
+      // "Tente novamente" slices are at indices 1 and 4 in WHEEL_SEGMENTS
+      const TRY_AGAIN_INDICES = [1, 4];
+      // Sponsor slices are at indices 0, 2, 3, 5, 6
+      const SPONSOR_MAP: Record<string, number> = {
+        brahma: 0, sicoob: 2, volkswagen: 3, volks: 3, vw: 3,
+        ballantines: 5, globo: 6,
+      };
+
+      let segIndex: number;
+      if (isTryAgain) {
+        segIndex = TRY_AGAIN_INDICES[result.prize.id % 2 === 0 ? 0 : 1];
+      } else {
+        const matchedKey = Object.keys(SPONSOR_MAP).find((k) => prizeName.includes(k));
+        segIndex = matchedKey !== undefined ? SPONSOR_MAP[matchedKey] : 0;
+      }
 
       const SEG_ANGLE = 360 / segments.length;
       const segCenterAngle = segIndex * SEG_ANGLE + SEG_ANGLE / 2;
@@ -169,16 +119,17 @@ export default function Roulette() {
       setTransitioning(true);
       setRotation(newRotation);
 
+      const landedSegment = WHEEL_SEGMENTS[segIndex];
       setTimeout(() => {
         setTransitioning(false);
         setSpinning(false);
         const p = new URLSearchParams({
-          prize_id: result.prize.id.toString(),
-          prize_name: result.prize.name,
-          prize_position: result.prize.position.toString(),
+          prize_id: landedSegment.id.toString(),
+          prize_name: landedSegment.name,
+          prize_position: segIndex.toString(),
           event_id: eventId.toString(),
         });
-        if (result.prize.image_url) p.append("prize_image", result.prize.image_url);
+        if (landedSegment.image_url) p.append("prize_image", landedSegment.image_url);
         router.push(`/pages/user/roulette/prize/prize-win?${p.toString()}`);
       }, SPIN_MS + 1200);
     } catch {
@@ -375,7 +326,7 @@ export default function Roulette() {
               const start = i * SEG_ANGLE;
               const end = (i + 1) * SEG_ANGLE;
               const mid = start + SEG_ANGLE / 2;
-              const isTryAgain = seg.id === -1;
+              const isTryAgain = !seg.image_url;
               const { x: tx, y: ty } = toCart(mid, RADIUS * 0.61);
               const textRot = mid > 90 && mid < 270 ? mid - 180 : mid;
               const segColor = SEG_COLORS[i % SEG_COLORS.length];

@@ -24,11 +24,11 @@ export interface UserResponse {
   invited_by: UserInfo | null;
   deactivated_by_id: number | null;
   deactivated_by: UserInfo | null;
-  deactivated_at: string | null; // ISO datetime string
+  deactivated_at: string | null;
   reactivated_by_id: number | null;
   reactivated_by: UserInfo | null;
-  reactivated_at: string | null; // ISO datetime string
-  created_at: string; // ISO datetime string
+  reactivated_at: string | null;
+  created_at: string;
   is_email_verified: boolean;
 }
 
@@ -42,29 +42,14 @@ interface ResendAdminInviteData {
 }
 
 // ---------------------------
-// INVITE ADMIN
+// INVITE ADMIN (legacy - cria admin direto)
 // ---------------------------
 export const inviteAdmin = async (data: InviteAdminData): Promise<void> => {
   try {
     await api.post("/auth/invite-admin", data);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao convidar administrador";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao convidar administrador");
   }
 };
 
@@ -75,160 +60,68 @@ export const firstAccess = async (data: FirstAccessData): Promise<void> => {
   try {
     await api.post("/auth/first-access", data);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao definir senha";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao definir senha");
   }
 };
 
 // ---------------------------
 // RESEND ADMIN INVITE
 // ---------------------------
-export const resendAdminInvite = async (
-  data: ResendAdminInviteData
-): Promise<void> => {
+export const resendAdminInvite = async (data: ResendAdminInviteData): Promise<void> => {
   try {
     await api.post("/auth/resend-admin-invite", data);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao reenviar convite";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao reenviar convite");
   }
 };
 
 // ---------------------------
-// INVITE SUBADMIN
+// INVITE ADMIN USER (convida um novo admin)
 // ---------------------------
-export const inviteSubadmin = async (data: InviteAdminData): Promise<void> => {
+export const inviteAdminUser = async (data: InviteAdminData): Promise<void> => {
   try {
-    await api.post("/auth/invite-subadmin", data);
+    await api.post("/auth/invite-admin-user", data);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao convidar admin";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao convidar admin");
   }
 };
 
 // ---------------------------
-// INVITE COLUNISTA
+// INVITE PATROCINADOR
 // ---------------------------
-export const inviteColunista = async (data: InviteAdminData): Promise<void> => {
+export const invitePatrocinador = async (data: InviteAdminData): Promise<void> => {
   try {
-    await api.post("/auth/invite-colunista", data);
+    await api.post("/auth/invite-patrocinador", data);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao convidar colunista";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao convidar patrocinador");
   }
 };
 
 // ---------------------------
-// REVOKE COLUNISTA ACCESS
+// REVOKE PATROCINADOR ACCESS
 // ---------------------------
-export const revokeColunistaAccess = async (colunistaId: number): Promise<void> => {
+export const revokePatrocinadorAccess = async (patrocinadorId: number): Promise<void> => {
   try {
-    await api.post(`/auth/revoke-colunista/${colunistaId}`);
+    await api.post(`/auth/revoke-patrocinador/${patrocinadorId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao revogar acesso do colunista";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao revogar acesso do patrocinador");
   }
 };
 
 // ---------------------------
-// REVOKE SUBADMIN ACCESS
+// REVOKE ADMIN ACCESS
 // ---------------------------
-export const revokeSubadminAccess = async (subadminId: number): Promise<void> => {
+export const revokeAdminAccess = async (adminId: number): Promise<void> => {
   try {
-    await api.post(`/auth/revoke-subadmin/${subadminId}`);
+    await api.post(`/auth/revoke-admin/${adminId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao revogar acesso do subadmin";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao revogar acesso do admin");
   }
 };
 
@@ -239,77 +132,32 @@ export const revokeUserAccess = async (userId: number): Promise<void> => {
   try {
     await api.post(`/auth/revoke-user/${userId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao revogar acesso do usuário";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao revogar acesso do usuário");
   }
 };
 
 // ---------------------------
-// REACTIVATE COLUNISTA ACCESS
+// REACTIVATE PATROCINADOR ACCESS
 // ---------------------------
-export const reactivateColunistaAccess = async (colunistaId: number): Promise<void> => {
+export const reactivatePatrocinadorAccess = async (patrocinadorId: number): Promise<void> => {
   try {
-    await api.post(`/auth/reactivate-colunista/${colunistaId}`);
+    await api.post(`/auth/reactivate-patrocinador/${patrocinadorId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao reativar acesso do colunista";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao reativar acesso do patrocinador");
   }
 };
 
 // ---------------------------
-// REACTIVATE SUBADMIN ACCESS
+// REACTIVATE ADMIN ACCESS
 // ---------------------------
-export const reactivateSubadminAccess = async (subadminId: number): Promise<void> => {
+export const reactivateAdminAccess = async (adminId: number): Promise<void> => {
   try {
-    await api.post(`/auth/reactivate-subadmin/${subadminId}`);
+    await api.post(`/auth/reactivate-admin/${adminId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao reativar acesso do subadmin";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao reativar acesso do admin");
   }
 };
 
@@ -320,113 +168,49 @@ export const reactivateUserAccess = async (userId: number): Promise<void> => {
   try {
     await api.post(`/auth/reactivate-user/${userId}`);
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao reativar acesso do usuário";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao reativar acesso do usuário");
   }
 };
 
 // ---------------------------
-// LIST USERS
+// LIST ADMINS
 // ---------------------------
-export const listSubadmins = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
+export const listAdmins = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params: any = {};
+    const params: Record<string, number> = {};
     if (limit !== undefined) params.limit = limit;
     if (offset !== undefined) params.offset = offset;
-    
-    const response = await api.get<UserResponse[]>("/auth/subadmins", { params });
+    const response = await api.get<UserResponse[]>("/auth/admins", { params });
     return response.data;
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao listar subadmins";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao listar admins");
   }
 };
 
-export const listColunistas = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
+export const listPatrocinadores = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params: any = {};
+    const params: Record<string, number> = {};
     if (limit !== undefined) params.limit = limit;
     if (offset !== undefined) params.offset = offset;
-    
-    const response = await api.get<UserResponse[]>("/auth/colunistas", { params });
+    const response = await api.get<UserResponse[]>("/auth/patrocinadores", { params });
     return response.data;
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao listar colunistas";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao listar patrocinadores");
   }
 };
 
 export const listUsers = async (limit?: number, offset?: number): Promise<UserResponse[]> => {
   try {
-    const params: any = {};
+    const params: Record<string, number> = {};
     if (limit !== undefined) params.limit = limit;
     if (offset !== undefined) params.offset = offset;
-    
     const response = await api.get<UserResponse[]>("/auth/users", { params });
     return response.data;
   } catch (error: unknown) {
-    const err = error as {
-      response?: {
-        data?: {
-          detail?: string;
-          message?: string;
-        };
-      };
-      message?: string;
-    };
-
-    const message =
-      err.response?.data?.detail ||
-      err.response?.data?.message ||
-      err.message ||
-      "Erro ao listar usuários";
-
-    throw new Error(message);
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao listar usuários");
   }
 };
-

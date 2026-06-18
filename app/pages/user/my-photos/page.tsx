@@ -19,7 +19,7 @@ const STORAGE_KEY = "circuito_selectedEventId";
 
 export default function MyPhotosPage() {
   const router = useRouter();
-  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin, isColunista } = useAuth();
+  const { isAuthenticated, isAdmin, isAdminMaster, isPatrocinador } = useAuth();
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [currentEvent, setCurrentEvent] = useState<EventResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function MyPhotosPage() {
   const [shouldAnimate, setShouldAnimate] = useState(true);
   
   // Para usuários comuns, sempre mostrar fotos diretamente
-  const isRegularUser = !isAdminMaster && !isSubadmin && !isColunista;
+  const isRegularUser = !isAdminMaster && !isAdmin && !isPatrocinador;
 
   // Função para atualizar o evento atual baseado no localStorage
   const updateCurrentEventFromStorage = useCallback((eventsList: EventResponse[]) => {
@@ -74,7 +74,7 @@ export default function MyPhotosPage() {
             localStorage.removeItem(STORAGE_KEY);
           }
         }
-        // Se o evento atual foi desativado e o usuário NÃO é admin/subadmin, troca para um ativo
+        // Se o evento atual foi desativado e o usuário NÃO é admin, troca para um ativo
         else if (!updatedEvent.is_active && !isAdmin) {
           const activeEvent = data.find((event) => event.is_active);
           if (activeEvent) {
@@ -171,7 +171,7 @@ export default function MyPhotosPage() {
       );
     }
 
-    // Admin, subadmin e colunistas veem menu ou conteúdo específico
+    // Admin e patrocinadores veem menu ou conteúdo específico
     switch (viewMode) {
       case "menu":
         return (

@@ -5,13 +5,13 @@ import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
 import {
-  inviteSubadmin,
-  inviteColunista,
-  revokeSubadminAccess,
-  revokeColunistaAccess,
+  inviteAdminUser,
+  invitePatrocinador,
+  revokeAdminAccess,
+  revokePatrocinadorAccess,
   revokeUserAccess,
-  reactivateSubadminAccess,
-  reactivateColunistaAccess,
+  reactivateAdminAccess,
+  reactivatePatrocinadorAccess,
   reactivateUserAccess,
 } from "@/app/services/auth/authAdminService";
 import PermissionsHeader from "@/app/components/admin/permissions/PermissionsHeader";
@@ -26,7 +26,7 @@ import SearchBar from "@/app/components/admin/permissions/SearchBar";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 
 export default function PermissionsPage() {
-  const { isAdminMaster, isSubadmin, authReady } = useAuth();
+  const { isAdminMaster, isAdmin, authReady } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -37,7 +37,7 @@ export default function PermissionsPage() {
 
   // Modais
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
-  const [inviteType, setInviteType] = useState<"subadmin" | "colunista">("colunista");
+  const [inviteType, setInviteType] = useState<"admin" | "patrocinador">("patrocinador");
   const [inviteName, setInviteName] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -45,7 +45,7 @@ export default function PermissionsPage() {
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState<{
     type: "revoke" | "reactivate";
-    userType: "subadmin" | "colunista" | "user";
+    userType: "admin" | "patrocinador" | "user";
     userId: number;
     userName: string;
   } | null>(null);
@@ -53,11 +53,11 @@ export default function PermissionsPage() {
 
   // Hooks devem ser chamados antes de qualquer return condicional
   useEffect(() => {
-    if (!isAdminMaster && !isSubadmin) {
+    if (!isAdminMaster && !isAdmin) {
       router.push("/pages/user/home");
       return;
     }
-  }, [isAdminMaster, isSubadmin, router]);
+  }, [isAdminMaster, isAdmin, router]);
 
   // Controla animações quando a página carrega ou tab muda
   useEffect(() => {
@@ -93,12 +93,12 @@ export default function PermissionsPage() {
 
     setInviteLoading(true);
     try {
-      if (inviteType === "subadmin") {
-        await inviteSubadmin({ name: inviteName.trim(), email: inviteEmail.trim() });
-        showToast("Subadmin convidado com sucesso!", "success");
+      if (inviteType === "admin") {
+        await inviteAdminUser({ name: inviteName.trim(), email: inviteEmail.trim() });
+        showToast("Admin convidado com sucesso!", "success");
       } else {
-        await inviteColunista({ name: inviteName.trim(), email: inviteEmail.trim() });
-        showToast("Colunista convidado com sucesso!", "success");
+        await invitePatrocinador({ name: inviteName.trim(), email: inviteEmail.trim() });
+        showToast("Patrocinador convidado com sucesso!", "success");
       }
       setInviteModalOpen(false);
       setInviteName("");
@@ -114,12 +114,12 @@ export default function PermissionsPage() {
     }
   };
 
-  const handleRevoke = (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => {
+  const handleRevoke = (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => {
     setConfirmAction({ type: "revoke", userType, userId, userName });
     setConfirmModalOpen(true);
   };
 
-  const handleReactivate = (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => {
+  const handleReactivate = (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => {
     setConfirmAction({ type: "reactivate", userType, userId, userName });
     setConfirmModalOpen(true);
   };
@@ -130,23 +130,23 @@ export default function PermissionsPage() {
     setConfirmLoading(true);
     try {
       if (confirmAction.type === "revoke") {
-        if (confirmAction.userType === "subadmin") {
-          await revokeSubadminAccess(confirmAction.userId);
-          showToast("Acesso do subadmin revogado com sucesso!", "success");
-        } else if (confirmAction.userType === "colunista") {
-          await revokeColunistaAccess(confirmAction.userId);
-          showToast("Acesso do colunista revogado com sucesso!", "success");
+        if (confirmAction.userType === "admin") {
+          await revokeAdminAccess(confirmAction.userId);
+          showToast("Acesso do admin revogado com sucesso!", "success");
+        } else if (confirmAction.userType === "patrocinador") {
+          await revokePatrocinadorAccess(confirmAction.userId);
+          showToast("Acesso do patrocinador revogado com sucesso!", "success");
         } else {
           await revokeUserAccess(confirmAction.userId);
           showToast("Acesso do usuário revogado com sucesso!", "success");
         }
       } else {
-        if (confirmAction.userType === "subadmin") {
-          await reactivateSubadminAccess(confirmAction.userId);
-          showToast("Acesso do subadmin reativado com sucesso!", "success");
-        } else if (confirmAction.userType === "colunista") {
-          await reactivateColunistaAccess(confirmAction.userId);
-          showToast("Acesso do colunista reativado com sucesso!", "success");
+        if (confirmAction.userType === "admin") {
+          await reactivateAdminAccess(confirmAction.userId);
+          showToast("Acesso do admin reativado com sucesso!", "success");
+        } else if (confirmAction.userType === "patrocinador") {
+          await reactivatePatrocinadorAccess(confirmAction.userId);
+          showToast("Acesso do patrocinador reativado com sucesso!", "success");
         } else {
           await reactivateUserAccess(confirmAction.userId);
           showToast("Acesso do usuário reativado com sucesso!", "success");
@@ -213,7 +213,7 @@ export default function PermissionsPage() {
             <TabPanel value={tabValue} index={0}>
               <SubadminsTab
                 onAddClick={() => {
-                  setInviteType("subadmin");
+                  setInviteType("admin");
                   setInviteModalOpen(true);
                 }}
                 onRevoke={handleRevoke}
@@ -230,7 +230,7 @@ export default function PermissionsPage() {
           <TabPanel value={tabValue} index={isAdminMaster ? 1 : 0}>
             <ColunistasTab
               onAddClick={() => {
-                setInviteType("colunista");
+                setInviteType("patrocinador");
                 setInviteModalOpen(true);
               }}
               onRevoke={handleRevoke}

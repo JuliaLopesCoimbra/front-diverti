@@ -57,7 +57,7 @@ export default function NewsDetailPage() {
   const newsId = Number(params.newsId);
   const eventIdParam = searchParams.get("eventId");
   const eventId = eventIdParam ? parseInt(eventIdParam, 10) : null;
-  const { isAuthenticated, isAdmin, isAdminMaster, isSubadmin, isColunista, canCreatePost } = useAuth();
+  const { isAuthenticated, isAdmin, isAdminMaster, isPatrocinador, canCreatePost } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -931,15 +931,14 @@ export default function NewsDetailPage() {
         isAuthor={isAuthor}
         isAdmin={isAdmin}
         isAdminMaster={isAdminMaster}
-        isSubadmin={isSubadmin}
-        isColunista={isColunista}
+        isPatrocinador={isPatrocinador}
         canDelete={Boolean(
-          (isAuthor && (isAdmin || (isColunista && news?.status !== "rejected"))) || 
-          ((isAdminMaster || isSubadmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
-          // Admin e subadmin podem excluir posts rejeitados
-          ((isAdminMaster || isSubadmin) && news?.status === "rejected")
+          (isAuthor && (isAdmin || (isPatrocinador && news?.status !== "rejected"))) ||
+          ((isAdminMaster || isAdmin) && news && news.author && news.approved_by_id && news.approved_by_id === news.author.id) ||
+          // Admin pode excluir posts rejeitados
+          ((isAdminMaster || isAdmin) && news?.status === "rejected")
         )}
-        canDeactivate={Boolean((isAdminMaster || isSubadmin) && news?.status !== "rejected")}
+        canDeactivate={Boolean((isAdminMaster || isAdmin) && news?.status !== "rejected")}
         onDelete={() => setDeleteModalOpen(true)}
         onDeactivate={() => setDeactivateModalOpen(true)}
         deleting={deleting}
@@ -990,7 +989,7 @@ export default function NewsDetailPage() {
             news={news}
             isAuthenticated={isAuthenticated}
             isAdminMaster={isAdminMaster}
-            isSubadmin={isSubadmin}
+            isAdmin={isAdmin}
             currentUser={currentUser}
             commentText={commentText}
             submittingComment={submittingComment}
@@ -1030,7 +1029,7 @@ export default function NewsDetailPage() {
       </Box>
 
       {/* Botão de reativar para posts rejeitados (apenas admin/subadmin) - no final da página */}
-      {news.status === "rejected" && (isAdminMaster || isSubadmin) && (
+      {news.status === "rejected" && (isAdminMaster || isAdmin) && (
         <Box
           sx={{
             px: 2,

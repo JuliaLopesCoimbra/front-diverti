@@ -13,8 +13,7 @@ interface NewsActionsProps {
   isAuthor: boolean;
   isAdmin: boolean;
   isAdminMaster: boolean;
-  isSubadmin: boolean;
-  isColunista: boolean;
+  isPatrocinador: boolean;
   canDelete: boolean;
   canDeactivate: boolean;
   onDelete: () => void;
@@ -30,8 +29,7 @@ export default function NewsActions({
   isAuthor,
   isAdmin,
   isAdminMaster,
-  isSubadmin,
-  isColunista,
+  isPatrocinador,
   canDelete,
   canDeactivate,
   onDelete,
@@ -42,9 +40,9 @@ export default function NewsActions({
 }: NewsActionsProps) {
   const router = useRouter();
 
-  // Colunistas não podem editar ou excluir posts rejeitados (desativados)
+  // Patrocinadores não podem editar ou excluir posts rejeitados (desativados)
   const isPostRejected = postStatus === "rejected";
-  const canColunistaEditOrDelete = isColunista && !isPostRejected;
+  const canColunistaEditOrDelete = isPatrocinador && !isPostRejected;
 
   return (
     <Box
@@ -82,7 +80,7 @@ export default function NewsActions({
         </IconButton>
       )}
 
-      {canDelete && !(isColunista && isPostRejected) && (
+      {canDelete && !(isPatrocinador && isPostRejected) && (
         <IconButton
           onClick={onDelete}
           size="small"

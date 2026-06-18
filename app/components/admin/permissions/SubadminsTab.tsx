@@ -3,21 +3,21 @@
 import { useEffect, useMemo } from "react";
 import { Box, Button, Paper, Typography, Alert, CircularProgress } from "@mui/material";
 import { PersonAdd, Info } from "@mui/icons-material";
-import { listSubadmins } from "@/app/services/auth/authAdminService";
+import { listAdmins } from "@/app/services/auth/authAdminService";
 import UserCard from "./UserCard";
 import { useInfiniteUsers } from "./useInfiniteUsers";
 import { filterUsers } from "./utils";
 
 interface SubadminsTabProps {
   onAddClick: () => void;
-  onRevoke: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
-  onReactivate: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
+  onRevoke: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
+  onReactivate: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
   refreshTrigger?: number;
   searchTerm?: string;
 }
 
 export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refreshTrigger, searchTerm = "" }: SubadminsTabProps) {
-  const { users: subadmins, loading, hasMore, reset, loaderRef } = useInfiniteUsers(listSubadmins);
+  const { users: subadmins, loading, hasMore, reset, loaderRef } = useInfiniteUsers(listAdmins);
   
   // Filtrar usuários baseado no termo de busca
   const filteredSubadmins = useMemo(() => {
@@ -96,7 +96,7 @@ export default function SubadminsTab({ onAddClick, onRevoke, onReactivate, refre
       ) : (
         <>
           {filteredSubadmins.map((subadmin) => (
-            <UserCard key={subadmin.id} user={subadmin} userType="subadmin" onRevoke={onRevoke} onReactivate={onReactivate} />
+            <UserCard key={subadmin.id} user={subadmin} userType="admin" onRevoke={onRevoke} onReactivate={onReactivate} />
           ))}
           
           {/* Loader para infinite scroll - só mostra se não estiver buscando */}

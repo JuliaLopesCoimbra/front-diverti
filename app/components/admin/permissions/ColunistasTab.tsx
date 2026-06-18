@@ -3,26 +3,26 @@
 import { useEffect, useMemo } from "react";
 import { Box, Button, Paper, Typography, Alert, CircularProgress } from "@mui/material";
 import { PersonAdd, Info } from "@mui/icons-material";
-import { listColunistas } from "@/app/services/auth/authAdminService";
+import { listPatrocinadores } from "@/app/services/auth/authAdminService";
 import UserCard from "./UserCard";
 import { useInfiniteUsers } from "./useInfiniteUsers";
 import { filterUsers } from "./utils";
 
 interface ColunistasTabProps {
   onAddClick: () => void;
-  onRevoke: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
-  onReactivate: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
+  onRevoke: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
+  onReactivate: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
   refreshTrigger?: number;
   searchTerm?: string;
 }
 
 export default function ColunistasTab({ onAddClick, onRevoke, onReactivate, refreshTrigger, searchTerm = "" }: ColunistasTabProps) {
-  const { users: colunistas, loading, hasMore, reset, loaderRef } = useInfiniteUsers(listColunistas);
-  
+  const { users: patrocinadores, loading, hasMore, reset, loaderRef } = useInfiniteUsers(listPatrocinadores);
+
   // Filtrar usuários baseado no termo de busca
   const filteredColunistas = useMemo(() => {
-    return filterUsers(colunistas, searchTerm);
-  }, [colunistas, searchTerm]);
+    return filterUsers(patrocinadores, searchTerm);
+  }, [patrocinadores, searchTerm]);
 
   // Reset quando refreshTrigger mudar
   useEffect(() => {
@@ -46,12 +46,12 @@ export default function ColunistasTab({ onAddClick, onRevoke, onReactivate, refr
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3, flexWrap: "wrap", gap: 2, maxWidth: "100%" }}>
         <Box>
           <Typography variant="h5" sx={{ color: "white", fontWeight: 600, mb: 0.5 }}>
-            Colunistas
+            Patrocinadores
           </Typography>
           <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.6)" }}>
             {searchTerm
-              ? `${filteredColunistas.length} de ${colunistas.length} ${filteredColunistas.length === 1 ? "colunista encontrado" : "colunistas encontrados"}`
-              : `${colunistas.length} ${colunistas.length === 1 ? "colunista cadastrado" : "colunistas cadastrados"}`}
+              ? `${filteredColunistas.length} de ${patrocinadores.length} ${filteredColunistas.length === 1 ? "patrocinador encontrado" : "patrocinadores encontrados"}`
+              : `${patrocinadores.length} ${patrocinadores.length === 1 ? "patrocinador cadastrado" : "patrocinadores cadastrados"}`}
           </Typography>
         </Box>
         <Button
@@ -74,7 +74,7 @@ export default function ColunistasTab({ onAddClick, onRevoke, onReactivate, refr
             transition: "all 0.2s ease",
           }}
         >
-          Adicionar Colunista
+          Adicionar Patrocinador
         </Button>
       </Box>
 
@@ -90,13 +90,13 @@ export default function ColunistasTab({ onAddClick, onRevoke, onReactivate, refr
           }}
         >
           {searchTerm
-            ? `Nenhum colunista encontrado para "${searchTerm}"`
-            : 'Nenhum colunista cadastrado. Clique em "Adicionar Colunista" para começar.'}
+            ? `Nenhum patrocinador encontrado para "${searchTerm}"`
+            : 'Nenhum patrocinador cadastrado. Clique em "Adicionar Patrocinador" para começar.'}
         </Alert>
       ) : (
         <>
           {filteredColunistas.map((colunista) => (
-            <UserCard key={colunista.id} user={colunista} userType="colunista" onRevoke={onRevoke} onReactivate={onReactivate} />
+            <UserCard key={colunista.id} user={colunista} userType="patrocinador" onRevoke={onRevoke} onReactivate={onReactivate} />
           ))}
           
           {/* Loader para infinite scroll - só mostra se não estiver buscando */}

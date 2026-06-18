@@ -29,9 +29,9 @@ import { formatDate } from "./utils";
 
 interface UserCardProps {
   user: UserResponse;
-  userType: "subadmin" | "colunista" | "user";
-  onRevoke: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
-  onReactivate: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
+  userType: "admin" | "patrocinador" | "user";
+  onRevoke: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
+  onReactivate: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
 }
 
 export default function UserCard({ user, userType, onRevoke, onReactivate }: UserCardProps) {
@@ -55,9 +55,9 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
   // Ícone baseado no tipo de usuário
   const getRoleIcon = () => {
     switch (userType) {
-      case "subadmin":
+      case "admin":
         return <AdminPanelSettings sx={{ fontSize: 20, color: "#7c3aed" }} />;
-      case "colunista":
+      case "patrocinador":
         return <EditNote sx={{ fontSize: 20, color: "#7c3aed" }} />;
       default:
         return <People sx={{ fontSize: 20, color: "#7c3aed" }} />;
@@ -130,7 +130,7 @@ export default function UserCard({ user, userType, onRevoke, onReactivate }: Use
                 </Typography>
               </Box>
 
-              {userType === "colunista" && user.invited_by && (
+              {userType === "patrocinador" && user.invited_by && (
                 <Box
                   sx={{
                     display: "flex",

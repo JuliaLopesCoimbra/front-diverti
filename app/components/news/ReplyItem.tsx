@@ -13,7 +13,7 @@ interface ReplyItemProps {
   reply: CommentResponse;
   isAuthenticated: boolean;
   isAdminMaster: boolean;
-  isSubadmin: boolean;
+  isAdmin: boolean;
   currentUserId?: number;
   onLike: () => void;
   onDelete: () => void;
@@ -24,13 +24,13 @@ export default function ReplyItem({
   reply,
   isAuthenticated,
   isAdminMaster,
-  isSubadmin,
+  isAdmin,
   currentUserId,
   onLike,
   onDelete,
   liking,
 }: ReplyItemProps) {
-  const canDelete = isAuthenticated && (isAdminMaster || isSubadmin || reply.user.id === currentUserId);
+  const canDelete = isAuthenticated && (isAdminMaster || isAdmin || reply.user.id === currentUserId);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [likesModalOpen, setLikesModalOpen] = useState(false);
 

@@ -22,7 +22,7 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 function EditNewsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { canCreatePost, isColunista } = useAuth();
+  const { canCreatePost, isPatrocinador } = useAuth();
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [loadingNews, setLoadingNews] = useState(true);
@@ -221,9 +221,9 @@ function EditNewsPageContent() {
         replace_all: hasRemovals, // Se removeu alguma, substitui todas
       });
 
-      // Verifica se é colunista editando um post aprovado
+      // Verifica se é patrocinador editando um post aprovado
       // Se for, redireciona para a lista de pending
-      if (isColunista && news?.status === "approved") {
+      if (isPatrocinador && news?.status === "approved") {
         showToast("Notícia atualizada! Post enviado para aprovação novamente.", "success");
         const redirectUrl = eventId 
           ? `/pages/admin/pending-posts?eventId=${eventId}`

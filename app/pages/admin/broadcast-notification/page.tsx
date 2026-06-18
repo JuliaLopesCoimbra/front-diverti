@@ -30,7 +30,7 @@ import PreviewIcon from "@mui/icons-material/Preview";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function BroadcastNotificationPage() {
-  const { isAdminMaster, isSubadmin, authReady } = useAuth();
+  const { isAdminMaster, isAdmin, authReady } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -41,11 +41,11 @@ export default function BroadcastNotificationPage() {
 
   // Hooks devem ser chamados antes de qualquer return condicional
   useEffect(() => {
-    if (!isAdminMaster && !isSubadmin) {
+    if (!isAdminMaster && !isAdmin) {
       router.push("/pages/user/home");
       return;
     }
-  }, [isAdminMaster, isSubadmin, router]);
+  }, [isAdminMaster, isAdmin, router]);
 
   // Aguardar o contexto estar pronto antes de renderizar
   if (!authReady) {

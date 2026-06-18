@@ -17,7 +17,7 @@ import { PersonAdd } from "@mui/icons-material";
 
 interface InviteModalProps {
   open: boolean;
-  inviteType: "subadmin" | "colunista";
+  inviteType: "admin" | "patrocinador";
   inviteName: string;
   inviteEmail: string;
   loading: boolean;
@@ -58,10 +58,10 @@ export default function InviteModal({
           <PersonAdd sx={{ fontSize: 28, color: "#ffcc01" }} />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              Convidar {inviteType === "subadmin" ? "Administrador" : "Colunista"}
+              Convidar {inviteType === "admin" ? "Administrador" : "Patrocinador"}
             </Typography>
             <Typography variant="caption" sx={{ color: "rgba(255,255,255,0.6)" }}>
-              Envie um convite por e-mail para adicionar um novo {inviteType === "subadmin" ? "administrador" : "colunista"}
+              Envie um convite por e-mail para adicionar um novo {inviteType === "admin" ? "administrador" : "patrocinador"}
             </Typography>
           </Box>
         </Box>

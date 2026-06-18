@@ -61,7 +61,7 @@ type FilterStatus = "approved" | "pending" | "rejected" | "all";
 
 export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProps) {
   const router = useRouter();
-  const { isColunista, isAdmin, isSubadmin } = useAuth();
+  const { isPatrocinador, isAdmin } = useAuth();
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [pendingPosts, setPendingPosts] = useState<NewsResponse[]>([]);
   const [offset, setOffset] = useState(0);
@@ -132,11 +132,11 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
 
   // Carregar posts pendentes quando a tab for selecionada
   useEffect(() => {
-    if (filterStatus === "pending" && isColunista && pendingPosts.length === 0) {
+    if (filterStatus === "pending" && isPatrocinador && pendingPosts.length === 0) {
       loadPendingPosts();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterStatus, isColunista]);
+  }, [filterStatus, isPatrocinador]);
 
   // Filtrar posts baseado no status selecionado
   const filteredPosts = (() => {
@@ -287,8 +287,8 @@ export default function MyPosts({ hideTitle = false, currentEvent }: MyPostsProp
               },
             }}
           >
-            <Tab label={isAdmin || isSubadmin ? "Postados" : "Aprovados"} value="approved" />
-            {isColunista && <Tab label="Pendentes" value="pending" />}
+            <Tab label={isAdmin ? "Postados" : "Aprovados"} value="approved" />
+            {isPatrocinador && <Tab label="Pendentes" value="pending" />}
             <Tab label="Rejeitados" value="rejected" />
           </Tabs>
         </Box>

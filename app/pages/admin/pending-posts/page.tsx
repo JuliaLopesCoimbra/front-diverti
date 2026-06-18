@@ -23,14 +23,14 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 function PendingPostsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isAdminMaster, isSubadmin } = useAuth();
+  const { isAdminMaster, isAdmin } = useAuth();
   const [posts, setPosts] = useState<NewsResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const { showToast } = useToast();
   const isLoadingRef = useRef(false);
   const hasRedirectedRef = useRef(false);
 
-  const canApprovePosts = isAdminMaster || isSubadmin;
+  const canApprovePosts = isAdminMaster || isAdmin;
   const eventIdParam = searchParams.get("eventId");
   const eventId = eventIdParam ? parseInt(eventIdParam, 10) : undefined;
 

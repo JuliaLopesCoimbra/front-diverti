@@ -2,14 +2,13 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import {
-  Button,
-  TextField,
-  Typography,
-  Box,
-  InputAdornment,
-  IconButton,
+  Button, TextField, Typography, Box, InputAdornment, IconButton, Chip,
 } from "@mui/material";
-import { Visibility, VisibilityOff, Email, Google, Facebook } from "@mui/icons-material";
+import {
+  Visibility, VisibilityOff, Email,
+  BarChart as ChartIcon, LocationOn as LocationIcon,
+  People as PeopleIcon, Campaign as CampaignIcon,
+} from "@mui/icons-material";
 import { loginUser, resendVerificationEmail } from "@/app/services/auth/authService";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
@@ -46,7 +45,20 @@ const inputSx = {
   "& .MuiInputLabel-root.Mui-focused": { color: "rgba(255,255,255,0.85)" },
 };
 
-const LoginForm: React.FC = () => {
+const FEATURES = [
+  { icon: <CampaignIcon sx={{ fontSize: 20 }} />, title: "Campanhas segmentadas", desc: "CPC e CPV com controle total de orçamento e duração" },
+  { icon: <PeopleIcon    sx={{ fontSize: 20 }} />, title: "Público qualificado",   desc: "Segmentação por hobbies, profissão, idade e gênero" },
+  { icon: <LocationIcon  sx={{ fontSize: 20 }} />, title: "Geolocalização",         desc: "Anuncie para quem está próximo ao evento" },
+  { icon: <ChartIcon     sx={{ fontSize: 20 }} />, title: "Dashboard em tempo real",desc: "Métricas de cliques, views e investimento por campanha" },
+];
+
+const STATS = [
+  { value: "5+",  label: "Marcas parceiras" },
+  { value: "20+", label: "Campanhas ativas" },
+  { value: "1M+", label: "Interações geradas" },
+];
+
+export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,7 +96,17 @@ const LoginForm: React.FC = () => {
       login(access_token, refresh_token);
       localStorage.setItem("circuito_access_token", access_token);
       document.cookie = `refresh_token=${refresh_token}; path=/; secure`;
-      router.push("/pages/user/home");
+      const { jwtDecode } = await import("jwt-decode");
+      const decoded = jwtDecode<{ role: string }>(access_token);
+      if (decoded.role === "admin_master") {
+        router.push("/pages/admin-master/home");
+      } else if (decoded.role === "admin") {
+        router.push("/pages/admin/home");
+      } else if (decoded.role === "patrocinador") {
+        router.push("/pages/patrocinador/home");
+      } else {
+        router.push("/pages/user/home");
+      }
     } catch (err: unknown) {
       setShowForgotPassword(true);
       if (err instanceof Error) {
@@ -97,11 +119,7 @@ const LoginForm: React.FC = () => {
           return;
         }
         const msg = err.message.toLowerCase();
-        if (
-          msg.includes("confirme seu e-mail") ||
-          msg.includes("confirme seu email") ||
-          msg.includes("email não confirmado")
-        ) {
+        if (msg.includes("confirme seu e-mail") || msg.includes("confirme seu email") || msg.includes("email não confirmado")) {
           setShowResendEmail(true);
         }
         showToast(err.message, "error");
@@ -114,10 +132,7 @@ const LoginForm: React.FC = () => {
   };
 
   const handleResendEmail = async () => {
-    if (!email) {
-      showToast("Por favor, insira seu email primeiro", "error");
-      return;
-    }
+    if (!email) { showToast("Por favor, insira seu email primeiro", "error"); return; }
     if (cooldownSeconds > 0) return;
     setResendLoading(true);
     try {
@@ -145,138 +160,138 @@ const LoginForm: React.FC = () => {
     <Box
       sx={{
         ...dashboardBackgroundSx,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
         minHeight: "100svh",
-        padding: { xs: "20px", md: "40px" },
+        display: "flex",
+        alignItems: "stretch",
         position: "relative",
         "&::before": {
           content: '""',
           position: "fixed",
           inset: 0,
-          background:
-            "linear-gradient(170deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.7) 100%)",
+          background: "linear-gradient(170deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.65) 100%)",
           zIndex: 0,
           pointerEvents: "none",
         },
       }}
     >
+      {/* ── Left panel: apresentação ─────────────────────────────────────── */}
       <Box
         sx={{
+          display: { xs: "none", md: "flex" },
+          flexDirection: "column",
+          justifyContent: "center",
+          flex: 1,
+          px: { md: 6, lg: 9 },
+          py: 8,
           position: "relative",
           zIndex: 1,
-          width: "100%",
-          maxWidth: { xs: "100%", sm: "400px" },
           opacity: mounted ? 1 : 0,
-          transform: mounted ? "translateY(0)" : "translateY(28px)",
-          transition: "opacity 0.55s ease, transform 0.55s ease",
+          transform: mounted ? "translateX(0)" : "translateX(-24px)",
+          transition: "opacity 0.6s ease, transform 0.6s ease",
         }}
       >
         {/* Logo */}
-        <Box sx={{ display: "flex", justifyContent: "center", mb: 3.5 }}>
-          <Box
-            sx={{
-              filter:
-                "drop-shadow(0 0 18px rgba(255,31,33,0.5)) drop-shadow(0 0 40px rgba(255,31,33,0.2))",
-            }}
-          >
-            <Image
-              src="/logo/logo-circuito.png"
-              alt="Circuito Sertanejo"
-              width={220}
-              height={80}
-              style={{ objectFit: "contain" }}
-              priority
-            />
-          </Box>
+        <Box sx={{ mb: 5 }}>
+          <Image
+            src="/logo/logo-circuito.png"
+            alt="Circuito Sertanejo"
+            width={180}
+            height={64}
+            style={{ objectFit: "contain" }}
+            priority
+          />
         </Box>
 
-        {/* Card */}
-        <Box
-          sx={{
-            backgroundColor: "rgba(8,8,8,0.62)",
-            backdropFilter: "blur(30px)",
-            WebkitBackdropFilter: "blur(30px)",
-            borderRadius: "24px",
-            border: "1px solid rgba(255,255,255,0.09)",
-            boxShadow:
-              "0 28px 72px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07)",
-            padding: { xs: "28px 22px 32px", md: "36px 32px 40px" },
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: "15%",
-              width: "70%",
-              height: "1px",
-              background:
-                "linear-gradient(90deg, transparent, rgba(255,31,33,0.65), transparent)",
-            },
-          }}
-        >
-          <Typography
-            variant="h5"
-            sx={{
-              color: "#fff",
-              fontWeight: 700,
-              textAlign: "center",
-              mb: 0.5,
-              fontSize: { xs: "20px", md: "22px" },
-              letterSpacing: "-0.3px",
-            }}
-          >
+        {/* Tagline */}
+        <Chip
+          label="Plataforma de mídia para eventos sertanejos"
+          size="small"
+          sx={{ backgroundColor: "rgba(255,204,1,0.12)", color: "#ffcc01", fontWeight: 700, fontSize: "0.72rem", mb: 2.5, alignSelf: "flex-start", border: "1px solid rgba(255,204,1,0.25)" }}
+        />
+        <Typography variant="h3" sx={{ color: "#fff", fontWeight: 800, lineHeight: 1.2, mb: 1.5, fontSize: { md: "2rem", lg: "2.5rem" } }}>
+          Conecte sua marca ao{" "}
+          <Box component="span" sx={{ color: "#ffcc01" }}>público sertanejo</Box>
+        </Typography>
+        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", lineHeight: 1.7, mb: 5, maxWidth: 480 }}>
+          Gerencie campanhas de anúncios em eventos, acompanhe métricas em tempo real e alcance o público certo com segmentação inteligente.
+        </Typography>
+
+        {/* Features */}
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mb: 6 }}>
+          {FEATURES.map((f) => (
+            <Box key={f.title} sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
+              <Box sx={{ width: 40, height: 40, borderRadius: 2, backgroundColor: "rgba(255,204,1,0.1)", border: "1px solid rgba(255,204,1,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffcc01", flexShrink: 0 }}>
+                {f.icon}
+              </Box>
+              <Box>
+                <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", lineHeight: 1.3 }}>{f.title}</Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", lineHeight: 1.5 }}>{f.desc}</Typography>
+              </Box>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Stats */}
+        <Box sx={{ display: "flex", gap: 4 }}>
+          {STATS.map((s) => (
+            <Box key={s.label}>
+              <Typography sx={{ color: "#ffcc01", fontWeight: 800, fontSize: "1.6rem", lineHeight: 1 }}>{s.value}</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem", mt: 0.4 }}>{s.label}</Typography>
+            </Box>
+          ))}
+        </Box>
+      </Box>
+
+      {/* ── Right panel: formulário ───────────────────────────────────────── */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          width: { xs: "100%", md: "460px" },
+          flexShrink: 0,
+          px: { xs: 3, md: 5 },
+          py: { xs: 5, md: 8 },
+          position: "relative",
+          zIndex: 1,
+          backgroundColor: { md: "rgba(0,0,0,0.35)" },
+          backdropFilter: { md: "blur(20px)" },
+          borderLeft: { md: "1px solid rgba(255,255,255,0.07)" },
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "translateY(0)" : "translateY(24px)",
+          transition: "opacity 0.55s ease 0.1s, transform 0.55s ease 0.1s",
+        }}
+      >
+        {/* Logo mobile */}
+        <Box sx={{ display: { xs: "flex", md: "none" }, justifyContent: "center", mb: 4 }}>
+          <Image src="/logo/logo-circuito.png" alt="Circuito Sertanejo" width={180} height={64} style={{ objectFit: "contain" }} priority />
+        </Box>
+
+        <Box sx={{ width: "100%", maxWidth: 380 }}>
+          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.5, fontSize: { xs: "20px", md: "22px" }, letterSpacing: "-0.3px" }}>
             Bem-vindo de volta
           </Typography>
-          <Typography
-            sx={{
-              color: "rgba(255,255,255,0.45)",
-              textAlign: "center",
-              fontSize: { xs: "13px", md: "14px" },
-              mb: 3,
-            }}
-          >
+          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: { xs: "13px", md: "14px" }, mb: 3.5 }}>
             Entre com suas credenciais para continuar
           </Typography>
 
           <TextField
-            fullWidth
-            label="E-mail"
-            type="email"
-            variant="outlined"
-            margin="dense"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            onKeyDown={handleKeyDown}
+            fullWidth label="E-mail" type="email" variant="outlined" margin="dense"
+            value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={handleKeyDown}
             inputProps={{ autoCapitalize: "none", autoCorrect: "off", spellCheck: false }}
             sx={inputSx}
           />
 
           <TextField
-            fullWidth
-            label="Senha"
-            variant="outlined"
-            margin="dense"
+            fullWidth label="Senha" variant="outlined" margin="dense"
             type={showPassword ? "text" : "password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleKeyDown}
+            value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={handleKeyDown}
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword((p) => !p)}
-                    edge="end"
-                    sx={{ color: "rgba(255,255,255,0.45)", "&:hover": { color: "#fff" } }}
-                  >
-                    {showPassword ? (
-                      <VisibilityOff fontSize="small" />
-                    ) : (
-                      <Visibility fontSize="small" />
-                    )}
+                  <IconButton onClick={() => setShowPassword((p) => !p)} edge="end" sx={{ color: "rgba(255,255,255,0.45)", "&:hover": { color: "#fff" } }}>
+                    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                   </IconButton>
                 </InputAdornment>
               ),
@@ -287,14 +302,7 @@ const LoginForm: React.FC = () => {
           {showForgotPassword && (
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
               <Typography
-                sx={{
-                  color: "rgba(255,255,255,0.55)",
-                  fontSize: 13,
-                  cursor: "pointer",
-                  fontWeight: 500,
-                  transition: "color 0.2s",
-                  "&:hover": { color: "#fff", textDecoration: "underline" },
-                }}
+                sx={{ color: "rgba(255,255,255,0.55)", fontSize: 13, cursor: "pointer", fontWeight: 500, transition: "color 0.2s", "&:hover": { color: "#fff", textDecoration: "underline" } }}
                 onClick={() => router.push("/pages/auth/forgot-password")}
               >
                 Esqueceu a senha?
@@ -302,209 +310,33 @@ const LoginForm: React.FC = () => {
             </Box>
           )}
 
-          {/* Reenvio de email */}
           {showResendEmail && (
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                backgroundColor: "rgba(255,204,1,0.08)",
-                borderRadius: "12px",
-                border: "1px solid rgba(255,204,1,0.25)",
-              }}
-            >
+            <Box sx={{ mt: 2, p: 2, backgroundColor: "rgba(255,204,1,0.08)", borderRadius: "12px", border: "1px solid rgba(255,204,1,0.25)" }}>
               <Typography sx={{ color: "rgba(255,255,255,0.85)", mb: 1.5, fontSize: 13 }}>
                 Seu email ainda não foi confirmado. Reenvie o email de verificação.
               </Typography>
               <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Email fontSize="small" />}
-                onClick={handleResendEmail}
-                disabled={resendLoading || cooldownSeconds > 0}
-                sx={{
-                  color: "#ffcc01",
-                  borderColor: "rgba(255,204,1,0.5)",
-                  borderRadius: "10px",
-                  textTransform: "none",
-                  fontWeight: 600,
-                  fontSize: 13,
-                  py: 1,
-                  "&:hover": { backgroundColor: "rgba(255,204,1,0.1)" },
-                  "&.Mui-disabled": {
-                    color: "rgba(255,204,1,0.35)",
-                    borderColor: "rgba(255,204,1,0.2)",
-                  },
-                }}
+                fullWidth variant="outlined" startIcon={<Email fontSize="small" />}
+                onClick={handleResendEmail} disabled={resendLoading || cooldownSeconds > 0}
+                sx={{ color: "#ffcc01", borderColor: "rgba(255,204,1,0.5)", borderRadius: "10px", textTransform: "none", fontWeight: 600, fontSize: 13, py: 1, "&:hover": { backgroundColor: "rgba(255,204,1,0.1)" }, "&.Mui-disabled": { color: "rgba(255,204,1,0.35)", borderColor: "rgba(255,204,1,0.2)" } }}
               >
-                {resendLoading
-                  ? "Enviando..."
-                  : cooldownSeconds > 0
-                  ? `Aguarde ${cooldownSeconds}s`
-                  : "Reenviar email de verificação"}
+                {resendLoading ? "Enviando..." : cooldownSeconds > 0 ? `Aguarde ${cooldownSeconds}s` : "Reenviar email de verificação"}
               </Button>
             </Box>
           )}
 
-          {/* Botão Entrar */}
           <Button
-            fullWidth
-            variant="contained"
-            onClick={handleLogin}
-            disabled={loading}
-            sx={{
-              mt: 3,
-              py: 1.6,
-              borderRadius: "14px",
-              textTransform: "none",
-              fontWeight: 700,
-              fontSize: 15,
-              letterSpacing: "0.2px",
-              backgroundColor: "#ffffff",
-              color: "#111111",
-              boxShadow: "0 4px 24px rgba(0,0,0,0.15)",
-              transition: "all 0.25s ease",
-              "&:hover": {
-                backgroundColor: "#e8e8e8",
-                boxShadow: "0 6px 32px rgba(0,0,0,0.2)",
-                transform: "translateY(-2px)",
-              },
-              "&:active": { transform: "translateY(0)", boxShadow: "0 2px 12px rgba(0,0,0,0.15)" },
-              "&.Mui-disabled": {
-                backgroundColor: "rgba(255,255,255,0.25)",
-                color: "rgba(0,0,0,0.4)",
-                boxShadow: "none",
-              },
-            }}
+            fullWidth variant="contained" onClick={handleLogin} disabled={loading}
+            sx={{ mt: 3.5, py: 1.6, borderRadius: "14px", textTransform: "none", fontWeight: 700, fontSize: 15, letterSpacing: "0.2px", backgroundColor: "#ffffff", color: "#111111", boxShadow: "0 4px 24px rgba(0,0,0,0.15)", transition: "all 0.25s ease", "&:hover": { backgroundColor: "#e8e8e8", boxShadow: "0 6px 32px rgba(0,0,0,0.2)", transform: "translateY(-2px)" }, "&:active": { transform: "translateY(0)", boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }, "&.Mui-disabled": { backgroundColor: "rgba(255,255,255,0.25)", color: "rgba(0,0,0,0.4)", boxShadow: "none" } }}
           >
             {loading ? "Entrando..." : "Entrar"}
           </Button>
 
-          {/* Continuar sem login */}
-          <Button
-            fullWidth
-            variant="text"
-            onClick={() => router.push("/pages/events")}
-            sx={{
-              mt: 1.5,
-              py: 1.2,
-              borderRadius: "14px",
-              textTransform: "none",
-              fontWeight: 500,
-              fontSize: 14,
-              color: "rgba(255,255,255,0.4)",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.06)",
-                color: "rgba(255,255,255,0.7)",
-              },
-            }}
-          >
-            Continuar sem login
-          </Button>
-
-          {/* Divisor */}
-          <Typography
-            sx={{
-              mt: 3,
-              mb: 1.5,
-              textAlign: "center",
-              color: "rgba(255,255,255,0.3)",
-              fontSize: 12,
-              position: "relative",
-              "&::before, &::after": {
-                content: '""',
-                position: "absolute",
-                top: "50%",
-                width: "35%",
-                height: "1px",
-                backgroundColor: "rgba(255,255,255,0.12)",
-              },
-              "&::before": { left: 0 },
-              "&::after": { right: 0 },
-            }}
-          >
-            ou entre com
+          <Typography sx={{ color: "rgba(255,255,255,0.2)", fontSize: 11, textAlign: "center", mt: 3 }}>
+            © 2026 Circuito Sertanejo · Todos os direitos reservados
           </Typography>
-
-          {/* Botões sociais desabilitados */}
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Google fontSize="small" />}
-              disabled
-              sx={{
-                borderRadius: "12px",
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: 13,
-                py: 1.2,
-                borderColor: "rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.3)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                "&.Mui-disabled": {
-                  borderColor: "rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.25)",
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                },
-              }}
-            >
-              Google
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Facebook fontSize="small" />}
-              disabled
-              sx={{
-                borderRadius: "12px",
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: 13,
-                py: 1.2,
-                borderColor: "rgba(255,255,255,0.15)",
-                color: "rgba(255,255,255,0.3)",
-                backgroundColor: "rgba(255,255,255,0.04)",
-                "&.Mui-disabled": {
-                  borderColor: "rgba(255,255,255,0.12)",
-                  color: "rgba(255,255,255,0.25)",
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                },
-              }}
-            >
-              Facebook
-            </Button>
-          </Box>
-
-          {/* Rodapé */}
-          <Box
-            sx={{
-              mt: 3,
-              pt: 2.5,
-              borderTop: "1px solid rgba(255,255,255,0.07)",
-              textAlign: "center",
-            }}
-          >
-            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 13 }}>
-              Não tem uma conta?{" "}
-              <Box
-                component="span"
-                sx={{
-                  color: "rgba(255,255,255,0.6)",
-                  fontWeight: 600,
-                  cursor: "default",
-                  userSelect: "none",
-                }}
-              >
-                Cadastre-se aqui
-              </Box>
-            </Typography>
-          </Box>
         </Box>
       </Box>
     </Box>
   );
-};
-
-export default LoginForm;
+}

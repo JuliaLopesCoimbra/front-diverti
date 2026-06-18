@@ -25,7 +25,7 @@ interface CommentItemProps {
   repliesOffset: number;
   isAuthenticated: boolean;
   isAdminMaster: boolean;
-  isSubadmin: boolean;
+  isAdmin: boolean;
   currentUserId?: number;
   onLike: () => void;
   onReply: () => void;
@@ -48,7 +48,7 @@ export default function CommentItem({
   repliesOffset,
   isAuthenticated,
   isAdminMaster,
-  isSubadmin,
+  isAdmin,
   currentUserId,
   onLike,
   onReply,
@@ -58,7 +58,7 @@ export default function CommentItem({
   onDelete,
   onLoadMoreReplies,
 }: CommentItemProps) {
-  const canDelete = isAuthenticated && (isAdminMaster || isSubadmin || comment.user.id === currentUserId);
+  const canDelete = isAuthenticated && (isAdminMaster || isAdmin || comment.user.id === currentUserId);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
 
@@ -297,7 +297,7 @@ export default function CommentItem({
                                 {reply.likes.count}
                               </Typography>
                             )}
-                            {isAuthenticated && (isAdminMaster || isSubadmin || reply.user.id === currentUserId) && (
+                            {isAuthenticated && (isAdminMaster || isAdmin || reply.user.id === currentUserId) && (
                               <IconButton
                                 size="small"
                                 onClick={() => {/* handleDeleteReply */}}

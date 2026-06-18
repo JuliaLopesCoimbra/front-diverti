@@ -2,12 +2,32 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Box, Button, Card, CardContent, Dialog, DialogContent, IconButton, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Card, CardContent, Chip, Dialog, DialogContent, IconButton, Skeleton, Typography } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import AdBanner from "@/app/components/ads/AdBanner";
-import { getPrizesByEvent, PrizeResponse } from "@/app/services/roulette/rouletteService";
+import { getPrizesByEvent } from "@/app/services/roulette/rouletteService";
 import VideoModal from "@/app/components/home/VideoModal";
+
+interface SponsorCoupon {
+  id: number;
+  brand: string;
+  name: string;
+  image: string;
+  color: string;
+  benefit: string;
+  code: string;
+  tag: string;
+  expiry: string;
+}
+
+const SPONSOR_COUPONS: SponsorCoupon[] = [
+  { id: -1, brand: "brahma",      name: "Brahma",      image: "/ads/2.png", color: "#f59e0b", benefit: "1 Brahma gelada grátis no estande",    code: "BRAHMA2026",  tag: "Brinde",    expiry: "Válido até 17/08/2026" },
+  { id: -2, brand: "sicoob",      name: "Sicoob",      image: "/ads/3.png", color: "#10b981", benefit: "Isenção de anuidade no 1º ano",        code: "SICOOB2026",  tag: "Exclusivo", expiry: "Válido até 31/12/2026" },
+  { id: -3, brand: "volkswagen",  name: "Volkswagen",  image: "/ads/4.png", color: "#6366f1", benefit: "Test drive agendado + brinde especial", code: "VW2026",      tag: "Brinde",    expiry: "Válido até 30/09/2026" },
+  { id: -4, brand: "ballantines", name: "Ballantines", image: "/ads/5.png", color: "#ec4899", benefit: "Dose exclusiva no estande Ballantines", code: "BALL2026",    tag: "Brinde",    expiry: "Válido até 17/08/2026" },
+  { id: -5, brand: "globo",       name: "Globo",       image: "/ads/1.png", color: "#3b82f6", benefit: "1 mês grátis de Globoplay Premium",    code: "GLOBO2026",   tag: "30 dias",   expiry: "Válido até 31/10/2026" },
+];
 
 interface Props {
   eventId: number;
@@ -18,10 +38,10 @@ const MAX_SPINS = 3;
 const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
   const router = useRouter();
   const [spinCount, setSpinCount] = useState<number | null>(null);
-  const [prizes, setPrizes] = useState<PrizeResponse[]>([]);
   const [loadingPrizes, setLoadingPrizes] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
-  const [selectedPrize, setSelectedPrize] = useState<PrizeResponse | null>(null);
+  const [selectedCoupon, setSelectedCoupon] = useState<SponsorCoupon | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   useEffect(() => {
     const key = `roulette-spin-count-${eventId}`;
@@ -34,36 +54,8 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
 
     const loadPrizes = async () => {
       setLoadingPrizes(true);
-      try {
-        const data = await getPrizesByEvent(eventId);
-        if (!isMounted) return;
-
-        const filtered = data
-          .filter(
-            (prize) =>
-              prize.is_active &&
-              !prize.name.trim().toLowerCase().includes("não foi") &&
-              !prize.name.trim().toLowerCase().includes("nao foi") &&
-              !prize.name.trim().toLowerCase().includes("tente novamente")
-          )
-          .sort((a, b) => a.position - b.position);
-
-        // Deduplica por image_url (cada marca tem 2 prêmios com a mesma imagem)
-        const seen = new Set<string>();
-        const unique = filtered.filter((prize) => {
-          const key = prize.image_url ?? `name:${prize.name}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-
-        setPrizes(unique);
-      } catch (error) {
-        console.error("Erro ao carregar brindes da roleta:", error);
-        if (isMounted) setPrizes([]);
-      } finally {
-        if (isMounted) setLoadingPrizes(false);
-      }
+      try { await getPrizesByEvent(eventId); } catch { /* ignora — usando cupons dos patrocinadores */ }
+      if (isMounted) setLoadingPrizes(false);
     };
 
     loadPrizes();
@@ -243,7 +235,7 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
             Ganhar brinde
           </Button>
 
-          {/* Brindes disponíveis */}
+          {/* Cupons dos patrocinadores */}
           <Box
             sx={{
               borderRadius: 3,
@@ -252,137 +244,50 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
               border: "1px solid rgba(255,255,255,0.1)",
             }}
           >
-            <Typography
-              sx={{
-                color: "#fff",
-                fontSize: { xs: "1.05rem", md: "1.15rem" },
-                fontWeight: 800,
-                mb: 0.75,
-              }}
-            >
-              Brindes que podem sair na sua roleta
+            <Typography sx={{ color: "#fff", fontSize: { xs: "1.05rem", md: "1.15rem" }, fontWeight: 800, mb: 0.75 }}>
+              Cupons dos patrocinadores
             </Typography>
-            <Typography
-              sx={{
-                color: "rgba(255,255,255,0.68)",
-                fontSize: "0.92rem",
-                mb: 2,
-              }}
-            >
-              Veja alguns premios disponiveis e gire agora para tentar a sorte.
+            <Typography sx={{ color: "rgba(255,255,255,0.68)", fontSize: "0.92rem", mb: 2 }}>
+              Gire a roleta para ganhar um desses cupons exclusivos das marcas parceiras.
             </Typography>
 
             {loadingPrizes ? (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
-                  gap: 1.5,
-                }}
-              >
-                {[1, 2, 3, 4, 5, 6].map((item) => (
-                  <Box
-                    key={item}
-                    sx={{
-                      borderRadius: 3,
-                      p: 1.5,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    <Skeleton
-                      variant="rounded"
-                      sx={{
-                        width: "100%",
-                        aspectRatio: "1 / 1",
-                        borderRadius: 2.5,
-                        bgcolor: "rgba(255,255,255,0.12)",
-                        mb: 1,
-                      }}
-                    />
-                    <Skeleton
-                      variant="text"
-                      sx={{ width: "85%", height: 24, bgcolor: "rgba(255,255,255,0.12)" }}
-                    />
-                  </Box>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" }, gap: 1.5 }}>
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <Skeleton key={i} variant="rounded" height={88} sx={{ bgcolor: "rgba(255,255,255,0.08)", borderRadius: 3 }} />
                 ))}
               </Box>
-            ) : prizes.length > 0 ? (
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(3, 1fr)" },
-                  gap: 1.5,
-                }}
-              >
-                {prizes.map((prize) => (
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+                {SPONSOR_COUPONS.map((coupon) => (
                   <Box
-                    key={prize.id}
-                    onClick={() => setSelectedPrize(prize)}
+                    key={coupon.id}
+                    onClick={() => setSelectedCoupon(coupon)}
                     sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
                       borderRadius: 3,
                       p: 1.5,
-                      background: "rgba(255,255,255,0.05)",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      background: `linear-gradient(135deg, ${coupon.color}14, ${coupon.color}08)`,
+                      border: `1px solid ${coupon.color}44`,
                       cursor: "pointer",
-                      transition: "transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease",
-                      "&:hover": {
-                        transform: "translateY(-4px)",
-                        borderColor: "rgba(255,255,255,0.35)",
-                        boxShadow: "0 12px 24px rgba(0,0,0,0.25)",
-                      },
+                      transition: "transform 0.18s, box-shadow 0.18s",
+                      "&:hover": { transform: "translateY(-2px)", boxShadow: `0 8px 24px ${coupon.color}33` },
                     }}
                   >
                     <Box
-                      sx={{
-                        width: "100%",
-                        aspectRatio: "1 / 1",
-                        borderRadius: 2.5,
-                        background: "linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%)",
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        mb: 1,
-                        overflow: "hidden",
-                      }}
-                    >
-                      {prize.image_url ? (
-                        <Box
-                          component="img"
-                          src={prize.image_url}
-                          alt={prize.name}
-                          sx={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "contain",
-                            p: 1.25,
-                          }}
-                        />
-                      ) : (
-                        <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem" }}>
-                          Brinde
-                        </Typography>
-                      )}
-                    </Box>
-
-                    <Typography
-                      sx={{
-                        color: "#fff",
-                        fontWeight: 700,
-                        fontSize: "0.92rem",
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {prize.name}
+                      component="img"
+                      src={coupon.image}
+                      alt={coupon.name}
+                      sx={{ width: 52, height: 52, objectFit: "cover", borderRadius: 2, flexShrink: 0, border: `1px solid ${coupon.color}44` }}
+                    />
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem" }}>
+                      {coupon.name}
                     </Typography>
                   </Box>
                 ))}
               </Box>
-            ) : (
-              <Typography sx={{ color: "rgba(255,255,255,0.68)" }}>
-                Os brindes da roleta ainda nao foram cadastrados para este evento.
-              </Typography>
             )}
           </Box>
         </CardContent>
@@ -397,15 +302,15 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
       )}
 
       <Dialog
-        open={Boolean(selectedPrize)}
-        onClose={() => setSelectedPrize(null)}
+        open={Boolean(selectedCoupon)}
+        onClose={() => { setSelectedCoupon(null); setCopiedCode(false); }}
         maxWidth="xs"
         fullWidth
         PaperProps={{
           sx: {
             background: "rgba(15,15,20,0.97)",
             backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            border: selectedCoupon ? `1px solid ${selectedCoupon.color}44` : "1px solid rgba(255,255,255,0.12)",
             borderRadius: 4,
             overflow: "hidden",
           },
@@ -413,76 +318,67 @@ const DashboardRoulette: React.FC<Props> = ({ eventId }) => {
       >
         <DialogContent sx={{ p: 0 }}>
           <IconButton
-            onClick={() => setSelectedPrize(null)}
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              zIndex: 10,
-              color: "#fff",
-              backgroundColor: "rgba(0,0,0,0.45)",
-              "&:hover": { backgroundColor: "rgba(0,0,0,0.65)" },
-            }}
+            onClick={() => { setSelectedCoupon(null); setCopiedCode(false); }}
+            sx={{ position: "absolute", top: 10, right: 10, zIndex: 10, color: "#fff", backgroundColor: "rgba(0,0,0,0.45)", "&:hover": { backgroundColor: "rgba(0,0,0,0.65)" } }}
           >
             <CloseIcon fontSize="small" />
           </IconButton>
 
-          {/* Imagem do brinde */}
-          <Box
-            sx={{
-              width: "100%",
-              aspectRatio: "1 / 1",
-              background: "linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-            }}
-          >
-            {selectedPrize?.image_url ? (
-              <Box
-                component="img"
-                src={selectedPrize.image_url}
-                alt={selectedPrize?.name}
-                sx={{ width: "75%", height: "75%", objectFit: "contain" }}
-              />
-            ) : (
-              <CardGiftcardIcon sx={{ fontSize: 80, color: "rgba(255,255,255,0.25)" }} />
-            )}
-          </Box>
+          {selectedCoupon && (
+            <>
+              {/* Header com imagem */}
+              <Box sx={{ width: "100%", height: 160, background: `linear-gradient(135deg, ${selectedCoupon.color}22, ${selectedCoupon.color}08)`, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+                <Box component="img" src={selectedCoupon.image} alt={selectedCoupon.name} sx={{ width: 110, height: 110, objectFit: "cover", borderRadius: 3, border: `2px solid ${selectedCoupon.color}66`, boxShadow: `0 0 32px ${selectedCoupon.color}44` }} />
+              </Box>
 
-          {/* Info */}
-          <Box sx={{ p: 3 }}>
-            <Typography
-              sx={{
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: "1.25rem",
-                lineHeight: 1.2,
-                mb: 2,
-              }}
-            >
-              {selectedPrize?.name}
-            </Typography>
+              <Box sx={{ p: 3 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.2rem" }}>{selectedCoupon.name}</Typography>
+                  <Chip label={selectedCoupon.tag} size="small" sx={{ backgroundColor: `${selectedCoupon.color}22`, color: selectedCoupon.color, fontWeight: 700, fontSize: "0.65rem", border: `1px solid ${selectedCoupon.color}44` }} />
+                </Box>
+                <Typography sx={{ color: "rgba(255,255,255,0.65)", fontSize: "0.9rem", mb: 2.5, lineHeight: 1.5 }}>{selectedCoupon.benefit}</Typography>
 
+                {/* Código do cupom */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    p: 2,
+                    borderRadius: 2.5,
+                    border: `2px dashed ${selectedCoupon.color}66`,
+                    background: `${selectedCoupon.color}0d`,
+                    mb: 1.5,
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    navigator.clipboard.writeText(selectedCoupon.code).catch(() => {});
+                    setCopiedCode(true);
+                    setTimeout(() => setCopiedCode(false), 2000);
+                  }}
+                >
+                  <Box>
+                    <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", mb: 0.3 }}>Código do cupom</Typography>
+                    <Typography sx={{ color: selectedCoupon.color, fontWeight: 900, fontSize: "1.3rem", letterSpacing: "0.1em" }}>{selectedCoupon.code}</Typography>
+                  </Box>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: copiedCode ? "#10b981" : "rgba(255,255,255,0.4)" }}>
+                    <ContentCopyIcon sx={{ fontSize: 18 }} />
+                    <Typography sx={{ fontSize: "0.72rem", fontWeight: 600 }}>{copiedCode ? "Copiado!" : "Copiar"}</Typography>
+                  </Box>
+                </Box>
 
-            <Button
-              fullWidth
-              onClick={() => setSelectedPrize(null)}
-              sx={{
-                mt: 2.5,
-                backgroundColor: "#ffffff",
-                color: "#111111",
-                fontWeight: 700,
-                borderRadius: "12px",
-                textTransform: "none",
-                py: 1.4,
-                "&:hover": { backgroundColor: "#e8e8e8" },
-              }}
-            >
-              Fechar
-            </Button>
-          </Box>
+                <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.72rem", mb: 2.5, textAlign: "center" }}>{selectedCoupon.expiry}</Typography>
+
+                <Button
+                  fullWidth
+                  onClick={() => { setSelectedCoupon(null); setCopiedCode(false); }}
+                  sx={{ backgroundColor: "#ffffff", color: "#111111", fontWeight: 700, borderRadius: "12px", textTransform: "none", py: 1.4, "&:hover": { backgroundColor: "#e8e8e8" } }}
+                >
+                  Fechar
+                </Button>
+              </Box>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

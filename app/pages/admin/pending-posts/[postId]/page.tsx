@@ -40,7 +40,7 @@ export default function PendingPostDetailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const postId = Number(params.postId);
-  const { isAdminMaster, isSubadmin } = useAuth();
+  const { isAdminMaster, isAdmin } = useAuth();
   const eventIdParam = searchParams.get("eventId");
   const eventId = eventIdParam ? parseInt(eventIdParam, 10) : undefined;
   const [news, setNews] = useState<NewsDetailsResponse | null>(null);
@@ -57,7 +57,7 @@ export default function PendingPostDetailPage() {
   const hasRedirected = useRef(false);
   const isLoadingRef = useRef(false);
 
-  const canApprovePosts = isAdminMaster || isSubadmin;
+  const canApprovePosts = isAdminMaster || isAdmin;
 
   // Reset flags quando postId mudar
   useEffect(() => {
@@ -155,7 +155,7 @@ export default function PendingPostDetailPage() {
 
     loadNews();
     // Dependências mínimas: só postId e eventId (valores primitivos)
-    // canApprovePosts é derivado de isAdminMaster/isSubadmin, então é estável
+    // canApprovePosts é derivado de isAdminMaster/isAdmin, então é estável
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId, eventId]);
 

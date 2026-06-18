@@ -11,24 +11,25 @@ import React, {
 import { jwtDecode } from "jwt-decode";
 interface TokenPayload {
   sub: string;
-  role: "admin_master" | "subadmin" | "colunista" | "user" | "admin"; // Mantém "admin" para compatibilidade
+  role: "admin_master" | "admin" | "patrocinador" | "user";
+  name?: string | null;
   exp: number;
 }
 
-type UserRole = "admin_master" | "subadmin" | "colunista" | "user" | "admin" | null;
+type UserRole = "admin_master" | "admin" | "patrocinador" | "user" | null;
 
 interface AuthContextType {
   isAuthenticated: boolean;
   role: UserRole;
+  userName: string | null;
   isAdminMaster: boolean;
-  isSubadmin: boolean;
-  isColunista: boolean;
-  isAdmin: boolean; // Mantido para compatibilidade (admin_master ou subadmin)
+  isAdmin: boolean; // admin_master ou admin
+  isPatrocinador: boolean;
   canCreatePost: boolean;
   canApprovePost: boolean;
   canCreateEvent: boolean;
-  canInviteSubadmin: boolean;
-  canInviteColunista: boolean;
+  canInviteAdmin: boolean;
+  canInvitePatrocinador: boolean;
   authReady: boolean;
   authVersion: number;
   login: (accessToken: string, refreshToken: string) => void;
@@ -47,12 +48,12 @@ export const useAuth = () => {
 
 function getInitialAuthState() {
   if (typeof window === "undefined") {
-    return { isAuthenticated: false, role: null };
+    return { isAuthenticated: false, role: null, userName: null };
   }
 
   const token = localStorage.getItem("circuito_access_token");
   if (!token) {
-    return { isAuthenticated: false, role: null };
+    return { isAuthenticated: false, role: null, userName: null };
   }
 
   try {
@@ -60,9 +61,10 @@ function getInitialAuthState() {
     return {
       isAuthenticated: true,
       role: decoded.role,
+      userName: decoded.name ?? null,
     };
   } catch {
-    return { isAuthenticated: false, role: null };
+    return { isAuthenticated: false, role: null, userName: null };
   }
 }
 
@@ -75,19 +77,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     initialState.isAuthenticated
   );
   const [role, setRole] = useState<UserRole>(initialState.role);
+  const [userName, setUserName] = useState<string | null>(initialState.userName);
   const [authReady, setAuthReady] = useState(false);
   const [authVersion, setAuthVersion] = useState(0);
 
   // Computed permissions
   const isAdminMaster = role === "admin_master";
-  const isSubadmin = role === "subadmin";
-  const isColunista = role === "colunista";
-  const isAdmin = role === "admin_master" || role === "subadmin" || role === "admin"; // Compatibilidade
-  const canCreatePost = role === "admin_master" || role === "subadmin" || role === "colunista";
-  const canApprovePost = role === "admin_master" || role === "subadmin";
-  const canCreateEvent = role === "admin_master" || role === "subadmin";
-  const canInviteSubadmin = role === "admin_master";
-  const canInviteColunista = role === "admin_master" || role === "subadmin";
+  const isAdmin = role === "admin_master" || role === "admin";
+  const isPatrocinador = role === "patrocinador";
+  const canCreatePost = role === "admin_master" || role === "admin" || role === "patrocinador";
+  const canApprovePost = role === "admin_master" || role === "admin";
+  const canCreateEvent = role === "admin_master" || role === "admin";
+  const canInviteAdmin = role === "admin_master";
+  const canInvitePatrocinador = role === "admin_master" || role === "admin";
 
   /* Marca o contexto como pronto após o boot inicial */
   useEffect(() => {
@@ -120,6 +122,7 @@ const login = useCallback(
       // Garante que o role seja definido (pode ser undefined em tokens antigos)
       const userRole = decoded.role || null;
       setRole(userRole);
+      setUserName(decoded.name ?? null);
       setIsAuthenticated(true);
       
       // Força atualização do contexto
@@ -140,6 +143,7 @@ const login = useCallback(
 
     setIsAuthenticated(false);
     setRole(null);
+    setUserName(null);
 
     setAuthVersion((v) => v + 1);
   }, []);
@@ -157,10 +161,12 @@ const login = useCallback(
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       setRole(decoded.role || null);
+      setUserName(decoded.name ?? null);
       setIsAuthenticated(true);
     } catch {
       setIsAuthenticated(false);
       setRole(null);
+      setUserName(null);
     } finally {
       setAuthReady(true);
     }
@@ -171,15 +177,15 @@ const login = useCallback(
   const contextValue = useMemo(() => ({
     isAuthenticated,
     role,
+    userName,
     isAdminMaster,
-    isSubadmin,
-    isColunista,
     isAdmin,
+    isPatrocinador,
     canCreatePost,
     canApprovePost,
     canCreateEvent,
-    canInviteSubadmin,
-    canInviteColunista,
+    canInviteAdmin,
+    canInvitePatrocinador,
     authReady,
     authVersion,
     login,
@@ -187,15 +193,15 @@ const login = useCallback(
   }), [
     isAuthenticated,
     role,
+    userName,
     isAdminMaster,
-    isSubadmin,
-    isColunista,
     isAdmin,
+    isPatrocinador,
     canCreatePost,
     canApprovePost,
     canCreateEvent,
-    canInviteSubadmin,
-    canInviteColunista,
+    canInviteAdmin,
+    canInvitePatrocinador,
     authReady,
     authVersion,
     login,

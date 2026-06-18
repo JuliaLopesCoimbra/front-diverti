@@ -50,7 +50,7 @@ export default function HamburgerMenu({
   currentEvent,
   onSelectEvent,
 }: Props) {
-  const { isAdmin, isAdminMaster, isSubadmin, logout } = useAuth();
+  const { isAdmin, isAdminMaster, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [openEvents, setOpenEvents] = useState(false);
   const [activateModalOpen, setActivateModalOpen] = useState(false);
@@ -494,8 +494,8 @@ export default function HamburgerMenu({
             </ListItemButton>
           </ListItem> */}
         
-                {/* ───────── PERMISSÕES (ADMIN MASTER E SUBADMIN) ───────── */}
-                {(isAdminMaster || isSubadmin) && (
+                {/* ───────── PERMISSÕES (ADMIN MASTER E ADMIN) ───────── */}
+                {isAdmin && (
              <>
                <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
                <ListItem disablePadding>

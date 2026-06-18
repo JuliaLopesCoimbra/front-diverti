@@ -31,7 +31,7 @@ interface CommentSectionProps {
   news: NewsDetailsResponse;
   isAuthenticated: boolean;
   isAdminMaster: boolean;
-  isSubadmin: boolean;
+  isAdmin: boolean;
   currentUser: ProfileResponse | null;
   commentText: string;
   submittingComment: boolean;
@@ -64,7 +64,7 @@ export default function CommentSection({
   news,
   isAuthenticated,
   isAdminMaster,
-  isSubadmin,
+  isAdmin,
   currentUser,
   commentText,
   submittingComment,
@@ -309,7 +309,7 @@ export default function CommentSection({
                       </>
                     )}
                     {/* Botão de excluir */}
-                    {isAuthenticated && (isAdminMaster || isSubadmin || comment.user.id === currentUser?.id) && (
+                    {isAuthenticated && (isAdminMaster || isAdmin || comment.user.id === currentUser?.id) && (
                       <IconButton
                         size="small"
                         onClick={() => onDeleteComment(comment.id, comment.content)}
@@ -465,7 +465,7 @@ export default function CommentSection({
                             reply={reply}
                             isAuthenticated={isAuthenticated}
                             isAdminMaster={isAdminMaster}
-                            isSubadmin={isSubadmin}
+                            isAdmin={isAdmin}
                             currentUserId={currentUser?.id}
                             onLike={() => onLikeComment(reply.id, comment.id)}
                             onDelete={() => onDeleteComment(reply.id, reply.content)}

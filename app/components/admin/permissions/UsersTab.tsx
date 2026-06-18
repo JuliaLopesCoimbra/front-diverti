@@ -9,8 +9,8 @@ import { useInfiniteUsers } from "./useInfiniteUsers";
 import { filterUsers } from "./utils";
 
 interface UsersTabProps {
-  onRevoke: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
-  onReactivate: (userType: "subadmin" | "colunista" | "user", userId: number, userName: string) => void;
+  onRevoke: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
+  onReactivate: (userType: "admin" | "patrocinador" | "user", userId: number, userName: string) => void;
   refreshTrigger?: number;
   searchTerm?: string;
 }

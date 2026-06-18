@@ -16,7 +16,7 @@ interface MenuOptionsProps {
 }
 
 export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
-  const { isAdminMaster, isSubadmin } = useAuth();
+  const { isAdminMaster, isAdmin } = useAuth();
   
   const allOptions: MenuOption[] = [
     {
@@ -39,10 +39,10 @@ export default function MenuOptions({ onSelectOption }: MenuOptionsProps) {
     },
   ];
 
-  // Filtra opções: "Posts Rejeitados por Mim" só aparece para subadmin e admin master
+  // Filtra opções: "Posts Rejeitados por Mim" só aparece para admin e admin master
   const options = allOptions.filter((option) => {
     if (option.id === "rejected") {
-      return isAdminMaster || isSubadmin;
+      return isAdminMaster || isAdmin;
     }
     return true;
   });

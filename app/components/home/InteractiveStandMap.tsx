@@ -46,14 +46,51 @@ interface StandPosition {
   labelOffset?: { x?: number; y?: number }; // fine-tune label placement
 }
 
+// ─── 5 patrocinadores fixos ───────────────────────────────────────────────────
+
+const PATROCINADORES = [
+  { id: -1, brand: "brahma",      name: "Brahma",      image: "/ads/2.png", color: "#f59e0b", x: 28, y: 35 },
+  { id: -2, brand: "sicoob",      name: "Sicoob",      image: "/ads/3.png", color: "#10b981", x: 68, y: 28 },
+  { id: -3, brand: "volkswagen",  name: "Volkswagen",  image: "/ads/4.png", color: "#6366f1", x: 50, y: 55 },
+  { id: -4, brand: "ballantines", name: "Ballantines", image: "/ads/5.png", color: "#ec4899", x: 30, y: 68 },
+  { id: -5, brand: "globo",       name: "Globo",       image: "/ads/1.png", color: "#3b82f6", x: 70, y: 65 },
+] as const;
+
+const BOOKED_SLOTS = [45, 30, 60, 20, 55, 40, 70, 25]; // determinístico — sem Math.random
+
+function mockSessions(standId: number): import("@/app/services/liveStands/liveStandUserService").UserStandSession[] {
+  const DATES = ["2026-08-14", "2026-08-15", "2026-08-16", "2026-08-17"];
+  const TIMES = [
+    { start: "19:00:00", end: "20:00:00" },
+    { start: "21:00:00", end: "22:00:00" },
+  ];
+  let idx = 0;
+  return DATES.flatMap((session_date) =>
+    TIMES.map(({ start, end }) => {
+      const booked = BOOKED_SLOTS[idx++ % BOOKED_SLOTS.length];
+      return {
+        id: standId * 100 - idx,
+        stand_id: standId,
+        session_date,
+        start_time: start,
+        end_time: end,
+        booking_open_time: null,
+        capacity: 100,
+        status: "active",
+        booked_slots: booked,
+        remaining_slots: 100 - booked,
+        is_booked: false,
+      };
+    })
+  );
+}
+
 const STAND_IMAGES: { keys: string[]; image: string }[] = [
-  { keys: ["coca"],                    image: "https://marcasmais.com.br/wp-content/uploads/2026/03/Banco-e-Samba-assinam-experiencias-da-Coca-Cola-Tic-Tac-Sprite-e-Schweppes-no-Lollapalooza-2026-3.jpg" },
-  { keys: ["fiat"],                    image: "https://portalg.com.br/wp-content/uploads/2026/03/Fiat-transforma-fas-em-estrelas-com-experiencias-tecnologicas-no-Lollapalooza-2026-1068x588.webp" },
-  { keys: ["sprite"],                  image: "https://gkpb.com.br/wp-content/uploads/2026/03/sprite-lollapalooza-gkpb-banner.jpg" },
-  { keys: ["balatines", "ballantines"],image: "https://creativosbr.com.br/wp-content/uploads/2024/09/3D-do-estande-de-Johnnie-Walker-durante-o-Rock-in-Rio-Brasil-2024.png" },
-  { keys: ["vivo"],                    image: "https://uploads.promoview.com.br/2025/09/Estande-Skyline_1.jpg" },
-  { keys: ["samsung"],                 image: "https://t2.tudocdn.net/507931?w=1920" },
-  { keys: ["volkswagen", "volks", "vw"], image: "https://marcasmais.com.br/wp-content/uploads/2025/09/Volkswagen-Tera-e-esportivos-VW-Legends-%E2%80%98dao-show-no-The-Town.jpg" },
+  { keys: ["brahma"],                  image: "/ads/2.png" },
+  { keys: ["sicoob"],                  image: "/ads/3.png" },
+  { keys: ["volkswagen", "volks", "vw"], image: "/ads/4.png" },
+  { keys: ["balatines", "ballantines"],image: "/ads/5.png" },
+  { keys: ["globo"],                   image: "/ads/1.png" },
 ];
 
 function getStandImage(name: string, backendImage?: string | null): string | null {
@@ -65,16 +102,6 @@ function getStandImage(name: string, backendImage?: string | null): string | nul
   return null;
 }
 
-const STAND_CONFIGS: { keys: string[]; config: StandPosition }[] = [
-  { keys: ["coca"],                     config: { x: 30, y: 54, color: "#CC0000" } },
-  { keys: ["vivo"],                     config: { x: 55, y: 35, color: "#6600CC" } },
-  { keys: ["volkswagen", "volks", "vw"],config: { x: 72, y: 58, color: "#1D1D1B" } },
-  { keys: ["fiat"],                     config: { x: 45, y: 72, color: "#C9151E" } },
-  { keys: ["sprite"],                   config: { x: 22, y: 42, color: "#00A651" } },
-  { keys: ["samsung"],                  config: { x: 64, y: 42, color: "#1428A0" } },
-  { keys: ["balatines", "ballantines"], config: { x: 50, y: 68, color: "#B8860B" } },
-];
-
 const FALLBACK_POSITIONS: StandPosition[] = [
   { x: 22, y: 38, color: "#6C63FF" },
   { x: 78, y: 58, color: "#FF6B6B" },
@@ -84,8 +111,10 @@ const FALLBACK_POSITIONS: StandPosition[] = [
 
 function getStandConfig(name: string, fallbackIndex: number): StandPosition {
   const lower = name.toLowerCase();
-  for (const { keys, config } of STAND_CONFIGS) {
-    if (keys.some((k) => lower.includes(k))) return config;
+  for (const p of PATROCINADORES) {
+    if (lower.includes(p.brand) || lower === p.name.toLowerCase()) {
+      return { x: p.x, y: p.y, color: p.color };
+    }
   }
   return FALLBACK_POSITIONS[fallbackIndex % FALLBACK_POSITIONS.length];
 }
@@ -137,31 +166,29 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
   const [bookingSessionId, setBookingSessionId] = useState<number | null>(null);
   const [bookingToShowQr, setBookingToShowQr] = useState<UserStandBooking | null>(null);
 
-  // Load stands
+  // Load stands — sempre exibe os 5 patrocinadores; prefere dados reais da API quando disponíveis
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const raw = await getUserEventStands(eventId);
-      const HIDDEN = ["bauducco", "tic tac", "tictac", "piracanjuba", "eisenbahn"];
-      const SOLD_OUT_KEYS = ["balatines", "ballantines"];
-      const MOCK_SOLD_OUT_SESSIONS = [
-        { id: -1, stand_id: -1, session_date: "2026-09-04", start_time: "19:00:00", end_time: "20:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
-        { id: -2, stand_id: -1, session_date: "2026-09-04", start_time: "21:00:00", end_time: "22:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
-        { id: -3, stand_id: -1, session_date: "2026-09-05", start_time: "19:00:00", end_time: "20:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
-        { id: -4, stand_id: -1, session_date: "2026-09-05", start_time: "21:00:00", end_time: "22:00:00", booking_open_time: null, capacity: 100, status: "active", booked_slots: 100, remaining_slots: 0, is_booked: false },
-      ];
-      const data = raw
-        .filter((s) => !HIDDEN.some((h) => s.name.toLowerCase().includes(h)))
-        .map((s) => {
-          const lower = s.name.toLowerCase();
-          const soldOut = SOLD_OUT_KEYS.some((k) => lower.includes(k));
-          if (!soldOut) return { ...s, image_url: getStandImage(s.name, s.image_url) };
-          const sessions = s.sessions.length > 0
-            ? s.sessions.map((sess) => ({ ...sess, remaining_slots: 0 }))
-            : MOCK_SOLD_OUT_SESSIONS.map((sess) => ({ ...sess, stand_id: s.id }));
-          return { ...s, image_url: getStandImage(s.name, s.image_url), sessions };
-        });
-      setStands(data);
+      let raw: UserEventStand[] = [];
+      try { raw = await getUserEventStands(eventId); } catch { /* API offline */ }
+
+      const sponsorStands: UserEventStand[] = PATROCINADORES.map((p) => {
+        const apiMatch = raw.find((s) => s.name.toLowerCase().includes(p.brand));
+        if (apiMatch) {
+          return { ...apiMatch, image_url: apiMatch.image_url || p.image };
+        }
+        return {
+          id: p.id,
+          event_id: eventId,
+          name: p.name,
+          image_url: p.image,
+          description: `Estande oficial ${p.name} — Festa do Peão de Barretos 2026`,
+          sessions: mockSessions(p.id),
+        };
+      });
+
+      setStands(sponsorStands);
     } catch (err: unknown) {
       const detail =
         err && typeof err === "object" && "response" in err
@@ -235,6 +262,11 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
 
   const handleBooking = async (e: MouseEvent<HTMLButtonElement>, sessionId: number) => {
     e.stopPropagation();
+    // Stand mock (id negativo) — agendamento real ainda não disponível
+    if (sessionId < 0) {
+      showToast("Agendamento disponível em breve para este estande!", "info");
+      return;
+    }
     setBookingSessionId(sessionId);
     try {
       // Capture booked_slots before booking to compute queue position

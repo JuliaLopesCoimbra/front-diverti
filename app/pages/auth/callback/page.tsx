@@ -26,10 +26,24 @@ function AuthCallbackContent() {
 
     // Força o login e aguarda um pouco para garantir que o contexto seja atualizado
     login(access, refresh);
-    
-    // Pequeno delay para garantir que o token seja processado
+
+    // Decode the token to determine the role and redirect accordingly
     setTimeout(() => {
-      router.replace("/pages/user/home");
+      try {
+        const payload = JSON.parse(atob(access.split(".")[1]));
+        const role = payload.role as string | undefined;
+        if (role === "admin_master") {
+          router.replace("/pages/admin-master/home");
+        } else if (role === "admin") {
+          router.replace("/pages/admin/home");
+        } else if (role === "patrocinador") {
+          router.replace("/pages/patrocinador/home");
+        } else {
+          router.replace("/pages/user/home");
+        }
+      } catch {
+        router.replace("/pages/user/home");
+      }
     }, 100);
   }, [params, login, router]);
 
