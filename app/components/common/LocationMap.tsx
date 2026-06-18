@@ -74,9 +74,17 @@ export default function LocationMap({ mode, regioes, estados, cidades }: Props) 
     let destroyed = false;
 
     const init = async () => {
+      // Injeta CSS do leaflet via <link> — evita qualquer resolução em build time
+      if (!document.getElementById("leaflet-css")) {
+        const link = document.createElement("link");
+        link.id = "leaflet-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+      }
+
       // Importa leaflet só no browser, nunca em build time
       const L = (await import("leaflet")).default;
-      await import("leaflet/dist/leaflet.css");
 
       if (destroyed || !containerRef.current) return;
 
