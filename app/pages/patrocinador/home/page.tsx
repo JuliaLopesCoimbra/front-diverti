@@ -48,8 +48,11 @@ function CampaignCard({ c }: { c: Campaign }) {
   const perf = MOCK_PERFORMANCE[c.id] ?? [];
   const totalUnits = perf.reduce((s, d) => s + d.units, 0);
   const totalGasto = perf.reduce((s, d) => s + d.gasto, 0);
-  // Campanhas reais sem dados de performance ainda: exibir o orçamento contratado
-  const displayGasto = totalGasto > 0 ? totalGasto : (c.budget_value ?? 0);
+  const contractedTotal = c.budget_type === "diario"
+    ? (c.budget_value ?? 0) * (c.duration_days ?? 1)
+    : (c.budget_value ?? 0);
+  const displayGasto = totalGasto > 0 ? totalGasto : contractedTotal;
+  const displayUnits = totalUnits > 0 ? totalUnits : (c.target_units ?? 0);
   const created = new Date(c.created_at).toLocaleDateString("pt-BR");
   const isVideo = c.creative_url ? /\.(mp4|mov|webm)$/i.test(c.creative_url) : false;
 
@@ -113,7 +116,7 @@ function CampaignCard({ c }: { c: Campaign }) {
               {c.ad_type === "CPC" ? "Cliques" : "Views"}
             </Typography>
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>
-              {totalUnits.toLocaleString("pt-BR")}
+              {displayUnits.toLocaleString("pt-BR")}
             </Typography>
           </Box>
           <Box>
@@ -205,18 +208,19 @@ export default function PatrocinadorHomePage() {
           const AXIS  = "rgba(255,255,255,0.28)";
           const COLORS = ["#ffcc01","#10b981","#6366f1","#f59e0b","#ec4899"];
 
-          // Aggregate daily data across all campaigns
-          const dateMap: Record<string, { units: number; gasto: number }> = {};
+          // Aggregate by day of week across all campaigns
+          const DOW_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+          const dowTotals = [0, 0, 0, 0, 0, 0, 0];
           campaigns.forEach((c) => {
             (MOCK_PERFORMANCE[c.id] ?? []).forEach((d) => {
-              if (!dateMap[d.date]) dateMap[d.date] = { units: 0, gasto: 0 };
-              dateMap[d.date].units += d.units;
-              dateMap[d.date].gasto += d.gasto;
+              // date format: "DD/MM"
+              const [day, month] = d.date.split("/").map(Number);
+              const dt = new Date(2026, month - 1, day);
+              dowTotals[dt.getDay()] += d.units;
             });
           });
-          const lineData = Object.entries(dateMap)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([date, v]) => ({ date, interações: v.units, gasto: parseFloat(v.gasto.toFixed(2)) }));
+          const dowData = DOW_LABELS.map((label, i) => ({ dia: label, interações: dowTotals[i] }));
+          const bestDow = dowData.reduce((b, d) => d.interações > b.interações ? d : b);
 
           // Per-campaign bar data
           const barData = campaigns
@@ -234,9 +238,15 @@ export default function PatrocinadorHomePage() {
           // Summary numbers
           const totalInvested = campaigns.reduce((s, c) => {
             const gasto = (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.gasto, 0);
-            return s + (gasto > 0 ? gasto : (c.budget_value ?? 0));
+            const contracted = c.budget_type === "diario"
+              ? (c.budget_value ?? 0) * (c.duration_days ?? 1)
+              : (c.budget_value ?? 0);
+            return s + (gasto > 0 ? gasto : contracted);
           }, 0);
-          const totalUnits    = campaigns.reduce((s, c) => s + (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.units, 0), 0);
+          const totalUnits = campaigns.reduce((s, c) => {
+            const units = (MOCK_PERFORMANCE[c.id] ?? []).reduce((a, d) => a + d.units, 0);
+            return s + (units > 0 ? units : (c.target_units ?? 0));
+          }, 0);
           const activeCnt     = campaigns.filter((c) => c.status === "active").length;
           const avgProgress   = campaigns.length > 0
             ? Math.round(campaigns.reduce((s, c) => {
@@ -268,19 +278,36 @@ export default function PatrocinadorHomePage() {
               {/* Charts */}
               <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 3, mb: 3 }}>
 
-                {/* Line — daily performance */}
+                {/* Line — best day of week */}
                 <Paper elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 3 }}>
-                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", mb: 0.3 }}>Performance diária</Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mb: 2.5 }}>Interações e gasto somados de todas as campanhas</Typography>
+                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", mb: 0.3 }}>Melhor dia da semana</Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mb: 2.5 }}>
+                    Pico de acessos: <Box component="span" sx={{ color: "#ffcc01", fontWeight: 700 }}>{bestDow.dia}</Box>
+                    {" · "}{bestDow.interações.toLocaleString("pt-BR")} interações
+                  </Typography>
                   <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={lineData} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
+                    <LineChart data={dowData} margin={{ top: 4, right: 8, left: -14, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke={GRID} />
-                      <XAxis dataKey="date" tick={{ fill: AXIS, fontSize: 10 }} axisLine={false} tickLine={false} />
+                      <XAxis dataKey="dia" tick={{ fill: AXIS, fontSize: 11 }} axisLine={false} tickLine={false} />
                       <YAxis tick={{ fill: AXIS, fontSize: 10 }} axisLine={false} tickLine={false} />
-                      <RechartTooltip contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }} />
-                      <Legend formatter={(v) => <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 11 }}>{v}</span>} />
-                      <Line type="monotone" dataKey="interações" stroke="#ffcc01" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
-                      <Line type="monotone" dataKey="gasto" stroke="#10b981" strokeWidth={2} dot={false} activeDot={{ r: 4 }} />
+                      <RechartTooltip
+                        contentStyle={{ backgroundColor: "#1a1a2e", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
+                        labelStyle={{ color: "rgba(255,255,255,0.6)" }}
+                        itemStyle={{ color: "#fff" }}
+                        formatter={(v) => [Number(v).toLocaleString("pt-BR"), "Interações"]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="interações"
+                        stroke="#ffcc01"
+                        strokeWidth={2.5}
+                        dot={(props) => {
+                          const { cx, cy, payload } = props;
+                          const isBest = payload.dia === bestDow.dia;
+                          return <circle key={payload.dia} cx={cx} cy={cy} r={isBest ? 6 : 3} fill={isBest ? "#ffcc01" : "#ffcc01"} stroke={isBest ? "#fff" : "none"} strokeWidth={isBest ? 2 : 0} />;
+                        }}
+                        activeDot={{ r: 5 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </Paper>
