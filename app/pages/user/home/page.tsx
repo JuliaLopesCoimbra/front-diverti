@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
+import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
 import HomeHeader from "@/app/components/home/HeaderHome";
 import HomeTabs from "@/app/components/home/HomeTabs";
 import BottomNav from "@/app/components/layout/BottomNav";
@@ -18,6 +20,10 @@ import EventMap from "@/app/components/home/EventMap";
 import LineUp from "@/app/components/home/LineUp";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
 import DashboardRoulette from "@/app/components/home/DashboardRoulette";
+import CampingMap from "@/app/components/home/CampingMap";
+import { getMyCampingBookings } from "@/app/services/camping/campingUserService";
+import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
+import QrCodeIcon from "@mui/icons-material/QrCode";
 import { getProfile, ProfileResponse } from "@/app/services/profile/profileService";
 import { useToast } from "@/app/context/ToastContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
@@ -27,9 +33,9 @@ const STORAGE_KEY = "circuito_selectedEventId";
 const SCROLL_KEY = "circuito_homeScrollY";
 const TAB_KEY = "circuito_homeActiveTab";
 
-type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
+type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta" | "camping";
 
-const VALID_TABS: Tab[] = ["home", "eventos", "estandes", "mapa", "lineup", "foto", "roleta"];
+const VALID_TABS: Tab[] = ["home", "eventos", "estandes", "mapa", "lineup", "foto", "roleta", "camping"];
 
 const normalizeTab = (tab: string | null): Tab | null => {
   if (!tab) return null;
@@ -55,12 +61,23 @@ const HomeContent: React.FC = () => {
   const router = useRouter();
   const { isAdmin, authReady, isAuthenticated } = useAuth();
   const { showToast } = useToast();
+  const [campingBookingCount, setCampingBookingCount] = useState(0);
+  const [campingInitialStage, setCampingInitialStage] = useState<"pricing" | "mypassports">("pricing");
 
   // Persist tab selection
   useEffect(() => {
     if (typeof window !== "undefined") {
       sessionStorage.setItem(TAB_KEY, activeTab);
     }
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    getMyCampingBookings().then((b) => setCampingBookingCount(b.length)).catch(() => {});
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (activeTab !== "camping") setCampingInitialStage("pricing");
   }, [activeTab]);
 
   // Controla animações quando a aba muda
@@ -268,6 +285,13 @@ const HomeContent: React.FC = () => {
       isCheckingRef.current = false;
     }
   }, [isAdmin]);
+
+  const handleTabChange = useCallback((newTab: Tab) => {
+    setActiveTab(newTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", newTab);
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
   // Função para salvar evento selecionado no localStorage
   const handleSelectEvent = (event: EventResponse) => {
@@ -551,15 +575,7 @@ const HomeContent: React.FC = () => {
         </Box>
 
         {/* Tabs — dock flutuante fixo acima do BottomNav */}
-        <HomeTabs
-          active={activeTab}
-          onChange={(newTab) => {
-            setActiveTab(newTab);
-            const url = new URL(window.location.href);
-            url.searchParams.set("tab", newTab);
-            window.history.replaceState({}, "", url.toString());
-          }}
-        />
+        <HomeTabs active={activeTab} onChange={handleTabChange} />
 
         {/* Conteúdo baseado na aba selecionada */}
         {activeTab === "home" && currentEvent && (
@@ -567,6 +583,92 @@ const HomeContent: React.FC = () => {
             <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
               <AdCarousel eventId={currentEvent.id} />
             </Box>
+            <Box
+              className={shouldAnimate ? "slide-up-delay-2" : ""}
+              sx={{ px: 2, pt: 1.5, pb: 0.5, display: "flex", justifyContent: "center" }}
+            >
+            <Box sx={{ display: "flex", gap: 1.5, width: "100%", maxWidth: { md: 480 } }}>
+              {([
+                {
+                  label: "Brindes",
+                  sub: "Gire e ganhe prêmios",
+                  icon: <CardGiftcardRoundedIcon sx={{ fontSize: 24, color: "#c084fc" }} />,
+                  tab: "roleta" as Tab,
+                  accent: "rgba(192, 132, 252, 0.25)",
+                  href: null,
+                },
+                {
+                  label: "Photo Finder",
+                  sub: "Encontre sua foto",
+                  icon: <PhotoCameraRoundedIcon sx={{ fontSize: 24, color: "#60a5fa" }} />,
+                  tab: "foto" as Tab,
+                  accent: "rgba(96, 165, 250, 0.25)",
+                  href: "/pages/user/photoAI",
+                },
+              ] as { label: string; sub: string; icon: React.ReactNode; tab: Tab; accent: string; href: string | null }[]).map(({ label, sub, icon, tab, accent, href }) => (
+                <Box
+                  key={tab}
+                  onClick={() => href ? router.push(href) : handleTabChange(tab)}
+                  sx={{
+                    flex: 1,
+                    backgroundColor: "rgba(255,255,255,0.06)",
+                    border: `1px solid ${accent}`,
+                    borderRadius: "16px",
+                    p: 1.8,
+                    cursor: "pointer",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0.6,
+                    backdropFilter: "blur(12px)",
+                    transition: "transform 0.15s ease, background-color 0.15s ease",
+                    "&:active": { transform: "scale(0.96)" },
+                    "&:hover": { backgroundColor: "rgba(255,255,255,0.09)" },
+                  }}
+                >
+                  {icon}
+                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", lineHeight: 1.2 }}>
+                    {label}
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.7rem", lineHeight: 1.3 }}>
+                    {sub}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+            </Box>
+            {campingBookingCount > 0 && (
+              <Box
+                className={shouldAnimate ? "slide-up-delay-3" : ""}
+                onClick={() => { setCampingInitialStage("mypassports"); handleTabChange("camping"); }}
+                sx={{
+                  mx: 2, mt: 1, mb: 0.5,
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  gap: 1.5,
+                  backgroundColor: "rgba(255,204,1,0.07)",
+                  border: "1px solid rgba(255,204,1,0.2)",
+                  borderRadius: "16px",
+                  px: 2, py: 1.4,
+                  cursor: "pointer",
+                  transition: "background-color 0.15s",
+                  "&:hover": { backgroundColor: "rgba(255,204,1,0.12)" },
+                  "&:active": { transform: "scale(0.98)" },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                  <NightShelterRoundedIcon sx={{ color: "#ffcc01", fontSize: 22 }} />
+                  <Box>
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem", lineHeight: 1.2 }}>
+                      Meus Passaportes
+                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.72rem" }}>
+                      {campingBookingCount} reserva{campingBookingCount !== 1 ? "s" : ""} de camping ativa{campingBookingCount !== 1 ? "s" : ""}
+                    </Typography>
+                  </Box>
+                </Box>
+                <QrCodeIcon sx={{ color: "rgba(255,204,1,0.6)", fontSize: 22, flexShrink: 0 }} />
+              </Box>
+            )}
+
             <Box className={shouldAnimate ? "slide-up-delay-3" : ""}>
               <NewsFeed eventId={currentEvent.id} event={currentEvent} />
             </Box>
@@ -575,6 +677,7 @@ const HomeContent: React.FC = () => {
         {activeTab === "eventos" && currentEvent && (
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
             <EventDetails event={currentEvent} />
+            <LineUp eventId={currentEvent.id} />
           </Box>
         )}
         {activeTab === "estandes" && currentEvent && (
@@ -587,15 +690,18 @@ const HomeContent: React.FC = () => {
             <DashboardRoulette eventId={currentEvent.id} />
           </Box>
         )}
+        {activeTab === "camping" && currentEvent && (
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <CampingMap
+              eventId={currentEvent.id}
+              mapImageUrl={currentEvent.map_images?.[0]?.image_url ?? currentEvent.image_map ?? undefined}
+              initialStage={campingInitialStage}
+            />
+          </Box>
+        )}
         {activeTab === "mapa" && currentEvent && (
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
             <EventMap event={currentEvent} />
-          </Box>
-        )}
-
-        {activeTab === "lineup" && currentEvent && (
-          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
-            <LineUp eventId={currentEvent.id} />
           </Box>
         )}
 

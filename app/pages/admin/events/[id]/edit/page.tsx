@@ -49,8 +49,19 @@ export default function EditEventPage() {
         flexDirection: "column",
       }}
     >
-      <EditEventForm eventId={eventId} />
+      {/* ALTERADO: Container adicionado para limitar a largura e centralizar todo o conteúdo */}
+      <Box 
+        sx={{ 
+          width: "100%",
+          maxWidth: { xs: "100%", sm: "600px", md: "800px" }, // Ajuste esses valores para casar com o tamanho dos seus outros componentes
+          mx: "auto", 
+          px: { xs: 2, sm: 3, md: 4 },
+          pt: { xs: 3, sm: 4 },
+          pb: 6
+        }}
+      >
+        <EditEventForm eventId={eventId} />
+      </Box>
     </Box>
   );
 }
-

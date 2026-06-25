@@ -28,7 +28,17 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [severity, setSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('success');
 
   const showToast = useCallback((message: string, severity: 'success' | 'error' | 'info' | 'warning') => {
-    setMessage(message);
+    let safe: string;
+    if (typeof message === 'string') {
+      safe = message;
+    } else if (Array.isArray(message)) {
+      safe = (message as any[]).map((e) => e?.msg ?? JSON.stringify(e)).join('; ');
+    } else if (message && typeof message === 'object') {
+      safe = (message as any).msg ?? (message as any).detail ?? JSON.stringify(message);
+    } else {
+      safe = String(message);
+    }
+    setMessage(safe);
     setSeverity(severity);
     setOpen(true);
   }, []);

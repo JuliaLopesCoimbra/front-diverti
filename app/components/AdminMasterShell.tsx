@@ -15,6 +15,7 @@ import {
   AccountBalance as FinanceiroIcon,
   Settings as ConfigIcon,
 } from "@mui/icons-material";
+import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useAuth } from "@/app/context/AuthContext";
@@ -23,12 +24,13 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 const SIDEBAR_W = 220;
 
 const NAV_ITEMS = [
-  { label: "Dashboard",      icon: <DashboardIcon />, path: "/pages/admin-master/home"          },
-  { label: "Eventos",        icon: <EventosIcon />,   path: "/pages/admin-master/eventos"       },
-  { label: "Patrocinadores", icon: <UsuariosIcon />,  path: "/pages/admin-master/usuarios"      },
-  { label: "Extrato",        icon: <FinanceiroIcon />,path: "/pages/admin-master/financeiro"    },
-  { label: "Configurações",  icon: <ConfigIcon />,    path: "/pages/admin-master/configuracoes" },
-  { label: "Perfil",         icon: <PerfilIcon />,    path: "/pages/admin-master/perfil"        },
+  { label: "Dashboard",      icon: <DashboardIcon />,            path: "/pages/admin-master/home"          },
+  { label: "Eventos",        icon: <EventosIcon />,              path: "/pages/admin-master/eventos"       },
+  { label: "Patrocinadores", icon: <UsuariosIcon />,             path: "/pages/admin-master/usuarios"      },
+  { label: "Camping",        icon: <NightShelterRoundedIcon />,  path: "/pages/admin/camping"              },
+  { label: "Extrato",        icon: <FinanceiroIcon />,           path: "/pages/admin-master/financeiro"    },
+  { label: "Configurações",  icon: <ConfigIcon />,               path: "/pages/admin-master/configuracoes" },
+  { label: "Perfil",         icon: <PerfilIcon />,               path: "/pages/admin-master/perfil"        },
 ];
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
@@ -46,7 +48,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
 
   function handleLogout() {
     logout();
-    router.replace("/pages/auth/login");
+    router.replace("/");
   }
 
   return (
@@ -163,11 +165,11 @@ export default function AdminMasterShell({ children }: { children: React.ReactNo
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", ...dashboardBackgroundSx }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", ...dashboardBackgroundSx }}>
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — fixed, never scrolls */}
       {!isMobile && (
-        <Box sx={{ width: SIDEBAR_W, flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
+        <Box sx={{ width: SIDEBAR_W, flexShrink: 0, height: "100vh", overflowY: "auto" }}>
           <SidebarContent />
         </Box>
       )}
@@ -183,8 +185,8 @@ export default function AdminMasterShell({ children }: { children: React.ReactNo
         </Drawer>
       )}
 
-      {/* Main content */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      {/* Main content — scrolls independently */}
+      <Box sx={{ flex: 1, height: "100vh", overflowY: "auto", display: "flex", flexDirection: "column", minWidth: 0 }}>
         {isMobile && (
           <Box
             sx={{

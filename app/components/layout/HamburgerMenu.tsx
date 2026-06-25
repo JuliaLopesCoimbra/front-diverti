@@ -31,6 +31,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import StorefrontIcon from "@mui/icons-material/Storefront";
+import ConfirmationNumberIcon from "@mui/icons-material/ConfirmationNumber";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
 import { EventResponse } from "@/app/services/events/eventAppService";
@@ -471,8 +472,26 @@ export default function HamburgerMenu({
               />
             </ListItemButton>
           </ListItem>
-         
-  
+          <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
+          <ListItem disablePadding>
+            <ListItemButton
+              onClick={() => {
+                router.push("/pages/user/roulette/cupons");
+                setOpen(false);
+              }}
+            >
+              <ConfirmationNumberIcon sx={{ mr: 2, color: "white" }} />
+              <ListItemText
+                primary="Meus cupons"
+                secondary="Ver cupons ganhos na roleta"
+                primaryTypographyProps={{ fontWeight: 600 }}
+                secondaryTypographyProps={{
+                  sx: { color: "rgba(255,255,255,0.6)" },
+                }}
+              />
+            </ListItemButton>
+          </ListItem>
+
           {/* <Divider sx={{ borderColor: "rgba(255,255,255,0.2)", my: 1 }} />
           <ListItem disablePadding>
             <ListItemButton

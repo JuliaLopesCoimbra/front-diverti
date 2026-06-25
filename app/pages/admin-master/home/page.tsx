@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Box, CircularProgress, Typography, Paper, Chip, Divider } from "@mui/material";
+import React, { useEffect, useState } from "react";
+import {
+  Box, CircularProgress, Typography, Paper, Chip, Divider,
+  Drawer, Fab, Badge, IconButton,
+} from "@mui/material";
 import {
   Campaign as CampaignIcon,
   PeopleAlt as PeopleIcon,
@@ -12,10 +15,18 @@ import { useAuth } from "@/app/context/AuthContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 import AdminMasterShell from "@/app/components/AdminMasterShell";
 import { BRAND_MOCKS, BRAND_DEFAULT_PHOTO, MOCK_PERFORMANCE } from "@/app/services/campaigns/mockData";
+import { listPendingCampaigns, updateCampaignStatus, type Campaign, type PatrocinadorWithCampaigns } from "@/app/services/campaigns/campaignService";
+import { useToast } from "@/app/context/ToastContext";
 import {
   BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartTooltip,
   ResponsiveContainer, LineChart, Line, Legend,
 } from "recharts";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import CloseIcon from "@mui/icons-material/Close";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 /* ── Mock sponsor summaries ──────────────────────────────────────────────── */
 interface SponsorCard {
@@ -53,7 +64,6 @@ const MOCK_SPONSORS: SponsorCard[] = Object.entries(BRAND_MOCKS).map(([brand, ca
 
 /* ── Dashboard data ─────────────────────────────────────────────────────── */
 
-// Bar chart: invested + units per brand
 const BAR_DATA = MOCK_SPONSORS.map((s) => ({
   name: s.displayName,
   investido: parseFloat(s.totalInvested.toFixed(2)),
@@ -61,7 +71,6 @@ const BAR_DATA = MOCK_SPONSORS.map((s) => ({
   brand: s.brand,
 }));
 
-// Line chart: collect all unique dates across all brands, then build per-brand values
 const ALL_DATES: string[] = [];
 Object.entries(BRAND_MOCKS).forEach(([, campaigns]) => {
   campaigns.forEach((c) => {
@@ -85,6 +94,157 @@ const LINE_DATA = ALL_DATES.map((date) => {
 
 const CHART_GRID = "rgba(255,255,255,0.06)";
 const CHART_AXIS = "rgba(255,255,255,0.3)";
+
+const GENDER_LABELS: Record<string, string> = {
+  todos: "Todos",
+  feminino: "Feminino",
+  masculino: "Masculino",
+  nao_binario: "Não-binário",
+};
+
+/* ── Helper sub-components ───────────────────────────────────────────────── */
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.68rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", mb: 1.2 }}>
+      {children}
+    </Typography>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 2 }}>
+      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", flexShrink: 0 }}>{label}</Typography>
+      <Typography component="span" sx={{ color: "#fff", fontSize: "0.78rem", fontWeight: 600, textAlign: "right" }}>{value}</Typography>
+    </Box>
+  );
+}
+
+function CampaignDetailPanel({ campaign: c, group }: { campaign: Campaign; group: PatrocinadorWithCampaigns }) {
+  const isVideo = c.creative_url?.match(/\.(mp4|mov|webm)/i);
+
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+      {/* Creative preview */}
+      {c.creative_url && (
+        <Box sx={{ borderRadius: 2, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          {isVideo ? (
+            <video src={c.creative_url} controls style={{ width: "100%", maxHeight: 220, objectFit: "cover" }} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={c.creative_url} alt={c.campaign_name} style={{ width: "100%", maxHeight: 220, objectFit: "cover" }} />
+          )}
+        </Box>
+      )}
+
+      {/* Informações */}
+      <Box>
+        <SectionLabel>Informações</SectionLabel>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <DetailRow label="Patrocinador" value={group.patrocinador_name ?? group.patrocinador_email} />
+          <DetailRow label="Tipo" value={c.ad_type} />
+          {c.redirect_url && (
+            <DetailRow
+              label="URL de destino"
+              value={
+                <a
+                  href={c.redirect_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#60a5fa", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: 3 }}
+                >
+                  {c.redirect_url.length > 32 ? c.redirect_url.slice(0, 32) + "…" : c.redirect_url}
+                  <OpenInNewIcon style={{ fontSize: 11 }} />
+                </a>
+              }
+            />
+          )}
+        </Box>
+      </Box>
+
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
+
+      {/* Orçamento */}
+      <Box>
+        <SectionLabel>Orçamento</SectionLabel>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <DetailRow
+            label="Valor"
+            value={`R$ ${(c.budget_value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}${c.budget_type === "diario" ? " / dia" : " total"}`}
+          />
+          {c.duration_days != null && (
+            <DetailRow label="Duração" value={`${c.duration_days} dia${c.duration_days !== 1 ? "s" : ""}`} />
+          )}
+          {c.start_at && (
+            <DetailRow
+              label="Início"
+              value={new Date(c.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+            />
+          )}
+          {c.target_units != null && (
+            <DetailRow
+              label="Meta"
+              value={`${c.target_units.toLocaleString("pt-BR")} ${c.ad_type === "CPC" ? "cliques" : "visualizações"}`}
+            />
+          )}
+        </Box>
+      </Box>
+
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
+
+      {/* Público-alvo */}
+      <Box>
+        <SectionLabel>Público-alvo</SectionLabel>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+          {c.gender && (
+            <DetailRow label="Gênero" value={GENDER_LABELS[c.gender] ?? c.gender} />
+          )}
+          {(c.age_min != null || c.age_max != null) && (
+            <DetailRow label="Faixa etária" value={`${c.age_min ?? 18} – ${c.age_max ?? 100} anos`} />
+          )}
+          {c.hobbies && c.hobbies.length > 0 && (
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.68rem", mb: 0.8 }}>Hobbies</Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {c.hobbies.map((h) => (
+                  <Chip key={h} label={h} size="small" sx={{ backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: "0.68rem", height: 20, border: "1px solid rgba(255,255,255,0.1)" }} />
+                ))}
+              </Box>
+            </Box>
+          )}
+          {c.professions && c.professions.length > 0 && (
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.68rem", mb: 0.8 }}>Profissões</Typography>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                {c.professions.map((p) => (
+                  <Chip key={p} label={p} size="small" sx={{ backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontSize: "0.68rem", height: 20, border: "1px solid rgba(255,255,255,0.1)" }} />
+                ))}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Box>
+
+      {/* Localização */}
+      {(c.address || c.radius_km) && (
+        <>
+          <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
+          <Box>
+            <SectionLabel>Localização</SectionLabel>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {c.address && <DetailRow label="Endereço" value={c.address} />}
+              {c.radius_km != null && <DetailRow label="Raio" value={`${c.radius_km} km`} />}
+            </Box>
+          </Box>
+        </>
+      )}
+
+      {/* Spacer so footer doesn't cover bottom content */}
+      <Box sx={{ height: 16 }} />
+    </Box>
+  );
+}
 
 /* ── Sponsor card component ──────────────────────────────────────────────── */
 function SponsorCardItem({ s, onClick }: { s: SponsorCard; onClick: () => void }) {
@@ -123,7 +283,6 @@ function SponsorCardItem({ s, onClick }: { s: SponsorCard; onClick: () => void }
             </Typography>
           </Box>
         )}
-        {/* Active badge */}
         {s.activeCampaigns > 0 && (
           <Box sx={{ position: "absolute", top: 10, right: 10 }}>
             <Chip
@@ -173,7 +332,35 @@ function SponsorCardItem({ s, onClick }: { s: SponsorCard; onClick: () => void }
 export default function AdminMasterHomePage() {
   const { isAdminMaster, authReady, role } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
   const [mounted, setMounted] = useState(false);
+  const [pendingGroups, setPendingGroups] = useState<PatrocinadorWithCampaigns[]>([]);
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedCampaign, setSelectedCampaign] = useState<{ campaign: Campaign; group: PatrocinadorWithCampaigns } | null>(null);
+
+  useEffect(() => {
+    listPendingCampaigns().then(setPendingGroups).catch(() => {});
+  }, []);
+
+  const handleStatus = async (campaign: Campaign, status: "active" | "recusado") => {
+    setUpdatingId(campaign.id);
+    try {
+      await updateCampaignStatus(campaign.id, status);
+      setPendingGroups((prev) =>
+        prev.map((g) => ({ ...g, campaigns: g.campaigns.filter((c) => c.id !== campaign.id) }))
+            .filter((g) => g.campaigns.length > 0)
+      );
+      if (selectedCampaign?.campaign.id === campaign.id) setSelectedCampaign(null);
+      showToast(status === "active" ? "Anúncio aprovado!" : "Anúncio recusado.", status === "active" ? "success" : "info");
+    } catch {
+      showToast("Erro ao atualizar status.", "error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const totalPending = pendingGroups.reduce((s, g) => s + g.campaigns.length, 0);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 80);
@@ -371,6 +558,187 @@ export default function AdminMasterHomePage() {
         </Paper>
 
       </Box>
+
+      {/* ── FAB: pendentes ────────────────────────────────────────────────── */}
+      <Box sx={{ position: "fixed", bottom: 32, right: 32, zIndex: 1200 }}>
+        <Badge
+          badgeContent={totalPending}
+          max={99}
+          sx={{
+            "& .MuiBadge-badge": {
+              backgroundColor: "#ef4444",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "0.68rem",
+              minWidth: 18,
+              height: 18,
+              padding: "0 4px",
+            },
+          }}
+        >
+          <Fab
+            onClick={() => setDrawerOpen(true)}
+            sx={{
+              backgroundColor: "#f59e0b",
+              "&:hover": { backgroundColor: "#d97706" },
+              width: 56,
+              height: 56,
+              boxShadow: "0 4px 24px rgba(245,158,11,0.45)",
+            }}
+          >
+            <AccessTimeIcon sx={{ color: "#fff", fontSize: 26 }} />
+          </Fab>
+        </Badge>
+      </Box>
+
+      {/* ── Drawer: lista e detalhe de pendentes ──────────────────────────── */}
+      <Drawer
+        anchor="right"
+        open={drawerOpen}
+        onClose={() => { setDrawerOpen(false); setSelectedCampaign(null); }}
+        PaperProps={{
+          sx: {
+            width: { xs: "100vw", sm: 460 },
+            backgroundColor: "#0f0f1a",
+            borderLeft: "1px solid rgba(255,255,255,0.08)",
+            display: "flex",
+            flexDirection: "column",
+          },
+        }}
+      >
+        {/* Header */}
+        <Box sx={{ px: 3, py: 2.5, borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
+          {selectedCampaign && (
+            <IconButton
+              onClick={() => setSelectedCampaign(null)}
+              size="small"
+              sx={{ color: "rgba(255,255,255,0.5)", p: 0.5, mr: 0.5 }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
+          )}
+          <AccessTimeIcon sx={{ color: "#f59e0b", fontSize: 20 }} />
+          <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem", flex: 1 }}>
+            {selectedCampaign
+              ? selectedCampaign.campaign.campaign_name
+              : `Pendentes${totalPending > 0 ? ` (${totalPending})` : ""}`}
+          </Typography>
+          <IconButton
+            onClick={() => { setDrawerOpen(false); setSelectedCampaign(null); }}
+            size="small"
+            sx={{ color: "rgba(255,255,255,0.35)", p: 0.5 }}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Body */}
+        <Box sx={{ flex: 1, overflowY: "auto", px: 2.5, py: 2.5 }}>
+          {selectedCampaign ? (
+            <CampaignDetailPanel
+              campaign={selectedCampaign.campaign}
+              group={selectedCampaign.group}
+            />
+          ) : totalPending === 0 ? (
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 2, py: 8 }}>
+              <CheckCircleOutlineIcon sx={{ fontSize: 52, color: "rgba(255,255,255,0.08)" }} />
+              <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.88rem" }}>
+                Nenhum anúncio pendente
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              {pendingGroups.map((group) =>
+                group.campaigns.map((c) => (
+                  <Paper
+                    key={c.id}
+                    elevation={0}
+                    onClick={() => setSelectedCampaign({ campaign: c, group })}
+                    sx={{
+                      backgroundColor: "rgba(245,158,11,0.04)",
+                      border: "1px solid rgba(245,158,11,0.18)",
+                      borderRadius: 3,
+                      p: 2,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.5,
+                      transition: "all 0.15s ease",
+                      "&:hover": {
+                        backgroundColor: "rgba(245,158,11,0.09)",
+                        borderColor: "rgba(245,158,11,0.38)",
+                      },
+                    }}
+                  >
+                    {/* Creative thumb */}
+                    <Box sx={{ width: 46, height: 46, borderRadius: 1.5, overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", flexShrink: 0 }}>
+                      {c.creative_url
+                        ? <img src={c.creative_url} alt={c.campaign_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}><CampaignIcon sx={{ fontSize: 18, color: "rgba(255,255,255,0.2)" }} /></Box>
+                      }
+                    </Box>
+
+                    {/* Info */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {c.campaign_name}
+                      </Typography>
+                      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>
+                        {group.patrocinador_name ?? group.patrocinador_email} · {c.ad_type} · R$ {(c.budget_value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      </Typography>
+                    </Box>
+
+                    {/* Arrow */}
+                    <Typography sx={{ color: "rgba(255,255,255,0.2)", fontSize: "1.2rem", lineHeight: 1, flexShrink: 0 }}>›</Typography>
+                  </Paper>
+                ))
+              )}
+            </Box>
+          )}
+        </Box>
+
+        {/* Footer actions — only in detail view */}
+        {selectedCampaign && (
+          <Box sx={{ px: 2.5, py: 2.5, borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: 1.5, flexShrink: 0 }}>
+            <Box
+              onClick={() => !updatingId && handleStatus(selectedCampaign.campaign, "recusado")}
+              sx={{
+                flex: 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 0.8,
+                cursor: updatingId ? "default" : "pointer",
+                backgroundColor: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.25)",
+                borderRadius: "12px",
+                py: 1.5,
+                opacity: updatingId ? 0.5 : 1,
+                transition: "background-color 0.15s ease",
+                "&:hover": { backgroundColor: "rgba(239,68,68,0.18)" },
+              }}
+            >
+              <CancelOutlinedIcon sx={{ fontSize: 18, color: "#ef4444" }} />
+              <Typography sx={{ color: "#ef4444", fontWeight: 700, fontSize: "0.85rem" }}>Recusar</Typography>
+            </Box>
+            <Box
+              onClick={() => !updatingId && handleStatus(selectedCampaign.campaign, "active")}
+              sx={{
+                flex: 1,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 0.8,
+                cursor: updatingId ? "default" : "pointer",
+                backgroundColor: "rgba(16,185,129,0.12)",
+                border: "1px solid rgba(16,185,129,0.35)",
+                borderRadius: "12px",
+                py: 1.5,
+                opacity: updatingId ? 0.5 : 1,
+                transition: "background-color 0.15s ease",
+                "&:hover": { backgroundColor: "rgba(16,185,129,0.22)" },
+              }}
+            >
+              <CheckCircleOutlineIcon sx={{ fontSize: 18, color: "#10b981" }} />
+              <Typography sx={{ color: "#10b981", fontWeight: 700, fontSize: "0.85rem" }}>Aprovar</Typography>
+            </Box>
+          </Box>
+        )}
+      </Drawer>
     </AdminMasterShell>
   );
 }

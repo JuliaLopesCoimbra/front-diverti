@@ -207,7 +207,7 @@ function LiveStandsPageContent() {
           }}
         >
           <IconButton
-            onClick={() => router.push("/pages/user/home")}
+            onClick={() => requestedEventId ? router.push(`/pages/admin/events/${requestedEventId}`) : router.push("/pages/admin/home")}
             sx={{
               color: "#fff",
               width: 44,

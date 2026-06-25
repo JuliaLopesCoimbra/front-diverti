@@ -1,74 +1,212 @@
 "use client";
 
-import { Box, Typography, Paper, Chip } from "@mui/material";
-import { Event as EventIcon, LocationOn as LocationIcon, People as PeopleIcon } from "@mui/icons-material";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Paper,
+  Typography,
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import EventIcon from "@mui/icons-material/Event";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AdminMasterShell from "@/app/components/AdminMasterShell";
+import { useToast } from "@/app/context/ToastContext";
+import { getEvents, EventResponse } from "@/app/services/events/eventAppService";
 
-const MOCK_EVENTS = [
-  { id: 1, name: "Festa do Peão de Barretos",     city: "Barretos, SP",     date: "2026-08-15", attendees: 180000, status: "upcoming" },
-  { id: 2, name: "Rodeio de Americana",            city: "Americana, SP",    date: "2026-07-04", attendees: 95000,  status: "upcoming" },
-  { id: 3, name: "Expogran Serra Gaúcha",          city: "Caxias do Sul, RS",date: "2026-09-20", attendees: 60000,  status: "upcoming" },
-];
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
 
-const STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  upcoming: { label: "Próximo",     color: "#10b981", bg: "rgba(16,185,129,0.12)" },
-  active:   { label: "Em andamento",color: "#ffcc01", bg: "rgba(255,204,1,0.12)"  },
-  finished: { label: "Encerrado",   color: "#6b7280", bg: "rgba(107,114,128,0.12)"},
-};
+export default function AdminMasterEventosPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function EventosPage() {
+  useEffect(() => {
+    getEvents(100, 0)
+      .then((data) =>
+        setEvents([...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()))
+      )
+      .catch(() => showToast("Erro ao carregar eventos", "error"))
+      .finally(() => setLoading(false));
+  }, [showToast]);
+
+  const active   = events.filter((e) => e.is_active).length;
+  const inactive = events.filter((e) => !e.is_active).length;
+
   return (
     <AdminMasterShell>
       <Box sx={{ px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 3, sm: 4 }, pb: 6 }}>
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Eventos</Typography>
-          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>Todos os eventos cadastrados na plataforma</Typography>
+        {/* Header */}
+        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 4, gap: 2 }}>
+          <Box>
+            <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700, mb: 0.3 }}>Eventos</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: 14 }}>
+              Todos os eventos cadastrados na plataforma
+            </Typography>
+          </Box>
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => router.push("/pages/admin/events/create")}
+            sx={{ backgroundColor: "#fff", color: "#111", textTransform: "none", fontWeight: 700, borderRadius: "12px", px: 2.5, flexShrink: 0, "&:hover": { backgroundColor: "#e8e8e8" } }}
+          >
+            Criar evento
+          </Button>
         </Box>
 
-        {/* Summary */}
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)" }, gap: 2, mb: 4 }}>
-          {[
-            { label: "Total de eventos", value: MOCK_EVENTS.length },
-            { label: "Próximos",         value: MOCK_EVENTS.filter(e => e.status === "upcoming").length },
-            { label: "Público total",    value: MOCK_EVENTS.reduce((s, e) => s + e.attendees, 0).toLocaleString("pt-BR") },
-          ].map((s) => (
-            <Paper key={s.label} elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 2.5 }}>
-              <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", mb: 0.5 }}>{s.label}</Typography>
-              <Typography sx={{ color: "#ffcc01", fontWeight: 800, fontSize: "1.3rem" }}>{s.value}</Typography>
-            </Paper>
-          ))}
-        </Box>
+        {/* Summary cards */}
+        {!loading && events.length > 0 && (
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(3, 1fr)" }, gap: 2, mb: 4 }}>
+            {[
+              { label: "Total",    value: events.length, color: "#ffcc01" },
+              { label: "Ativos",   value: active,        color: "#2ecc71" },
+              { label: "Inativos", value: inactive,      color: "rgba(255,255,255,0.4)" },
+            ].map((s) => (
+              <Paper key={s.label} elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 2.5 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem", mb: 0.5 }}>{s.label}</Typography>
+                <Typography sx={{ color: s.color, fontWeight: 800, fontSize: "1.4rem" }}>{s.value}</Typography>
+              </Paper>
+            ))}
+          </Box>
+        )}
 
-        {/* List */}
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          {MOCK_EVENTS.map((ev) => {
-            const st = STATUS[ev.status];
-            return (
-              <Paper key={ev.id} elevation={0} sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 3, p: 2.5, display: "flex", alignItems: "center", gap: 2.5, cursor: "pointer", transition: "background 0.15s", "&:hover": { backgroundColor: "rgba(255,255,255,0.07)" } }}>
-                <Box sx={{ width: 44, height: 44, borderRadius: 2, backgroundColor: "rgba(255,204,1,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <EventIcon sx={{ color: "#ffcc01", fontSize: 22 }} />
+        {/* Content */}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+            <CircularProgress sx={{ color: "#ffcc01" }} />
+          </Box>
+        ) : events.length === 0 ? (
+          <Paper sx={{ p: 5, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
+            <EventIcon sx={{ color: "rgba(255,255,255,0.12)", fontSize: 52, mb: 1.5 }} />
+            <Typography sx={{ color: "#fff", fontWeight: 600, mb: 0.5 }}>Nenhum evento cadastrado</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.85rem" }}>
+              Clique em "Criar evento" para começar.
+            </Typography>
+          </Paper>
+        ) : (
+          /* ALTERADO: Grid Layout para os Cards */
+          <Box 
+            sx={{ 
+              display: "grid", 
+              gridTemplateColumns: { 
+                xs: "1fr", 
+                sm: "repeat(2, 1fr)", 
+                md: "repeat(3, 1fr)" 
+              }, 
+              gap: 3 
+            }}
+          >
+            {events.map((ev) => (
+              <Paper
+                key={ev.id}
+                elevation={0}
+                onClick={() => router.push(`/pages/admin/events/${ev.id}`)}
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 4,
+                  overflow: "hidden", // Garante que a imagem respeite o border-radius do card
+                  display: "flex",
+                  flexDirection: "column",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": { 
+                    backgroundColor: "rgba(255,255,255,0.07)", 
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    transform: "translateY(-4px)" // Efeito visual de levante no hover
+                  },
+                }}
+              >
+                {/* ALTERADO: Container da Foto Maior */}
+                <Box sx={{ width: "100%", height: 180, position: "relative", backgroundColor: "rgba(255,255,255,0.02)" }}>
+                  {ev.banner_image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={ev.banner_image}
+                      alt={ev.title}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <Box sx={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <EventIcon sx={{ color: "rgba(255,204,1,0.3)", fontSize: 40 }} />
+                    </Box>
+                  )}
+
+                  {/* Status posicionado em cima da imagem (Badge) */}
+                  <Chip
+                    label={ev.is_active ? "Ativo" : "Inativo"}
+                    size="small"
+                    sx={{
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      backgroundColor: ev.is_active ? "rgba(46,204,113,0.9)" : "rgba(17,17,17,0.8)",
+                      color: ev.is_active ? "#fff" : "rgba(255,255,255,0.6)",
+                      fontWeight: 700,
+                      fontSize: "0.68rem",
+                      backdropFilter: "blur(4px)"
+                    }}
+                  />
                 </Box>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ev.name}</Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mt: 0.4 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                      <LocationIcon sx={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }} />
-                      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>{ev.city}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
-                      <PeopleIcon sx={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }} />
-                      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>{ev.attendees.toLocaleString("pt-BR")} pessoas</Typography>
-                    </Box>
+
+                {/* ALTERADO: Informações do evento abaixo da foto */}
+                <Box sx={{ p: 2, display: "flex", flexDirection: "column", flexGrow: 1 }}>
+                  <Typography 
+                    sx={{ 
+                      color: "#fff", 
+                      fontWeight: 700, 
+                      fontSize: "1rem", 
+                      mb: 1.5,
+                      // Quebra linha se o título for grande, limitando a 2 linhas
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      minHeight: "2.8rem" 
+                    }}
+                  >
+                    {ev.title}
+                  </Typography>
+                  
+                  {/* Detalhes na parte inferior do card */}
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: "auto" }}>
+                    {ev.starts_at && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <CalendarTodayIcon sx={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }} />
+                        <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>
+                          {formatDate(ev.starts_at)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {ev.location && (
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <LocationOnIcon sx={{ fontSize: 13, color: "rgba(255,255,255,0.4)" }} />
+                        <Typography 
+                          sx={{ 
+                            color: "rgba(255,255,255,0.5)", 
+                            fontSize: "0.78rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          {ev.location}
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Box>
-                <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.78rem", flexShrink: 0 }}>
-                  {new Date(ev.date).toLocaleDateString("pt-BR")}
-                </Typography>
-                <Chip label={st.label} size="small" sx={{ backgroundColor: st.bg, color: st.color, fontWeight: 700, fontSize: "0.68rem", flexShrink: 0 }} />
               </Paper>
-            );
-          })}
-        </Box>
+            ))}
+          </Box>
+        )}
       </Box>
     </AdminMasterShell>
   );

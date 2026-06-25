@@ -3,191 +3,95 @@
 import { useEffect, useState } from "react";
 import {
   Box,
-  CircularProgress,
-  Typography,
-  Paper,
-  IconButton,
-  Avatar,
+  Button,
   Chip,
+  CircularProgress,
   Divider,
+  IconButton,
+  Paper,
+  Typography,
 } from "@mui/material";
-import {
-  Event as EventIcon,
-  Pending as PendingIcon,
-  Campaign as CampaignIcon,
-  CardGiftcard as CardGiftcardIcon,
-  Storefront as StorefrontIcon,
-  People as PeopleIcon,
-  AdminPanelSettings as AdminIcon,
-  Logout as LogoutIcon,
-  NotificationsActive as BroadcastIcon,
-  MusicNote as MusicIcon,
-  ChevronRight as ChevronRightIcon,
-} from "@mui/icons-material";
+import AddIcon from "@mui/icons-material/Add";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import CampaignIcon from "@mui/icons-material/Campaign";
+import EventIcon from "@mui/icons-material/Event";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import LogoutIcon from "@mui/icons-material/Logout";
+import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
+import PendingIcon from "@mui/icons-material/Pending";
+import PeopleIcon from "@mui/icons-material/People";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import { useToast } from "@/app/context/ToastContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
-import Image from "next/image";
+import { getEvents, EventResponse } from "@/app/services/events/eventAppService";
 
-interface ActionCard {
-  label: string;
-  description: string;
-  icon: React.ReactNode;
-  route: string;
-  color: string;
-}
-
-const ACTION_CARDS: ActionCard[] = [
-  {
-    label: "Eventos",
-    description: "Criar e gerenciar eventos",
-    icon: <EventIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/events/create",
-    color: "#4f46e5",
-  },
-  {
-    label: "Posts Pendentes",
-    description: "Aprovar ou rejeitar posts",
-    icon: <PendingIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/pending-posts",
-    color: "#f59e0b",
-  },
-  {
-    label: "Patrocinadores",
-    description: "Gerenciar patrocinadores",
-    icon: <PeopleIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/permissions",
-    color: "#10b981",
-  },
-  {
-    label: "Anúncios",
-    description: "Criar e ver analytics",
-    icon: <CampaignIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/anuncios",
-    color: "#3b82f6",
-  },
-  {
-    label: "Brindes",
-    description: "Analytics por estande",
-    icon: <CardGiftcardIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/brindes",
-    color: "#ec4899",
-  },
-  {
-    label: "Estandes ao Vivo",
-    description: "Dashboard em tempo real",
-    icon: <StorefrontIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/live-stands",
-    color: "#06b6d4",
-  },
-  {
-    label: "Broadcast",
-    description: "Notificações em massa",
-    icon: <BroadcastIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/broadcast-notification",
-    color: "#8b5cf6",
-  },
-  {
-    label: "Letras",
-    description: "Gerenciar letras de músicas",
-    icon: <MusicIcon sx={{ fontSize: 28 }} />,
-    route: "/pages/admin/music-lyrics",
-    color: "#ef4444",
-  },
+const GENERAL_ACTIONS = [
+  { label: "Posts Pendentes", icon: <PendingIcon sx={{ fontSize: 20 }} />,              route: "/pages/admin/pending-posts",           color: "#f59e0b" },
+  { label: "Patrocinadores",  icon: <PeopleIcon sx={{ fontSize: 20 }} />,               route: "/pages/admin/permissions",             color: "#10b981" },
+  { label: "Anúncios",        icon: <CampaignIcon sx={{ fontSize: 20 }} />,             route: "/pages/admin/anuncios",                color: "#3b82f6" },
+  { label: "Broadcast",       icon: <NotificationsActiveIcon sx={{ fontSize: 20 }} />,  route: "/pages/admin/broadcast-notification",  color: "#8b5cf6" },
 ];
 
+function formatDateShort(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 export default function AdminHomePage() {
-  const { isAdmin, isAdminMaster, authReady, logout, role } = useAuth();
+  const { isAdminMaster, authReady, logout, role } = useAuth();
   const router = useRouter();
+  const { showToast } = useToast();
+  const [events, setEvents] = useState<EventResponse[]>([]);
+  const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 80);
-    return () => clearTimeout(t);
-  }, []);
+  const canAccess = role === "admin_master" || role === "admin";
+
+  useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t); }, []);
+  useEffect(() => { if (authReady && !canAccess) router.replace("/pages/user/home"); }, [authReady, canAccess, router]);
 
   useEffect(() => {
-    if (!authReady) return;
-    if (!isAdmin) {
-      router.replace("/pages/user/home");
-    }
-  }, [authReady, isAdmin, router]);
+    if (!authReady || !canAccess) return;
+    getEvents(100, 0)
+      .then((data) => setEvents([...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())))
+      .catch(() => showToast("Erro ao carregar eventos", "error"))
+      .finally(() => setLoading(false));
+  }, [authReady, canAccess, showToast]);
 
   if (!authReady) {
     return (
-      <Box
-        sx={{
-          minHeight: "100vh",
-          ...dashboardBackgroundSx,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <CircularProgress sx={{ color: "#ffcc01" }} />
       </Box>
     );
   }
 
-  const handleLogout = () => {
-    logout();
-    router.replace("/pages/auth/login");
-  };
+  if (!canAccess) return null;
+
+  const handleLogout = () => { logout(); router.replace("/pages/auth/login"); };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        ...dashboardBackgroundSx,
-        pb: 6,
-      }}
-    >
-      {/* ── HEADER ── */}
+    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx, pb: 6 }}>
+      {/* Header */}
       <Paper
         elevation={0}
         sx={{
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          backgroundColor: "rgba(0, 0, 0, 0.55)",
-          backdropFilter: "blur(20px)",
+          position: "sticky", top: 0, zIndex: 100,
+          backgroundColor: "rgba(0,0,0,0.55)", backdropFilter: "blur(20px)",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
-          px: { xs: 2, sm: 3 },
-          py: 1.5,
+          px: { xs: 2, sm: 3 }, py: 1.5,
         }}
       >
-        <Box
-          sx={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            <Image
-              src="/logo/logo-circuito.png"
-              alt="Circuito Sertanejo"
-              width={100}
-              height={36}
-              style={{ objectFit: "contain" }}
-              priority
-            />
-          </Box>
-
+        <Box sx={{ maxWidth: 1200, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Image src="/logo/logo-circuito.png" alt="Circuito Sertanejo" width={100} height={36} style={{ objectFit: "contain" }} priority />
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <Chip
-              icon={<AdminIcon sx={{ fontSize: 16, color: "#ffcc01 !important" }} />}
+              icon={<AdminPanelSettingsIcon sx={{ fontSize: 16, color: "#ffcc01 !important" }} />}
               label={isAdminMaster ? "Admin Master" : "Admin"}
               size="small"
-              sx={{
-                backgroundColor: "rgba(255, 204, 1, 0.15)",
-                border: "1px solid rgba(255, 204, 1, 0.3)",
-                color: "#ffcc01",
-                fontWeight: 600,
-                fontSize: "0.7rem",
-              }}
+              sx={{ backgroundColor: "rgba(255,204,1,0.15)", border: "1px solid rgba(255,204,1,0.3)", color: "#ffcc01", fontWeight: 600, fontSize: "0.7rem" }}
             />
             <IconButton onClick={handleLogout} size="small" sx={{ color: "rgba(255,255,255,0.7)", "&:hover": { color: "#fff" } }}>
               <LogoutIcon fontSize="small" />
@@ -196,101 +100,116 @@ export default function AdminHomePage() {
         </Box>
       </Paper>
 
-      {/* ── CONTEÚDO ── */}
       <Box
         sx={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          px: { xs: 2, sm: 3, md: 4 },
-          pt: { xs: 3, sm: 4 },
+          maxWidth: 1200, margin: "0 auto",
+          px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 3, sm: 4 },
           opacity: mounted ? 1 : 0,
           transform: mounted ? "translateY(0)" : "translateY(20px)",
           transition: "opacity 0.45s ease, transform 0.45s ease",
         }}
       >
-        {/* Boas vindas */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h4"
-            sx={{ color: "#fff", fontWeight: 700, mb: 0.5 }}
+        {/* Events section header */}
+        <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 3, gap: 2 }}>
+          <Box>
+            <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700 }}>Eventos</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.88rem", mt: 0.3 }}>
+              Selecione um evento para gerenciar
+            </Typography>
+          </Box>
+          <Button
+            startIcon={<AddIcon />}
+            onClick={() => router.push("/pages/admin/events/create")}
+            sx={{ backgroundColor: "#fff", color: "#111", textTransform: "none", fontWeight: 700, borderRadius: "12px", px: 2.5, flexShrink: 0, "&:hover": { backgroundColor: "#e8e8e8" } }}
           >
-            Painel Administrativo
-          </Typography>
-          <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: 14 }}>
-            Gerencie eventos, conteúdos e usuários do Circuito Sertanejo
-          </Typography>
+            Criar evento
+          </Button>
         </Box>
 
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.1)", mb: 4 }} />
-
-        {/* Grade de ações */}
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)" }, gap: 2 }}>
-          {ACTION_CARDS.map((card) => (
-            <Box key={card.route}>
+        {/* Events grid */}
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+            <CircularProgress sx={{ color: "#fff" }} />
+          </Box>
+        ) : events.length === 0 ? (
+          <Paper sx={{ p: 4, borderRadius: 3, backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
+            <EventIcon sx={{ color: "rgba(255,255,255,0.15)", fontSize: 48, mb: 1 }} />
+            <Typography sx={{ color: "#fff", fontWeight: 600, mb: 0.5 }}>Nenhum evento cadastrado</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>Clique em "Criar evento" para começar.</Typography>
+          </Paper>
+        ) : (
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr", lg: "repeat(3, 1fr)" }, gap: 2 }}>
+            {events.map((ev) => (
               <Paper
+                key={ev.id}
                 elevation={0}
-                onClick={() => router.push(card.route)}
+                onClick={() => router.push(`/pages/admin/events/${ev.id}`)}
                 sx={{
-                  backgroundColor: "rgba(255,255,255,0.06)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 3,
-                  p: 2.5,
-                  cursor: "pointer",
-                  transition: "all 0.25s ease",
-                  "&:hover": {
-                    backgroundColor: "rgba(255,255,255,0.11)",
-                    borderColor: "rgba(255,255,255,0.22)",
-                    transform: "translateY(-3px)",
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-                  },
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
+                  backgroundColor: "rgba(255,255,255,0.04)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 3, overflow: "hidden", cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  "&:hover": { backgroundColor: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", transform: "translateY(-3px)", boxShadow: "0 8px 24px rgba(0,0,0,0.35)" },
                 }}
               >
-                <Box
-                  sx={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 2,
-                    backgroundColor: `${card.color}22`,
-                    border: `1px solid ${card.color}44`,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: card.color,
-                    flexShrink: 0,
-                  }}
-                >
-                  {card.icon}
+                {ev.banner_image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={ev.banner_image} alt={ev.title} style={{ width: "100%", height: 140, objectFit: "cover", display: "block" }} />
+                ) : (
+                  <Box sx={{ width: "100%", height: 140, backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <EventIcon sx={{ color: "rgba(255,255,255,0.12)", fontSize: 40 }} />
+                  </Box>
+                )}
+                <Box sx={{ p: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 1, mb: 1 }}>
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem", lineHeight: 1.3 }}>{ev.title}</Typography>
+                    <Chip
+                      label={ev.is_active ? "Ativo" : "Inativo"}
+                      size="small"
+                      sx={{ backgroundColor: ev.is_active ? "rgba(46,204,113,0.15)" : "rgba(255,255,255,0.08)", color: ev.is_active ? "#2ecc71" : "rgba(255,255,255,0.4)", fontWeight: 700, fontSize: "0.65rem", height: 20, flexShrink: 0 }}
+                    />
+                  </Box>
+                  {ev.starts_at && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                      <CalendarTodayIcon sx={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }} />
+                      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>{formatDateShort(ev.starts_at)}</Typography>
+                    </Box>
+                  )}
+                  {ev.location && (
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.6, mt: 0.4 }}>
+                      <LocationOnIcon sx={{ fontSize: 12, color: "rgba(255,255,255,0.3)" }} />
+                      <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }} noWrap>{ev.location}</Typography>
+                    </Box>
+                  )}
                 </Box>
-
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography
-                    sx={{
-                      color: "#fff",
-                      fontWeight: 600,
-                      fontSize: "0.95rem",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {card.label}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      color: "rgba(255,255,255,0.5)",
-                      fontSize: "0.78rem",
-                      mt: 0.3,
-                    }}
-                  >
-                    {card.description}
-                  </Typography>
-                </Box>
-
-                <ChevronRightIcon sx={{ color: "rgba(255,255,255,0.25)", fontSize: 20, flexShrink: 0 }} />
               </Paper>
-            </Box>
+            ))}
+          </Box>
+        )}
+
+        {/* General actions */}
+        <Divider sx={{ borderColor: "rgba(255,255,255,0.07)", my: 4 }} />
+        <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", mb: 2 }}>
+          Ações gerais
+        </Typography>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" }, gap: 1.5 }}>
+          {GENERAL_ACTIONS.map((a) => (
+            <Paper
+              key={a.route}
+              elevation={0}
+              onClick={() => router.push(a.route)}
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 2.5, p: 2, cursor: "pointer",
+                transition: "all 0.2s ease",
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.18)" },
+                display: "flex", alignItems: "center", gap: 1.5,
+              }}
+            >
+              <Box sx={{ color: a.color, display: "flex", flexShrink: 0 }}>{a.icon}</Box>
+              <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "0.85rem" }}>{a.label}</Typography>
+            </Paper>
           ))}
         </Box>
       </Box>

@@ -96,6 +96,26 @@ export const uploadCreative = async (file: File): Promise<string> => {
   }
 };
 
+export const listPendingCampaigns = async (): Promise<PatrocinadorWithCampaigns[]> => {
+  try {
+    const response = await api.get<PatrocinadorWithCampaigns[]>('/campaigns/pending');
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Erro ao listar campanhas pendentes');
+    throw error;
+  }
+};
+
+export const updateCampaignStatus = async (campaignId: number, status: string): Promise<Campaign> => {
+  try {
+    const response = await api.patch<Campaign>(`/campaigns/${campaignId}/status`, { status });
+    return response.data;
+  } catch (error) {
+    handleError(error, 'Erro ao atualizar status da campanha');
+    throw error;
+  }
+};
+
 export const listAllCampaignsGrouped = async (): Promise<PatrocinadorWithCampaigns[]> => {
   try {
     const response = await api.get<PatrocinadorWithCampaigns[]>('/campaigns/all');

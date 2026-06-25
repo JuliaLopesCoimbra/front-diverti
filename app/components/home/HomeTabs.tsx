@@ -9,8 +9,9 @@ import CardGiftcardRoundedIcon from "@mui/icons-material/CardGiftcardRounded";
 import ExploreRoundedIcon from "@mui/icons-material/ExploreRounded";
 import MicExternalOnIcon from "@mui/icons-material/MicExternalOn";
 import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
+import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 
-type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta";
+type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta" | "camping";
 
 interface Props {
   active: Tab;
@@ -21,10 +22,7 @@ const tabs: { label: string; value: Tab; icon: React.ReactNode }[] = [
   { label: "Feed",     value: "home",     icon: <HomeRoundedIcon        sx={{ fontSize: 17 }} /> },
   { label: "Evento",   value: "eventos",  icon: <EventRoundedIcon       sx={{ fontSize: 17 }} /> },
   { label: "Estandes", value: "estandes", icon: <StorefrontRoundedIcon  sx={{ fontSize: 17 }} /> },
-  { label: "Brindes",  value: "roleta",   icon: <CardGiftcardRoundedIcon sx={{ fontSize: 17 }} /> },
-  { label: "Mapa",     value: "mapa",     icon: <ExploreRoundedIcon     sx={{ fontSize: 17 }} /> },
-  { label: "Line Up",  value: "lineup",   icon: <MicExternalOnIcon      sx={{ fontSize: 17 }} /> },
-  { label: "Fotos",    value: "foto",     icon: <PhotoCameraRoundedIcon sx={{ fontSize: 17 }} /> },
+  { label: "Camping",  value: "camping",  icon: <NightShelterRoundedIcon sx={{ fontSize: 17 }} /> },
 ];
 
 const DRAG_THRESHOLD_PX = 5;
@@ -129,6 +127,7 @@ export default function HomeTabs({ active, onChange }: Props) {
           "&:active": { cursor: "grabbing" },
           userSelect: "none",
           pb: 0.3,
+          justifyContent: { xs: "flex-start", md: "center" },
         }}
       >
         {tabs.map((tab) => {

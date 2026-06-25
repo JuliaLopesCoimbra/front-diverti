@@ -374,8 +374,7 @@ export default function EditEventForm({
           borderBottom: "1px solid rgba(255,255,255,0.1)",
           position: "sticky",
           top: 0,
-          backgroundColor: "rgba(0, 0, 0, 0.3)",
-          backdropFilter: "blur(10px)",
+       
           zIndex: 10,
         }}
       >
@@ -1326,7 +1325,7 @@ export default function EditEventForm({
             sx={{
               flex: 1,
               backgroundColor: "#ffffff",
-              color: "#fff",
+              color: "black",
               fontWeight: 600,
               textTransform: "none",
               borderRadius: "14px",

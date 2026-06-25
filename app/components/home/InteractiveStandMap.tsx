@@ -337,14 +337,6 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
     [stands]
   );
 
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 10 }}>
-        <CircularProgress sx={{ color: "#fff" }} />
-      </Box>
-    );
-  }
-
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 1.5, md: 3 }, pb: 10 }}>
 
@@ -541,124 +533,132 @@ export default function InteractiveStandMap({ eventId, mapImageUrl }: Props) {
           >
             Estandes disponíveis
           </Typography>
-          <Button
-            size="small"
-            onClick={() => router.push("/pages/user/stand-bookings")}
+          {!loading && (
+            <Button
+              size="small"
+              onClick={() => router.push("/pages/user/stand-bookings")}
+              sx={{
+                color: "#fff",
+                backgroundColor: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.15)",
+                borderRadius: "10px",
+                textTransform: "none",
+                fontWeight: 600,
+                fontSize: "0.72rem",
+                px: 1.5,
+                py: 0.5,
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" },
+              }}
+            >
+              Meus agendamentos
+            </Button>
+          )}
+        </Box>
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+            <CircularProgress sx={{ color: "#fff" }} />
+          </Box>
+        ) : (
+          <Box
             sx={{
-              color: "#fff",
-              backgroundColor: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.15)",
-              borderRadius: "10px",
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: "0.72rem",
-              px: 1.5,
-              py: 0.5,
-              "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" },
+              display: "grid",
+              gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
+              gap: 1.5,
             }}
           >
-            Meus agendamentos
-          </Button>
-        </Box>
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
-            gap: 1.5,
-          }}
-        >
-          {standsWithPos.map(({ stand, pos }) => {
-            const availableSessions = stand.sessions.filter((s) => s.remaining_slots > 0).length;
-            const hasBooking = stand.sessions.some((s) => s.is_booked);
-            return (
-              <Box
-                key={stand.id}
-                onClick={() => { setSelectedStand(stand); setSelectedDate(""); }}
-                sx={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  border: `1px solid ${pos.color}44`,
-                  borderRadius: "16px",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  transition: "transform 0.18s ease, box-shadow 0.18s ease",
-                  "&:hover": {
-                    transform: "translateY(-2px)",
-                    boxShadow: `0 8px 24px ${pos.color}44`,
-                  },
-                  "&:active": { transform: "scale(0.97)" },
-                }}
-              >
-                {stand.image_url ? (
-                  <Box
-                    component="img"
-                    src={stand.image_url}
-                    alt={stand.name}
-                    sx={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <Box
-                    sx={{
-                      width: "100%",
-                      height: 80,
-                      background: `linear-gradient(135deg, ${pos.color}44, ${pos.color}22)`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <StorefrontIcon sx={{ color: pos.color, fontSize: 32 }} />
-                  </Box>
-                )}
-                <Box sx={{ p: 1.5 }}>
-                  <Typography
-                    sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", lineHeight: 1.2, mb: 0.6 }}
-                    noWrap
-                  >
-                    {stand.name}
-                  </Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+            {standsWithPos.map(({ stand, pos }) => {
+              const availableSessions = stand.sessions.filter((s) => s.remaining_slots > 0).length;
+              const hasBooking = stand.sessions.some((s) => s.is_booked);
+              return (
+                <Box
+                  key={stand.id}
+                  onClick={() => { setSelectedStand(stand); setSelectedDate(""); }}
+                  sx={{
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    border: `1px solid ${pos.color}44`,
+                    borderRadius: "16px",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    transition: "transform 0.18s ease, box-shadow 0.18s ease",
+                    "&:hover": {
+                      transform: "translateY(-2px)",
+                      boxShadow: `0 8px 24px ${pos.color}44`,
+                    },
+                    "&:active": { transform: "scale(0.97)" },
+                  }}
+                >
+                  {stand.image_url ? (
+                    <Box
+                      component="img"
+                      src={stand.image_url}
+                      alt={stand.name}
+                      sx={{ width: "100%", height: 80, objectFit: "cover", display: "block" }}
+                    />
+                  ) : (
                     <Box
                       sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: "50%",
-                        backgroundColor: hasBooking
-                          ? "#ffc91f"
-                          : availableSessions > 0
-                          ? "#2ecc71"
-                          : "rgba(255,255,255,0.3)",
-                        flexShrink: 0,
-                        boxShadow: hasBooking
-                          ? "0 0 6px rgba(255,201,31,0.7)"
-                          : availableSessions > 0
-                          ? "0 0 6px rgba(46,204,113,0.7)"
-                          : "none",
-                      }}
-                    />
-                    <Typography
-                      sx={{
-                        color: hasBooking
-                          ? "#ffc91f"
-                          : availableSessions > 0
-                          ? "#2ecc71"
-                          : "rgba(255,255,255,0.35)",
-                        fontSize: "0.7rem",
-                        fontWeight: 600,
-                        lineHeight: 1.2,
+                        width: "100%",
+                        height: 80,
+                        background: `linear-gradient(135deg, ${pos.color}44, ${pos.color}22)`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      {hasBooking
-                        ? "Agendado"
-                        : availableSessions > 0
-                        ? `${availableSessions} ${availableSessions === 1 ? "sessão" : "sessões"}`
-                        : "Sem vagas"}
+                      <StorefrontIcon sx={{ color: pos.color, fontSize: 32 }} />
+                    </Box>
+                  )}
+                  <Box sx={{ p: 1.5 }}>
+                    <Typography
+                      sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", lineHeight: 1.2, mb: 0.6 }}
+                      noWrap
+                    >
+                      {stand.name}
                     </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                      <Box
+                        sx={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: "50%",
+                          backgroundColor: hasBooking
+                            ? "#ffc91f"
+                            : availableSessions > 0
+                            ? "#2ecc71"
+                            : "rgba(255,255,255,0.3)",
+                          flexShrink: 0,
+                          boxShadow: hasBooking
+                            ? "0 0 6px rgba(255,201,31,0.7)"
+                            : availableSessions > 0
+                            ? "0 0 6px rgba(46,204,113,0.7)"
+                            : "none",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: hasBooking
+                            ? "#ffc91f"
+                            : availableSessions > 0
+                            ? "#2ecc71"
+                            : "rgba(255,255,255,0.35)",
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {hasBooking
+                          ? "Agendado"
+                          : availableSessions > 0
+                          ? `${availableSessions} ${availableSessions === 1 ? "sessão" : "sessões"}`
+                          : "Sem vagas"}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
-              </Box>
-            );
-          })}
-        </Box>
+              );
+            })}
+          </Box>
+        )}
       </Box>
 
       {/* ── Bottom Sheet: Stand details ── */}
