@@ -230,6 +230,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   const [selectedParkingSpotId, setSelectedParkingSpotId] = useState<number | null>(null);
   const [myParkingBooking, setMyParkingBooking] = useState<ParkingBooking | null>(null);
   const [parkingBookingLoading, setParkingBookingLoading] = useState(false);
+  const [parkingReturnStage, setParkingReturnStage] = useState<"success" | "mypassports">("success");
 
   useEffect(() => {
     const saved = localStorage.getItem(`camping_map_${eventId}`);
@@ -533,6 +534,45 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                         </Typography>
                       </Box>
                     </Box>
+
+                    {/* Mini mapa de camping com área destacada */}
+                    {campingMapUrl && (
+                      <Box sx={{ width: "100%", position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,204,1,0.15)", mt: 0.5 }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={campingMapUrl} alt="Mapa camping" draggable={false} style={{ display: "block", width: "100%" }} />
+                        {areas.filter((a) => a.x_position != null).map((a) => {
+                          const isMine = a.id === booking.area_id;
+                          return (
+                            <Box key={a.id} sx={{
+                              position: "absolute",
+                              left: `${(a.x_position ?? 0) * 100}%`, top: `${(a.y_position ?? 0) * 100}%`,
+                              transform: "translate(-50%, -50%)",
+                              width: isMine ? 36 : 24, height: isMine ? 36 : 24,
+                              borderRadius: "50%",
+                              backgroundColor: isMine ? "rgba(255,204,1,0.92)" : "rgba(255,255,255,0.1)",
+                              border: isMine ? "2px solid #fff" : "1px solid rgba(255,255,255,0.15)",
+                              display: "flex", alignItems: "center", justifyContent: "center",
+                              zIndex: isMine ? 10 : 3,
+                              "@keyframes campingCardPulse": {
+                                "0%": { boxShadow: "0 0 0 0 rgba(255,204,1,0.6)" },
+                                "70%": { boxShadow: "0 0 0 10px rgba(255,204,1,0)" },
+                                "100%": { boxShadow: "0 0 0 0 rgba(255,204,1,0)" },
+                              },
+                              ...(isMine && { animation: "campingCardPulse 2s ease-out infinite" }),
+                            }}>
+                              <Typography sx={{ color: isMine ? "#111" : "rgba(255,255,255,0.4)", fontWeight: 800, fontSize: "0.5rem", lineHeight: 1, pointerEvents: "none" }}>
+                                {a.name.slice(0, 3)}
+                              </Typography>
+                            </Box>
+                          );
+                        })}
+                        <Box sx={{ position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)", backgroundColor: "rgba(0,0,0,0.65)", borderRadius: "8px", px: 1.5, py: 0.5 }}>
+                          <Typography sx={{ color: "#ffcc01", fontWeight: 700, fontSize: "0.72rem", whiteSpace: "nowrap" }}>
+                            📍 {booking.area_name}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    )}
                   </Box>
                 );
               })}
@@ -568,67 +608,6 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </>
         )}
 
-        {/* Mini mapas de localização */}
-        {!bookingLoading && myBookings.length > 0 && (
-          <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Minha localização
-            </Typography>
-
-            {/* Mapa de camping */}
-            {campingMapUrl && (() => {
-              const myAreaIds = new Set(myBookings.map((b) => b.area_id));
-              const myAreas = areas.filter((a) => myAreaIds.has(a.id) && a.x_position != null && a.y_position != null);
-              return (
-                <Box sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,204,1,0.2)", borderRadius: "20px", overflow: "hidden" }}>
-                  <Box sx={{ px: 2, pt: 2, pb: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>Área de Camping</Typography>
-                    <Typography sx={{ color: "#ffcc01", fontWeight: 700, fontSize: "0.8rem" }}>
-                      {[...new Set(myBookings.map((b) => b.area_name))].join(", ")}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ position: "relative", mx: 2, mb: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={campingMapUrl} alt="Mapa camping" draggable={false}
-                      style={{ display: "block", width: "100%" }} />
-                    {/* All areas */}
-                    {areas.filter((a) => a.x_position != null).map((area) => {
-                      const isMine = myAreaIds.has(area.id);
-                      return (
-                        <Box key={area.id} sx={{
-                          position: "absolute",
-                          left: `${area.x_position}%`, top: `${area.y_position}%`,
-                          transform: "translate(-50%, -50%)",
-                          width: isMine ? 34 : 26, height: isMine ? 34 : 26,
-                          borderRadius: "50%",
-                          backgroundColor: isMine ? "rgba(255,204,1,0.9)" : "rgba(255,255,255,0.15)",
-                          border: isMine ? "2px solid #fff" : "1px solid rgba(255,255,255,0.2)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          boxShadow: isMine ? "0 0 0 4px rgba(255,204,1,0.3), 0 0 12px rgba(255,204,1,0.5)" : "none",
-                          zIndex: isMine ? 10 : 3,
-                          ...(isMine && {
-                            "@keyframes campingPulse": {
-                              "0%": { boxShadow: "0 0 0 0 rgba(255,204,1,0.5)" },
-                              "70%": { boxShadow: "0 0 0 8px rgba(255,204,1,0)" },
-                              "100%": { boxShadow: "0 0 0 0 rgba(255,204,1,0)" },
-                            },
-                            animation: "campingPulse 2s ease-out infinite",
-                          }),
-                        }}>
-                          <Typography sx={{ color: isMine ? "#111" : "rgba(255,255,255,0.5)", fontWeight: 800, fontSize: "0.55rem", lineHeight: 1, pointerEvents: "none" }}>
-                            {area.name.slice(0, 4)}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              );
-            })()}
-
-          </Box>
-        )}
-
         {/* Estacionamento */}
         {!bookingLoading && myBookings.length > 0 && (
           <Box sx={{ mt: 3 }}>
@@ -651,7 +630,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                     </Typography>
                   </Box>
                 <Box
-                  onClick={() => setStage("parkingSuccess")}
+                  onClick={() => { setParkingReturnStage("mypassports"); setStage("parkingSuccess"); }}
                   sx={{
                     backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
                     borderRadius: "12px", px: 2, py: 1, cursor: "pointer",
@@ -1705,7 +1684,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Box>
         </Box>
 
-        <Button fullWidth onClick={() => setStage("success")} sx={{
+        <Button fullWidth onClick={() => setStage(parkingReturnStage)} sx={{
           backgroundColor: "rgba(255,255,255,0.08)", color: "#fff",
           border: "1px solid rgba(255,255,255,0.15)", borderRadius: "14px",
           textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
