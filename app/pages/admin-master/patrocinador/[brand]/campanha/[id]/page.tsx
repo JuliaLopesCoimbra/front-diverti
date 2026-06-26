@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Box, Typography, Paper, Chip, IconButton, Divider, Tooltip,
@@ -23,9 +23,8 @@ import {
 } from "recharts";
 import { BRAND_MOCKS, BRAND_DEFAULT_PHOTO, MOCK_PERFORMANCE } from "@/app/services/campaigns/mockData";
 import type { Campaign } from "@/app/services/campaigns/campaignService";
+import { getPlataformaConfig } from "@/app/services/configuracoes/configuracaoService";
 
-const CPC_PRICE = 0.14;
-const CPV_PRICE = 0.1;
 const CHART_GRID_COLOR = "rgba(255,255,255,0.06)";
 const CHART_AXIS_COLOR = "rgba(255,255,255,0.25)";
 
@@ -91,6 +90,15 @@ export default function AdminCampaignDetailPage({
 }) {
   const { brand, id } = use(params);
   const router = useRouter();
+
+  const [CPC_PRICE, setCpcPrice] = useState(0.14);
+  const [CPV_PRICE, setCpvPrice] = useState(0.10);
+
+  useEffect(() => {
+    getPlataformaConfig()
+      .then((cfg) => { setCpcPrice(cfg.cpc); setCpvPrice(cfg.cpv); })
+      .catch(() => {});
+  }, []);
 
   const campaigns = BRAND_MOCKS[brand] ?? [];
   const c = campaigns.find((x) => String(x.id) === String(id)) as Campaign | undefined;

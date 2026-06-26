@@ -21,6 +21,7 @@ import LineUp from "@/app/components/home/LineUp";
 import EventIndisponivel from "@/app/components/event/EventIndisponivel";
 import DashboardRoulette from "@/app/components/home/DashboardRoulette";
 import CampingMap from "@/app/components/home/CampingMap";
+import FoodOrder from "@/app/components/home/FoodOrder";
 import { getMyCampingBookings } from "@/app/services/camping/campingUserService";
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 import QrCodeIcon from "@mui/icons-material/QrCode";
@@ -33,9 +34,9 @@ const STORAGE_KEY = "circuito_selectedEventId";
 const SCROLL_KEY = "circuito_homeScrollY";
 const TAB_KEY = "circuito_homeActiveTab";
 
-type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta" | "camping";
+type Tab = "home" | "eventos" | "estandes" | "mapa" | "lineup" | "foto" | "roleta" | "camping" | "restaurante";
 
-const VALID_TABS: Tab[] = ["home", "eventos", "estandes", "mapa", "lineup", "foto", "roleta", "camping"];
+const VALID_TABS: Tab[] = ["home", "eventos", "estandes", "mapa", "lineup", "foto", "roleta", "camping", "restaurante"];
 
 const normalizeTab = (tab: string | null): Tab | null => {
   if (!tab) return null;
@@ -63,6 +64,7 @@ const HomeContent: React.FC = () => {
   const { showToast } = useToast();
   const [campingBookingCount, setCampingBookingCount] = useState(0);
   const [campingInitialStage, setCampingInitialStage] = useState<"pricing" | "mypassports">("pricing");
+  const [campingDeliverySpot, setCampingDeliverySpot] = useState("");
 
   // Persist tab selection
   useEffect(() => {
@@ -73,8 +75,11 @@ const HomeContent: React.FC = () => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    getMyCampingBookings().then((b) => setCampingBookingCount(b.length)).catch(() => {});
-  }, [isAuthenticated]);
+    getMyCampingBookings().then((b) => {
+      setCampingBookingCount(b.length);
+      if (b.length > 0) setCampingDeliverySpot(b[0].area_name ?? "");
+    }).catch(() => {});
+  }, [isAuthenticated, activeTab === "restaurante"]);
 
   useEffect(() => {
     if (activeTab !== "camping") setCampingInitialStage("pricing");
@@ -694,8 +699,17 @@ const HomeContent: React.FC = () => {
           <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
             <CampingMap
               eventId={currentEvent.id}
-              mapImageUrl={currentEvent.map_images?.[0]?.image_url ?? currentEvent.image_map ?? undefined}
+              mapImageUrl={currentEvent.camping_map_url ?? undefined}
               initialStage={campingInitialStage}
+            />
+          </Box>
+        )}
+        {activeTab === "restaurante" && currentEvent && (
+          <Box className={shouldAnimate ? "slide-up-delay-2" : ""}>
+            <FoodOrder
+              eventId={currentEvent.id}
+              deliverySpot={campingDeliverySpot}
+              hasCampingBooking={campingBookingCount > 0}
             />
           </Box>
         )}

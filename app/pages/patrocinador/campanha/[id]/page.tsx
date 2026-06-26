@@ -28,14 +28,12 @@ import {
   BarChart, Bar, Cell,
 } from "recharts";
 import { listMyCampaigns, type Campaign } from "@/app/services/campaigns/campaignService";
+import { getPlataformaConfig } from "@/app/services/configuracoes/configuracaoService";
 import { BRAND_MOCKS, MOCK_PERFORMANCE } from "@/app/services/campaigns/mockData";
 
 const ALL_MOCK_CAMPAIGNS = Object.values(BRAND_MOCKS).flat();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-const CPC_PRICE = 0.14;
-const CPV_PRICE = 0.1;
 
 function statusConfig(status: string) {
   const map: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
@@ -132,9 +130,17 @@ export default function CampaignDetailPage() {
   const router = useRouter();
   const { authReady, isPatrocinador, role } = useAuth();
 
+  const [CPC_PRICE, setCpcPrice] = useState(0.14);
+  const [CPV_PRICE, setCpvPrice] = useState(0.10);
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    getPlataformaConfig()
+      .then((cfg) => { setCpcPrice(cfg.cpc); setCpvPrice(cfg.cpv); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => { const t = setTimeout(() => setMounted(true), 80); return () => clearTimeout(t); }, []);
 

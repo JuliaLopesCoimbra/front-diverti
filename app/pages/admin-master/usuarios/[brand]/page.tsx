@@ -73,8 +73,8 @@ function formatBudget(value: number, type: string, days: number) {
   return `R$ ${value.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 }
 
-function totalBudget(value: number, type: string, days: number) {
-  return type === "diario" ? value * days : value;
+function totalBudget(value: number, type: string, days: number | null) {
+  return type === "diario" ? value * (days ?? 0) : value;
 }
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
@@ -270,7 +270,7 @@ export default function PatrocinadorDetailPage() {
                     <Box>
                       <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.06em", mb: 0.3 }}>Período</Typography>
                       <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "0.82rem" }}>
-                        {new Date(c.start_at).toLocaleDateString("pt-BR")}
+                        {c.start_at ? new Date(c.start_at).toLocaleDateString("pt-BR") : "—"}
                       </Typography>
                       <Typography sx={{ color: "rgba(255,255,255,0.25)", fontSize: "0.65rem" }}>{c.duration_days} dias</Typography>
                     </Box>

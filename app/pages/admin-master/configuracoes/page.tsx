@@ -1,9 +1,10 @@
 "use client";
 
-import { Box, Typography, Paper, Divider, Switch, TextField, Button, InputAdornment, Snackbar, Alert } from "@mui/material";
+import { Box, Typography, Paper, Divider, Switch, TextField, Button, InputAdornment, Snackbar, Alert, CircularProgress } from "@mui/material";
 import { Save as SaveIcon, RestartAlt as ResetIcon } from "@mui/icons-material";
 import AdminMasterShell from "@/app/components/AdminMasterShell";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getPlataformaConfig, updatePlataformaConfig, type PlataformaConfig } from "@/app/services/configuracoes/configuracaoService";
 
 const fieldSx = {
   "& .MuiOutlinedInput-root": {
@@ -20,13 +21,17 @@ const fieldSx = {
   "& .MuiInputAdornment-root p": { color: "rgba(255,255,255,0.35)", fontSize: "0.85rem" },
 };
 
-const DEFAULTS = {
-  cpc: "0.14",
-  cpv: "0.10",
-  minRadius: "1",
-  minDuration: "3",
-  minUnits: "100",
-  maxBudget: "50000",
+const DEFAULTS: PlataformaConfig = {
+  cpc: 0.14,
+  cpv: 0.10,
+  min_radius: 1,
+  min_duration: 3,
+  min_units: 100,
+  max_budget: 50000,
+  new_sponsors: true,
+  email_notifications: true,
+  auto_approve: false,
+  maintenance_mode: false,
 };
 
 function SettingRow({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: () => void }) {
@@ -50,35 +55,53 @@ function SettingRow({ label, description, value, onChange }: { label: string; de
 }
 
 export default function ConfiguracoesPage() {
-  const [settings, setSettings] = useState({
-    newSponsors: true,
-    emailNotifications: true,
-    autoApprove: false,
-    maintenanceMode: false,
-  });
-
-  const [prices, setPrices] = useState(DEFAULTS);
+  const [config, setConfig] = useState<PlataformaConfig>(DEFAULTS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
 
-  function toggle(key: keyof typeof settings) {
-    setSettings((s) => ({ ...s, [key]: !s[key] }));
+  useEffect(() => {
+    getPlataformaConfig()
+      .then(setConfig)
+      .catch(() => setConfig(DEFAULTS))
+      .finally(() => setLoading(false));
+  }, []);
+
+  function update(key: keyof PlataformaConfig, val: PlataformaConfig[keyof PlataformaConfig]) {
+    setConfig((c) => ({ ...c, [key]: val }));
     setDirty(true);
   }
 
-  function setPrice(key: keyof typeof prices, val: string) {
-    setPrices((p) => ({ ...p, [key]: val }));
-    setDirty(true);
-  }
-
-  function handleSave() {
-    setSaved(true);
-    setDirty(false);
+  async function handleSave() {
+    setSaving(true);
+    setError(null);
+    try {
+      const saved = await updatePlataformaConfig(config);
+      setConfig(saved);
+      setSaved(true);
+      setDirty(false);
+    } catch {
+      setError("Erro ao salvar configurações. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleReset() {
-    setPrices(DEFAULTS);
+    setConfig(DEFAULTS);
     setDirty(true);
+  }
+
+  if (loading) {
+    return (
+      <AdminMasterShell>
+        <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
+          <CircularProgress sx={{ color: "#ffcc01" }} />
+        </Box>
+      </AdminMasterShell>
+    );
   }
 
   return (
@@ -104,10 +127,10 @@ export default function ConfiguracoesPage() {
               variant="contained"
               startIcon={<SaveIcon />}
               onClick={handleSave}
-              disabled={!dirty}
+              disabled={!dirty || saving}
               sx={{ backgroundColor: "#ffcc01", color: "#111", borderRadius: 2, textTransform: "none", fontWeight: 700, fontSize: "0.82rem", "&:hover": { backgroundColor: "#e6b800" }, "&.Mui-disabled": { backgroundColor: "rgba(255,204,1,0.2)", color: "rgba(0,0,0,0.3)" } }}
             >
-              Salvar alterações
+              {saving ? "Salvando..." : "Salvar alterações"}
             </Button>
           </Box>
         </Box>
@@ -124,8 +147,8 @@ export default function ConfiguracoesPage() {
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
                 <TextField
                   label="CPC — por clique"
-                  value={prices.cpc}
-                  onChange={(e) => setPrice("cpc", e.target.value)}
+                  value={config.cpc}
+                  onChange={(e) => update("cpc", parseFloat(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 0, step: 0.01 }}
                   InputProps={{ startAdornment: <InputAdornment position="start">R$</InputAdornment> }}
@@ -134,8 +157,8 @@ export default function ConfiguracoesPage() {
                 />
                 <TextField
                   label="CPV — por visualização"
-                  value={prices.cpv}
-                  onChange={(e) => setPrice("cpv", e.target.value)}
+                  value={config.cpv}
+                  onChange={(e) => update("cpv", parseFloat(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 0, step: 0.01 }}
                   InputProps={{ startAdornment: <InputAdornment position="start">R$</InputAdornment> }}
@@ -153,8 +176,8 @@ export default function ConfiguracoesPage() {
               <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
                 <TextField
                   label="Raio mínimo"
-                  value={prices.minRadius}
-                  onChange={(e) => setPrice("minRadius", e.target.value)}
+                  value={config.min_radius}
+                  onChange={(e) => update("min_radius", parseFloat(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 1, step: 1 }}
                   InputProps={{ endAdornment: <InputAdornment position="end">km</InputAdornment> }}
@@ -163,8 +186,8 @@ export default function ConfiguracoesPage() {
                 />
                 <TextField
                   label="Duração mínima"
-                  value={prices.minDuration}
-                  onChange={(e) => setPrice("minDuration", e.target.value)}
+                  value={config.min_duration}
+                  onChange={(e) => update("min_duration", parseInt(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 1, step: 1 }}
                   InputProps={{ endAdornment: <InputAdornment position="end">dias</InputAdornment> }}
@@ -173,8 +196,8 @@ export default function ConfiguracoesPage() {
                 />
                 <TextField
                   label="Meta mínima de unidades"
-                  value={prices.minUnits}
-                  onChange={(e) => setPrice("minUnits", e.target.value)}
+                  value={config.min_units}
+                  onChange={(e) => update("min_units", parseInt(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 1, step: 1 }}
                   InputProps={{ endAdornment: <InputAdornment position="end">un.</InputAdornment> }}
@@ -183,8 +206,8 @@ export default function ConfiguracoesPage() {
                 />
                 <TextField
                   label="Orçamento máximo"
-                  value={prices.maxBudget}
-                  onChange={(e) => setPrice("maxBudget", e.target.value)}
+                  value={config.max_budget}
+                  onChange={(e) => update("max_budget", parseFloat(e.target.value) || 0)}
                   type="number"
                   inputProps={{ min: 1, step: 100 }}
                   InputProps={{ startAdornment: <InputAdornment position="start">R$</InputAdornment> }}
@@ -202,13 +225,13 @@ export default function ConfiguracoesPage() {
                   <Box>
                     <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>Custo CPC</Typography>
                     <Typography sx={{ color: "#ffcc01", fontWeight: 800, fontSize: "1rem" }}>
-                      R$ {(parseFloat(prices.cpc || "0") * 1000).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {(config.cpc * 1000).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </Typography>
                   </Box>
                   <Box>
                     <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>Custo CPV</Typography>
                     <Typography sx={{ color: "#ffcc01", fontWeight: 800, fontSize: "1rem" }}>
-                      R$ {(parseFloat(prices.cpv || "0") * 1000).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                      R$ {(config.cpv * 1000).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </Typography>
                   </Box>
                 </Box>
@@ -221,15 +244,15 @@ export default function ConfiguracoesPage() {
             <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", mb: 2 }}>
               Plataforma
             </Typography>
-            <SettingRow label="Cadastro de novos patrocinadores" description="Permite que novos sponsors criem conta" value={settings.newSponsors} onChange={() => toggle("newSponsors")} />
+            <SettingRow label="Cadastro de novos patrocinadores" description="Permite que novos sponsors criem conta" value={config.new_sponsors} onChange={() => update("new_sponsors", !config.new_sponsors)} />
             <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
-            <SettingRow label="Notificações por e-mail" description="Envia alertas automáticos aos patrocinadores" value={settings.emailNotifications} onChange={() => toggle("emailNotifications")} />
+            <SettingRow label="Notificações por e-mail" description="Envia alertas automáticos aos patrocinadores" value={config.email_notifications} onChange={() => update("email_notifications", !config.email_notifications)} />
             <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
-            <SettingRow label="Aprovação automática de campanhas" description="Campanhas ficam ativas sem revisão manual" value={settings.autoApprove} onChange={() => toggle("autoApprove")} />
+            <SettingRow label="Aprovação automática de campanhas" description="Campanhas ficam ativas sem revisão manual" value={config.auto_approve} onChange={() => update("auto_approve", !config.auto_approve)} />
             <Divider sx={{ borderColor: "rgba(255,255,255,0.06)" }} />
-            <SettingRow label="Modo manutenção" description="Bloqueia acesso de patrocinadores temporariamente" value={settings.maintenanceMode} onChange={() => toggle("maintenanceMode")} />
+            <SettingRow label="Modo manutenção" description="Bloqueia acesso de patrocinadores temporariamente" value={config.maintenance_mode} onChange={() => update("maintenance_mode", !config.maintenance_mode)} />
 
-            {settings.maintenanceMode && (
+            {config.maintenance_mode && (
               <Box sx={{ mt: 2, p: 2, borderRadius: 2, backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
                 <Typography sx={{ color: "#ef4444", fontSize: "0.78rem", fontWeight: 600 }}>
                   ⚠ Modo manutenção ativo — patrocinadores não conseguem acessar a plataforma.
@@ -240,10 +263,15 @@ export default function ConfiguracoesPage() {
         </Box>
       </Box>
 
-      {/* Toast de confirmação */}
       <Snackbar open={saved} autoHideDuration={3000} onClose={() => setSaved(false)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
         <Alert severity="success" onClose={() => setSaved(false)} sx={{ backgroundColor: "#1a2a1a", color: "#fff", "& .MuiAlert-icon": { color: "#10b981" } }}>
           Configurações salvas com sucesso!
+        </Alert>
+      </Snackbar>
+
+      <Snackbar open={!!error} autoHideDuration={4000} onClose={() => setError(null)} anchorOrigin={{ vertical: "bottom", horizontal: "center" }}>
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
         </Alert>
       </Snackbar>
     </AdminMasterShell>

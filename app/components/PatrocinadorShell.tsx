@@ -185,11 +185,11 @@ export default function PatrocinadorShell({ children }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", ...dashboardBackgroundSx }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", ...dashboardBackgroundSx }}>
 
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — fixed, never scrolls */}
       {!isMobile && (
-        <Box sx={{ width: SIDEBAR_W, flexShrink: 0, position: "sticky", top: 0, height: "100vh" }}>
+        <Box sx={{ width: SIDEBAR_W, flexShrink: 0, height: "100vh", overflowY: "auto" }}>
           <SidebarContent />
         </Box>
       )}
@@ -205,8 +205,8 @@ export default function PatrocinadorShell({ children }: Props) {
         </Drawer>
       )}
 
-      {/* Main content */}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+      {/* Main content — only this scrolls */}
+      <Box sx={{ flex: 1, height: "100vh", overflowY: "auto", display: "flex", flexDirection: "column", minWidth: 0 }}>
         {/* Mobile top bar */}
         {isMobile && (
           <Box

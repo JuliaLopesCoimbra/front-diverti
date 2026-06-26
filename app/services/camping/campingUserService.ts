@@ -45,6 +45,25 @@ export interface UserCampingBooking {
   qr_token?: string | null;
 }
 
+export interface PublicCampingPackage {
+  id: number;
+  event_id: number;
+  label: string;
+  badge?: string | null;
+  badge_color?: string | null;
+  price_cents: number;
+  price_label?: string | null;
+  period?: string | null;
+  days?: string[] | null;
+  is_active: boolean;
+  sort_order: number;
+}
+
+export const getPublicCampingPackages = async (eventId: number): Promise<PublicCampingPackage[]> => {
+  const response = await api.get<PublicCampingPackage[]>(`/public/events/${eventId}/camping-packages`);
+  return response.data;
+};
+
 export const getUserCampingAreas = async (eventId: number): Promise<UserCampingArea[]> => {
   const response = await api.get<UserCampingArea[]>(`/user/events/${eventId}/camping-areas`);
   return response.data;

@@ -10,7 +10,6 @@ import {
   Typography,
 } from "@mui/material";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LockIcon from "@mui/icons-material/Lock";
@@ -18,6 +17,7 @@ import {
   getUserCampingAreas,
   getMyCampingBookings,
   bookCampingAreaDay,
+  getPublicCampingPackages,
   UserCampingArea,
   UserCampingBooking,
 } from "@/app/services/camping/campingUserService";
@@ -41,41 +41,9 @@ const DAY_LABELS: Record<number, string> = {
   28: "Sex 28/08", 29: "Sáb 29/08", 30: "Dom 30/08",
 };
 
-const PACKAGES: Package[] = [
-  {
-    id: "diaria",
-    label: "Passaporte Camping Individual + Tag acesso Veículo",
-    badge: "1° Lote",
-    badgeColor: "rgba(255,255,255,0.12)",
-    priceStr: "R$ 754,60",
-    priceLabel: "por vaga",
-    period: "1 dia",
-    days: [],
-  },
-  {
-    id: "pacote4",
-    label: "Passaporte Camping Individual + Tag acesso Veículo",
-    badge: "1° Lote",
-    badgeColor: "rgba(255,204,1,0.18)",
-    priceStr: "R$ 2.264,00",
-    priceLabel: "total",
-    period: "Qui 20/08 a Dom 23/08",
-    days: ["Qui 20/08", "Sex 21/08", "Sáb 22/08", "Dom 23/08"],
-  },
-  {
-    id: "pacote10",
-    label: "Passaporte Camping Individual + Tag acesso Veículo",
-    badge: "1° Lote",
-    badgeColor: "rgba(255,204,1,0.18)",
-    priceStr: "R$ 3.751,00",
-    priceLabel: "total",
-    period: "Qui 21/08 a Dom 30/08",
-    days: [
-      "Qui 21/08", "Sex 22/08", "Sáb 23/08", "Dom 24/08", "Seg 25/08",
-      "Ter 26/08", "Qua 27/08", "Qui 28/08", "Sex 29/08", "Dom 30/08",
-    ],
-  },
-];
+function formatCents(cents: number): string {
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
 
 function CampingQRCode({ value, size = 140 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -149,6 +117,7 @@ interface Props {
 export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props) {
   const [stage, setStage] = useState<Stage>(initialStage ?? "pricing");
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
+  const [packages, setPackages] = useState<Package[]>([]);
 
   // calendário (só para diária) — multi-seleção
   const [selectedDates, setSelectedDates] = useState<number[]>([]);
@@ -157,9 +126,10 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   // stepper de dias extras (pricing + mapa)
   const [extraDays, setExtraDays] = useState(1);
 
-  // vagas por dia: índice = índice do dia no activeDays
-  const [selectedAreasByDay, setSelectedAreasByDay] = useState<(number | null)[]>([]);
-  const [mapDayIndex, setMapDayIndex] = useState(0);
+  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
+  const [confirmedDays, setConfirmedDays] = useState<string[]>([]);
+  const [conflictAreaId, setConflictAreaId] = useState<number | null>(null);
+  const [conflictOccupiedDays, setConflictOccupiedDays] = useState<string[]>([]);
 
   const [areas, setAreas] = useState<UserCampingArea[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,10 +141,30 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   const [myBookings, setMyBookings] = useState<UserCampingBooking[]>([]);
   const [carouselIdx, setCarouselIdx] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"pix" | "credit_card" | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(`camping_map_${eventId}`);
     if (saved) setCampingMapUrl(saved);
+  }, [eventId]);
+
+  useEffect(() => {
+    getPublicCampingPackages(eventId)
+      .then((apiPkgs) => {
+        const mapped: Package[] = apiPkgs.map((p) => ({
+          id: String(p.id),
+          label: p.label,
+          badge: p.badge ?? "1° Lote",
+          badgeColor: p.badge_color ?? "rgba(255,204,1,0.18)",
+          priceStr: `R$ ${formatCents(p.price_cents)}`,
+          priceLabel: p.price_label ?? "total",
+          period: p.period ?? (p.days && p.days.length === 0 ? "1 dia" : ""),
+          days: p.days ?? [],
+        }));
+        setPackages(mapped);
+      })
+      .catch(() => {});
   }, [eventId]);
 
   async function handlePayment() {
@@ -183,16 +173,12 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
     try {
       const bookings: UserCampingBooking[] = [];
 
-      for (let i = 0; i < activeDays.length; i++) {
-        const areaId = selectedAreasByDay[i];
-        if (areaId == null) continue;
-
-        const dayLabel = activeDays[i];
+      for (const dayLabel of confirmedDays) {
+        if (selectedAreaId == null) continue;
         const dayMatch = dayLabel.match(/(\d+)\/08/);
         const dayNum = dayMatch ? parseInt(dayMatch[1]) : -1;
         const dateIso = `2026-08-${String(dayNum).padStart(2, "0")}`;
-
-        const booking = await bookCampingAreaDay(areaId, dateIso);
+        const booking = await bookCampingAreaDay(selectedAreaId, dateIso);
         bookings.push(booking);
       }
 
@@ -241,45 +227,53 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
       : selectedPkg?.days ?? [];
 
   const totalDays = activeDays.length;
-  const currentDayLabel = activeDays[mapDayIndex] ?? "";
-  const currentAreaId = selectedAreasByDay[mapDayIndex] ?? null;
 
   const displayPrice: string =
-    selectedPkg?.id === "diaria" && totalDays > 0
+    selectedPkg?.id === "diaria" && confirmedDays.length > 0
+      ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(confirmedDays.length * 754.60)
+      : selectedPkg?.id === "diaria" && totalDays > 0
       ? new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalDays * 754.60)
       : selectedPkg?.priceStr ?? "";
 
-  function setAreaForDay(dayIdx: number, areaId: number | null) {
-    setSelectedAreasByDay((prev) => {
-      const next = [...prev];
-      next[dayIdx] = areaId;
-      return next;
-    });
-  }
-
   function startMapFlow() {
-    setMapDayIndex(0);
-    setSelectedAreasByDay(Array(totalDays).fill(null));
+    setSelectedAreaId(null);
+    setConfirmedDays([]);
     setStage("map");
   }
 
-  const currentDayMatch = currentDayLabel.match(/(\d+)\/08/);
-  const currentDayIso = currentDayMatch ? `2026-08-${currentDayMatch[1].padStart(2, "0")}` : null;
+  function getAreaAvailability(area: UserCampingArea): { available: string[]; occupied: string[] } {
+    const available: string[] = [];
+    const occupied: string[] = [];
+    for (const dayLabel of activeDays) {
+      const match = dayLabel.match(/(\d+)\/08/);
+      const dayNum = match ? parseInt(match[1]) : -1;
+      const dayIso = `2026-08-${String(dayNum).padStart(2, "0")}`;
+      const session = area.sessions.find((s) => s.check_in_date.slice(0, 10) === dayIso);
+      if (session && session.remaining_slots <= 0) {
+        occupied.push(dayLabel);
+      } else {
+        available.push(dayLabel);
+      }
+    }
+    return { available, occupied };
+  }
 
-  const sessionForDay = (area: UserCampingArea) =>
-    currentDayIso
-      ? area.sessions.find((s) => s.check_in_date.slice(0, 10) === currentDayIso)
-      : undefined;
-
-  const isReserved = (area: UserCampingArea) => {
-    const s = sessionForDay(area);
-    return s ? s.remaining_slots <= 0 && !s.is_booked : false;
-  };
-
-  const isBooked = (area: UserCampingArea) => {
-    const s = sessionForDay(area);
-    return s ? s.is_booked : false;
-  };
+  function handleAreaClick(area: UserCampingArea) {
+    if (selectedAreaId === area.id) {
+      setSelectedAreaId(null);
+      setConfirmedDays([]);
+      return;
+    }
+    const { available, occupied } = getAreaAvailability(area);
+    if (available.length === 0) return;
+    if (occupied.length === 0) {
+      setSelectedAreaId(area.id);
+      setConfirmedDays(activeDays);
+    } else {
+      setConflictAreaId(area.id);
+      setConflictOccupiedDays(occupied);
+    }
+  }
 
   // ─── Meus Passaportes ────────────────────────────────────────────────────────
 
@@ -503,7 +497,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {PACKAGES.map((pkg) => (
+          {packages.map((pkg) => (
             <Box key={pkg.id} sx={{
               backgroundColor: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
@@ -559,8 +553,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                     setSelectedPkg(pkg);
                     setSelectedDates([]);
                     setCalendarTargetCount(extraDays);
-                    setSelectedAreasByDay([]);
-                    setMapDayIndex(0);
+                    startMapFlow();
                     setStage("calendar");
                   }} sx={{
                     backgroundColor: "#fff", color: "#111",
@@ -575,10 +568,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                 <Button fullWidth onClick={() => {
                   setSelectedPkg(pkg);
                   setSelectedDates([]); setCalendarTargetCount(1);
-                  setSelectedAreasByDay([]);
-                  setMapDayIndex(0);
-                  setSelectedAreasByDay(Array(pkg.days.length).fill(null));
-                  setStage("map");
+                  startMapFlow();
                 }} sx={{
                   backgroundColor: "#fff", color: "#111",
                   borderRadius: "12px", textTransform: "none",
@@ -714,11 +704,10 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
     );
   }
 
-  // ─── Map (repete para cada dia) ──────────────────────────────────────────────
+  // ─── Map ─────────────────────────────────────────────────────────────────────
 
   if (stage === "map") {
-    const isLastDay = mapDayIndex === totalDays - 1;
-    const allDaysSelected = selectedAreasByDay.slice(0, totalDays).every((id) => id != null);
+    const selectedArea = areas.find((a) => a.id === selectedAreaId);
 
     return (
       <Box sx={{ pb: 12 }}>
@@ -728,43 +717,23 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           px: 2, py: 1.5,
           borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}>
-          <Box onClick={() => {
-            if (mapDayIndex > 0) setMapDayIndex((i) => i - 1);
-            else setStage(selectedPkg?.id === "diaria" ? "calendar" : "pricing");
-          }} sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
+          <Box onClick={() => setStage(selectedPkg?.id === "diaria" ? "calendar" : "pricing")}
+            sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
             <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", lineHeight: 1.2 }}>
-              {totalDays > 1 ? `Dia ${mapDayIndex + 1} de ${totalDays} — ${currentDayLabel}` : currentDayLabel}
+              Escolha sua vaga
             </Typography>
             <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem" }}>
-              {selectedPkg?.priceStr} · Toque em uma vaga para selecionar
+              {totalDays} dia{totalDays !== 1 ? "s" : ""} · Toque em uma vaga para selecionar
             </Typography>
           </Box>
-          {currentAreaId && (
-            <Chip label={areas.find((a) => a.id === currentAreaId)?.name ?? ""}
+          {selectedArea && (
+            <Chip label={selectedArea.name}
               size="small" sx={{ backgroundColor: "#ffcc01", color: "#111", fontWeight: 800, fontSize: "0.72rem", flexShrink: 0 }} />
           )}
         </Box>
-
-
-        {/* Progress dots para multi-dia */}
-        {totalDays > 1 && (
-          <Box sx={{ display: "flex", justifyContent: "center", gap: 0.8, py: 1.2 }}>
-            {activeDays.map((_, i) => (
-              <Box key={i} sx={{
-                width: i === mapDayIndex ? 20 : 8, height: 8, borderRadius: "999px",
-                backgroundColor: selectedAreasByDay[i] != null
-                  ? "#ffcc01"
-                  : i === mapDayIndex
-                  ? "rgba(255,255,255,0.7)"
-                  : "rgba(255,255,255,0.2)",
-                transition: "all 0.2s ease",
-              }} />
-            ))}
-          </Box>
-        )}
 
         {/* Map */}
         {loading ? (
@@ -773,57 +742,66 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Box>
         ) : (
           <Box sx={{ px: 2 }}>
-          <Box sx={{ position: "relative", width: "100%", lineHeight: 0, overflow: "hidden", borderRadius: "12px" }}>
-            <Box component="img"
-              src={campingMapUrl || mapImageUrl || "/mapa/Mapa-do-Rock-In-Rio-2024.png"}
-              alt="Mapa de Camping"
-              sx={{ width: "100%", display: "block" }}
-            />
-            {areas.map((area) => {
-              const x = area.x_position ?? 0.08;
-              const y = area.y_position ?? 0.1;
-              const reserved = isReserved(area);
-              const booked = isBooked(area);
-              const isSelected = currentAreaId === area.id;
-              const isHovered = hoveredId === area.id;
-              const unavailable = reserved || booked;
+            <Box sx={{ position: "relative", width: "100%", lineHeight: 0, overflow: "hidden", borderRadius: "12px" }}>
+              <Box component="img"
+                src={mapImageUrl || campingMapUrl || "/mapa/Mapa-do-Rock-In-Rio-2024.png"}
+                alt="Mapa de Camping"
+                sx={{ width: "100%", display: "block" }}
+              />
+              {areas.map((area) => {
+                const x = area.x_position ?? 0.08;
+                const y = area.y_position ?? 0.1;
+                const { available, occupied } = getAreaAvailability(area);
+                const allOccupied = available.length === 0;
+                const partial = occupied.length > 0 && available.length > 0;
+                const isSelected = selectedAreaId === area.id;
+                const isHovered = hoveredId === area.id;
 
-              return (
-                <Box key={area.id}
-                  onClick={() => !unavailable && setAreaForDay(mapDayIndex, isSelected ? null : area.id)}
-                  onMouseEnter={() => setHoveredId(area.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  sx={{
-                    position: "absolute",
-                    left: `${x * 100}%`, top: `${y * 100}%`,
-                    transform: isHovered && !unavailable
-                      ? "translate(-50%, -50%) scale(1.25)"
-                      : "translate(-50%, -50%) scale(1)",
-                    transition: "transform 0.15s ease",
-                    cursor: unavailable ? "not-allowed" : "pointer",
-                    zIndex: isSelected ? 10 : 2,
-                  }}
-                >
-                  <Box sx={{
-                    width: 28, height: 22, borderRadius: "4px",
-                    backgroundColor: isSelected ? "#ffcc01" : booked || reserved ? "#f97316" : "rgba(255,255,255,0.93)",
-                    color: isSelected ? "#111" : booked || reserved ? "#fff" : "#111",
-                    display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-                    border: isSelected ? "2px solid #e6b800" : "1.5px solid rgba(0,0,0,0.2)",
-                    boxShadow: isSelected
-                      ? "0 0 0 3px rgba(255,204,1,0.35), 0 3px 12px rgba(0,0,0,0.6)"
-                      : "0 1px 6px rgba(0,0,0,0.5)",
-                    opacity: reserved ? 0.75 : 1,
-                  }}>
-                    {reserved ? <LockIcon sx={{ fontSize: 9 }} /> : <DirectionsCarIcon sx={{ fontSize: 10 }} />}
-                    <Typography sx={{ fontSize: "0.38rem", fontWeight: 800, lineHeight: 1.1 }}>
-                      {area.name}
-                    </Typography>
+                const bgColor = isSelected
+                  ? "#ffcc01"
+                  : allOccupied
+                  ? "#f97316"
+                  : partial
+                  ? "#fb923c"
+                  : "rgba(255,255,255,0.93)";
+                const fgColor = isSelected || allOccupied || partial ? (isSelected ? "#111" : "#fff") : "#111";
+
+                return (
+                  <Box key={area.id}
+                    onClick={() => !allOccupied && handleAreaClick(area)}
+                    onMouseEnter={() => setHoveredId(area.id)}
+                    onMouseLeave={() => setHoveredId(null)}
+                    sx={{
+                      position: "absolute",
+                      left: `${x * 100}%`, top: `${y * 100}%`,
+                      transform: isHovered && !allOccupied
+                        ? "translate(-50%, -50%) scale(1.25)"
+                        : "translate(-50%, -50%) scale(1)",
+                      transition: "transform 0.15s ease",
+                      cursor: allOccupied ? "not-allowed" : "pointer",
+                      zIndex: isSelected ? 10 : 2,
+                    }}
+                  >
+                    <Box sx={{
+                      width: 28, height: 22, borderRadius: "4px",
+                      backgroundColor: bgColor,
+                      color: fgColor,
+                      display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                      border: isSelected ? "2px solid #e6b800" : "1.5px solid rgba(0,0,0,0.2)",
+                      boxShadow: isSelected
+                        ? "0 0 0 3px rgba(255,204,1,0.35), 0 3px 12px rgba(0,0,0,0.6)"
+                        : "0 1px 6px rgba(0,0,0,0.5)",
+                      opacity: allOccupied ? 0.7 : 1,
+                    }}>
+                      {allOccupied ? <LockIcon sx={{ fontSize: 9 }} /> : <NightShelterRoundedIcon sx={{ fontSize: 10, color: fgColor }} />}
+                      <Typography sx={{ fontSize: "0.38rem", fontWeight: 800, lineHeight: 1.1, color: fgColor }}>
+                        {area.name}
+                      </Typography>
+                    </Box>
                   </Box>
-                </Box>
-              );
-            })}
-          </Box>
+                );
+              })}
+            </Box>
           </Box>
         )}
 
@@ -831,7 +809,8 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         <Box sx={{ px: 2, pt: 1.5, display: "flex", gap: 2.5, flexWrap: "wrap" }}>
           {[
             { color: "rgba(255,255,255,0.93)", border: "rgba(0,0,0,0.2)", label: "Disponível" },
-            { color: "#f97316", border: "#f97316", label: "Reservada" },
+            { color: "#fb923c", border: "#fb923c", label: "Parcial" },
+            { color: "#f97316", border: "#f97316", label: "Ocupada" },
             { color: "#ffcc01", border: "#e6b800", label: "Selecionada" },
           ].map(({ color, border, label }) => (
             <Box key={label} sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
@@ -858,8 +837,8 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Typography>
         </Box>
 
-        {/* Comprar mais dias (só para diária) */}
-        {totalDays === 1 && (
+        {/* Comprar mais dias (só para diária com 1 dia) */}
+        {selectedPkg?.id === "diaria" && totalDays === 1 && (
           <Box sx={{
             mx: 2, mt: 1,
             backgroundColor: "rgba(255,255,255,0.04)",
@@ -904,26 +883,72 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Box>
         )}
 
+        {/* Conflict dialog */}
+        {conflictAreaId != null && (() => {
+          const conflictArea = areas.find((a) => a.id === conflictAreaId);
+          const { available } = getAreaAvailability(conflictArea!);
+          return (
+            <Box sx={{
+              position: "fixed", inset: 0, zIndex: 1000,
+              backgroundColor: "rgba(0,0,0,0.7)", display: "flex", alignItems: "flex-end",
+            }}
+              onClick={() => setConflictAreaId(null)}
+            >
+              <Box
+                onClick={(e) => e.stopPropagation()}
+                sx={{
+                  width: "100%", maxWidth: 560, mx: "auto",
+                  backgroundColor: "#1a1a2e",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: "20px 20px 0 0",
+                  p: 3, pb: 4,
+                }}
+              >
+                <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1rem", mb: 0.8 }}>
+                  Vaga {conflictArea?.name} — ocupada em alguns dias
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.83rem", mb: 0.5 }}>
+                  Já reservada em: <Box component="span" sx={{ color: "#f97316", fontWeight: 700 }}>{conflictOccupiedDays.join(", ")}</Box>
+                </Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.83rem", mb: 2.5 }}>
+                  Deseja reservar nos <Box component="span" sx={{ color: "#fff", fontWeight: 700 }}>{available.length} dias disponíveis</Box>?
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1.5 }}>
+                  <Button fullWidth onClick={() => setConflictAreaId(null)} sx={{
+                    border: "1px solid rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.6)",
+                    borderRadius: "12px", textTransform: "none", fontWeight: 600, py: 1.2,
+                    "&:hover": { backgroundColor: "rgba(255,255,255,0.05)" },
+                  }}>
+                    Cancelar
+                  </Button>
+                  <Button fullWidth onClick={() => {
+                    setSelectedAreaId(conflictAreaId);
+                    setConfirmedDays(available);
+                    setConflictAreaId(null);
+                    setConflictOccupiedDays([]);
+                  }} sx={{
+                    backgroundColor: "#fff", color: "#111",
+                    borderRadius: "12px", textTransform: "none", fontWeight: 700, py: 1.2,
+                    "&:hover": { backgroundColor: "#efefef" },
+                  }}>
+                    Reservar {available.length} dia{available.length !== 1 ? "s" : ""}
+                  </Button>
+                </Box>
+              </Box>
+            </Box>
+          );
+        })()}
+
         {/* CTA */}
-        {currentAreaId && (
+        {selectedAreaId != null && (
           <Box sx={{ px: 2, pt: 2 }}>
-            {isLastDay ? (
-              <Button fullWidth onClick={() => setStage("review")} sx={{
-                backgroundColor: "#fff", color: "#111", borderRadius: "14px",
-                textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
-                "&:hover": { backgroundColor: "#efefef" },
-              }}>
-                Revisar pedido →
-              </Button>
-            ) : (
-              <Button fullWidth onClick={() => setMapDayIndex((i) => i + 1)} sx={{
-                backgroundColor: "#fff", color: "#111", borderRadius: "14px",
-                textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
-                "&:hover": { backgroundColor: "#efefef" },
-              }}>
-                Próximo dia →
-              </Button>
-            )}
+            <Button fullWidth onClick={() => setStage("review")} sx={{
+              backgroundColor: "#fff", color: "#111", borderRadius: "14px",
+              textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+              "&:hover": { backgroundColor: "#efefef" },
+            }}>
+              Revisar pedido →
+            </Button>
           </Box>
         )}
       </Box>
@@ -933,10 +958,14 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   // ─── Review ──────────────────────────────────────────────────────────────────
 
   if (stage === "review") {
+    const reviewArea = areas.find((a) => a.id === selectedAreaId);
+    const isDiaria = selectedPkg?.id === "diaria";
+    const daysToShow = isDiaria ? confirmedDays : activeDays;
+
     return (
       <Box sx={{ px: 2, pb: 12, pt: 2.5, maxWidth: 560, mx: "auto" }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-          <Box onClick={() => { setMapDayIndex(totalDays - 1); setStage("map"); }}
+          <Box onClick={() => setStage("map")}
             sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
             <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
           </Box>
@@ -957,43 +986,47 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
             Resumo do pedido
           </Typography>
 
-          {/* Cabeçalho de colunas */}
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1, mb: 1 }}>
-            <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Dia</Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Vaga</Typography>
-            <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", textAlign: "right" }}>Valor</Typography>
+          {/* Vaga selecionada */}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>Vaga</Typography>
+            <Chip label={reviewArea?.name ?? "—"} size="small" sx={{
+              backgroundColor: "rgba(255,204,1,0.15)", color: "#ffcc01",
+              fontWeight: 700, fontSize: "0.75rem", height: 22,
+              border: "1px solid rgba(255,204,1,0.3)",
+            }} />
           </Box>
 
-          {activeDays.map((dayLabel, i) => {
-            const area = areas.find((a) => a.id === selectedAreasByDay[i]);
-            const unitPrice = selectedPkg?.id === "diaria"
-              ? "R$ 754,60"
-              : i === 0 ? selectedPkg?.priceStr ?? "—" : "—";
-            const isPackageRow = selectedPkg?.id !== "diaria";
-            return (
-              <Box key={i} sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1, alignItems: "center", mb: 1 }}>
-                <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.82rem" }}>
-                  {dayLabel}
-                  {isPackageRow && i === 0 && (
-                    <Box component="span" sx={{ display: "block", color: "rgba(255,255,255,0.3)", fontSize: "0.68rem" }}>
-                      {selectedPkg?.period}
-                    </Box>
-                  )}
-                </Typography>
-                <Chip label={area?.name ?? "—"} size="small" sx={{
-                  backgroundColor: "rgba(255,204,1,0.15)", color: "#ffcc01",
-                  fontWeight: 700, fontSize: "0.68rem", height: 20,
-                  border: "1px solid rgba(255,204,1,0.3)",
-                }} />
-                <Typography sx={{
-                  color: unitPrice === "—" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.75)",
-                  fontSize: "0.8rem", fontWeight: 600, textAlign: "right", whiteSpace: "nowrap",
-                }}>
-                  {unitPrice}
+          {isDiaria ? (
+            <>
+              <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 1, mb: 1 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase" }}>Dia</Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase", textAlign: "right" }}>Valor</Typography>
+              </Box>
+              {daysToShow.map((dayLabel) => (
+                <Box key={dayLabel} sx={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 1, alignItems: "center", mb: 1 }}>
+                  <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.82rem" }}>{dayLabel}</Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.75)", fontSize: "0.8rem", fontWeight: 600, textAlign: "right" }}>
+                    R$ 754,60
+                  </Typography>
+                </Box>
+              ))}
+            </>
+          ) : (
+            <>
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>Período</Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem", fontWeight: 600 }}>
+                  {selectedPkg?.period}
                 </Typography>
               </Box>
-            );
-          })}
+              <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>Dias incluídos</Typography>
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: "0.78rem", fontWeight: 600 }}>
+                  {daysToShow.length} dia{daysToShow.length !== 1 ? "s" : ""}
+                </Typography>
+              </Box>
+            </>
+          )}
 
           <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 1.5 }} />
 
@@ -1079,19 +1112,22 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
             <Typography sx={{ color: "#fff", fontSize: "0.82rem", fontWeight: 600 }}>{selectedPkg?.period}</Typography>
           </Box>
 
-          {activeDays.map((dayLabel, i) => {
-            const area = areas.find((a) => a.id === selectedAreasByDay[i]);
-            return (
-              <Box key={i} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-                <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>{dayLabel}</Typography>
-                <Chip label={area?.name ?? "—"} size="small" sx={{
-                  backgroundColor: "rgba(255,204,1,0.15)", color: "#ffcc01",
-                  fontWeight: 700, fontSize: "0.7rem", height: 22,
-                  border: "1px solid rgba(255,204,1,0.3)",
-                }} />
-              </Box>
-            );
-          })}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>Vaga</Typography>
+            <Chip label={areas.find((a) => a.id === selectedAreaId)?.name ?? "—"} size="small" sx={{
+              backgroundColor: "rgba(255,204,1,0.15)", color: "#ffcc01",
+              fontWeight: 700, fontSize: "0.7rem", height: 22,
+              border: "1px solid rgba(255,204,1,0.3)",
+            }} />
+          </Box>
+          {confirmedDays.map((dayLabel) => (
+            <Box key={dayLabel} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem" }}>{dayLabel}</Typography>
+              <Typography sx={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", fontWeight: 600 }}>
+                {selectedPkg?.id === "diaria" ? "R$ 754,60" : selectedPkg?.priceStr ?? "—"}
+              </Typography>
+            </Box>
+          ))}
 
           <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mt: 1.5, mb: 1.5 }} />
           <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1104,8 +1140,8 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           setStage("pricing");
           setSelectedPkg(null);
           setSelectedDates([]); setCalendarTargetCount(1);
-          setSelectedAreasByDay([]);
-          setMapDayIndex(0);
+          setSelectedAreaId(null);
+          setConfirmedDays([]);
           setReservationCode("");
         }} sx={{
           backgroundColor: "rgba(255,255,255,0.08)",
@@ -1124,7 +1160,222 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
     );
   }
 
-  // ─── Payment ──────────────────────────────────────────────────────────────────
+  // ─── Payment helpers ──────────────────────────────────────────────────────────
+
+  const MOCK_PIX_KEY = "pagamento@diverti.com.br";
+  const MOCK_PIX_CODE = `00020126580014BR.GOV.BCB.PIX0136${
+    "a1f2c3d4-e5f6-7890-abcd-ef1234567890"
+  }5204000053039865406${displayPrice.replace(/\D/g, "").slice(0, 6)}5802BR5925DIVERTI EVENTOS LTDA6009SAO PAULO62070503***6304CAFE`;
+
+  const orderSummaryBlock = (
+    <Box sx={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", p: 2.5, mb: 2.5 }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5 }}>
+        <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem" }}>Vaga</Typography>
+        <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem" }}>
+          {areas.find((a) => a.id === selectedAreaId)?.name ?? "—"}
+        </Typography>
+      </Box>
+      {(selectedPkg?.id === "diaria" ? confirmedDays : activeDays).map((dayLabel) => (
+        <Box key={dayLabel} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+          <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem" }}>{dayLabel}</Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.6)", fontWeight: 600, fontSize: "0.82rem" }}>
+            {selectedPkg?.id === "diaria" ? "R$ 754,60" : "—"}
+          </Typography>
+        </Box>
+      ))}
+      <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 1.5 }} />
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <Typography sx={{ color: "#fff", fontWeight: 700 }}>Total</Typography>
+        <Typography sx={{ color: "#fff", fontWeight: 900, fontSize: "1.2rem" }}>{displayPrice}</Typography>
+      </Box>
+    </Box>
+  );
+
+  // ─── Payment: PIX ─────────────────────────────────────────────────────────────
+
+  if (stage === "payment" && paymentMethod === "pix") {
+    return (
+      <Box sx={{ px: 2, pb: 12, pt: 2.5, maxWidth: 560, mx: "auto" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+          <Box onClick={() => setPaymentMethod(null)} sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
+            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+          </Box>
+          <Box>
+            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>Pagar via PIX</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>Escaneie ou copie o código</Typography>
+          </Box>
+        </Box>
+
+        {/* QR code */}
+        <Box sx={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "20px", p: 3, mb: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+          <Box sx={{ backgroundColor: "#fff", borderRadius: "16px", p: 2 }}>
+            <CampingQRCode value={MOCK_PIX_CODE} size={180} />
+          </Box>
+
+          <Box sx={{ textAlign: "center" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.72rem", mb: 0.3 }}>Chave PIX</Typography>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.9rem", letterSpacing: "0.02em" }}>
+              {MOCK_PIX_KEY}
+            </Typography>
+          </Box>
+
+          <Box sx={{ width: "100%" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.7rem", mb: 1, textAlign: "center" }}>
+              Código copia e cola
+            </Typography>
+            <Box sx={{ backgroundColor: "rgba(0,0,0,0.35)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "12px", p: 1.5, wordBreak: "break-all" }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.62rem", fontFamily: "monospace", lineHeight: 1.6 }}>
+                {MOCK_PIX_CODE}
+              </Typography>
+            </Box>
+            <Button
+              fullWidth
+              onClick={() => {
+                navigator.clipboard?.writeText(MOCK_PIX_CODE).catch(() => {});
+                setPixCopied(true);
+                setTimeout(() => setPixCopied(false), 2500);
+              }}
+              sx={{
+                mt: 1.5,
+                backgroundColor: pixCopied ? "rgba(34,197,94,0.15)" : "rgba(255,255,255,0.08)",
+                border: `1px solid ${pixCopied ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.15)"}`,
+                color: pixCopied ? "#22c55e" : "#fff",
+                borderRadius: "12px", textTransform: "none", fontWeight: 700, py: 1.1,
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+              }}
+            >
+              {pixCopied ? "✓ Código copiado!" : "Copiar código PIX"}
+            </Button>
+          </Box>
+
+          <Box sx={{ backgroundColor: "rgba(255,204,1,0.07)", border: "1px solid rgba(255,204,1,0.15)", borderRadius: "10px", px: 2, py: 1, width: "100%" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.55)", fontSize: "0.73rem", textAlign: "center" }}>
+              Válido por <Box component="span" sx={{ color: "#ffcc01", fontWeight: 700 }}>30 minutos</Box> · após o pagamento a reserva é confirmada automaticamente
+            </Typography>
+          </Box>
+        </Box>
+
+        {bookingError && (
+          <Typography sx={{ color: "#f87171", fontSize: "0.8rem", textAlign: "center", mb: 1.5 }}>
+            {bookingError}
+          </Typography>
+        )}
+
+        <Button
+          fullWidth
+          onClick={handlePayment}
+          disabled={bookingLoading}
+          sx={{
+            backgroundColor: "#32BCAD", color: "#fff", borderRadius: "14px",
+            textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+            "&:hover": { backgroundColor: "#28a89a" },
+            "&.Mui-disabled": { backgroundColor: "rgba(50,188,173,0.3)", color: "rgba(255,255,255,0.5)" },
+          }}
+        >
+          {bookingLoading ? <CircularProgress size={20} sx={{ color: "#fff" }} /> : "Já paguei — confirmar reserva"}
+        </Button>
+      </Box>
+    );
+  }
+
+  // ─── Payment: Cartão de crédito ───────────────────────────────────────────────
+
+  if (stage === "payment" && paymentMethod === "credit_card") {
+    return (
+      <Box sx={{ px: 2, pb: 12, pt: 2.5, maxWidth: 560, mx: "auto" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+          <Box onClick={() => setPaymentMethod(null)} sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
+            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+          </Box>
+          <Box>
+            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>Cartão de crédito</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>Cartão salvo na conta</Typography>
+          </Box>
+        </Box>
+
+        {/* Card visualization */}
+        <Box sx={{
+          position: "relative",
+          borderRadius: "20px", p: 3, mb: 2.5,
+          background: "linear-gradient(135deg, #1a1a3e 0%, #2d2d6b 50%, #1a1a3e 100%)",
+          border: "1px solid rgba(255,255,255,0.15)",
+          overflow: "hidden",
+          minHeight: 180,
+        }}>
+          {/* Background circles */}
+          <Box sx={{ position: "absolute", top: -30, right: -30, width: 140, height: 140, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.04)" }} />
+          <Box sx={{ position: "absolute", bottom: -50, left: -20, width: 160, height: 160, borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.03)" }} />
+
+          {/* Card brand */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", mb: 3, position: "relative" }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.3 }}>
+              <Box sx={{ width: 36, height: 28, borderRadius: "5px", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Typography sx={{ color: "#fff", fontSize: "0.55rem", fontWeight: 900, letterSpacing: "0.05em" }}>CHIP</Typography>
+              </Box>
+            </Box>
+            {/* Visa logo */}
+            <Typography sx={{ color: "#fff", fontWeight: 900, fontSize: "1.4rem", fontStyle: "italic", letterSpacing: "-0.03em", textShadow: "0 1px 4px rgba(0,0,0,0.4)" }}>
+              VISA
+            </Typography>
+          </Box>
+
+          {/* Card number */}
+          <Typography sx={{ color: "rgba(255,255,255,0.9)", fontWeight: 600, fontSize: "1.1rem", letterSpacing: "0.22em", mb: 2.5, fontFamily: "monospace", position: "relative" }}>
+            ••••  ••••  ••••  4242
+          </Typography>
+
+          {/* Card holder + expiry */}
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", position: "relative" }}>
+            <Box>
+              <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.1em", mb: 0.2 }}>
+                Titular
+              </Typography>
+              <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", letterSpacing: "0.08em" }}>
+                NOME DO TITULAR
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: "right" }}>
+              <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.1em", mb: 0.2 }}>
+                Validade
+              </Typography>
+              <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem" }}>12/28</Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        {/* Change card link */}
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.75rem", textDecoration: "underline", cursor: "not-allowed" }}>
+            Trocar cartão
+          </Typography>
+        </Box>
+
+        {orderSummaryBlock}
+
+        {bookingError && (
+          <Typography sx={{ color: "#f87171", fontSize: "0.8rem", textAlign: "center", mb: 1.5 }}>
+            {bookingError}
+          </Typography>
+        )}
+
+        <Button
+          fullWidth
+          onClick={handlePayment}
+          disabled={bookingLoading}
+          sx={{
+            backgroundColor: "#fff", color: "#111", borderRadius: "14px",
+            textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+            "&:hover": { backgroundColor: "#efefef" },
+            "&.Mui-disabled": { backgroundColor: "rgba(255,255,255,0.2)", color: "rgba(0,0,0,0.3)" },
+          }}
+        >
+          {bookingLoading ? <CircularProgress size={20} sx={{ color: "#111" }} /> : `Pagar ${displayPrice}`}
+        </Button>
+      </Box>
+    );
+  }
+
+  // ─── Payment: seleção de método ───────────────────────────────────────────────
 
   return (
     <Box sx={{ px: 2, pb: 12, pt: 2.5, maxWidth: 560, mx: "auto" }}>
@@ -1132,72 +1383,79 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         <Box onClick={() => setStage("review")} sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
           <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
         </Box>
-        <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>Pagamento</Typography>
+        <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>Forma de pagamento</Typography>
       </Box>
 
-      <Box sx={{
-        backgroundColor: "rgba(255,255,255,0.05)",
-        border: "1px solid rgba(255,255,255,0.1)",
-        borderRadius: "20px", p: 2.5, mb: 2.5,
-      }}>
-        {activeDays.map((dayLabel, i) => {
-          const area = areas.find((a) => a.id === selectedAreasByDay[i]);
-          return (
-            <Box key={i} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
-              <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem" }}>{dayLabel}</Typography>
-              <Typography sx={{ color: "#fff", fontWeight: 600, fontSize: "0.82rem" }}>{area?.name ?? "—"}</Typography>
+      {orderSummaryBlock}
+
+      <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", mb: 1.5 }}>
+        Escolha como pagar
+      </Typography>
+
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+        {/* Cartão de crédito */}
+        <Box
+          onClick={() => setPaymentMethod("credit_card")}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "16px", p: 2,
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 2,
+            transition: "all 0.2s ease",
+            "&:active": { transform: "scale(0.98)" },
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.09)", borderColor: "rgba(255,255,255,0.2)" },
+          }}
+        >
+          <Box sx={{
+            width: 48, height: 48, borderRadius: "12px", flexShrink: 0,
+            background: "linear-gradient(135deg, #1a1a3e, #2d2d6b)",
+            border: "1px solid rgba(255,255,255,0.15)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Typography sx={{ color: "#fff", fontSize: "1.4rem", lineHeight: 1 }}>💳</Typography>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem" }}>Cartão de crédito</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+              Visa ••••4242 · Cartão salvo
+            </Typography>
+          </Box>
+          <Box sx={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#22c55e", flexShrink: 0 }} />
+        </Box>
+
+        {/* PIX */}
+        <Box
+          onClick={() => setPaymentMethod("pix")}
+          sx={{
+            backgroundColor: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "16px", p: 2,
+            cursor: "pointer", display: "flex", alignItems: "center", gap: 2,
+            transition: "all 0.2s ease",
+            "&:active": { transform: "scale(0.98)" },
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.09)", borderColor: "rgba(255,255,255,0.2)" },
+          }}
+        >
+          <Box sx={{
+            width: 48, height: 48, borderRadius: "12px", flexShrink: 0,
+            backgroundColor: "rgba(50,188,173,0.12)",
+            border: "1px solid rgba(50,188,173,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <Box component="svg" viewBox="0 0 512 512" sx={{ width: 26, height: 26 }}>
+              <path d="M112.57 391.19a73 73 0 0 0 51.82 21.46h.14a73 73 0 0 0 51.75-21.46l84.91-84.92a11.08 11.08 0 0 1 15.63 0l85.25 85.25a73 73 0 0 0 51.82 21.46h.14A73 73 0 0 0 505 391.52l-119.74-120a11.08 11.08 0 0 1 0-15.63L505 135.86a73.27 73.27 0 0 0-51.82-21.47h-.14a73.27 73.27 0 0 0-51.75 21.47L316 221.14a11.08 11.08 0 0 1-15.63 0l-84.91-84.92a73.27 73.27 0 0 0-51.82-21.47h-.14a73.27 73.27 0 0 0-51.82 21.47L7 255.88l-.15.15 105.72 135.16z" fill="#32BCAD"/>
+              <path d="M112.43 135.86a73.27 73.27 0 0 1 51.82-21.47h.14a73.27 73.27 0 0 1 51.82 21.47l84.91 84.92a11.08 11.08 0 0 0 15.63 0l85.11-85.25a73.27 73.27 0 0 1 51.75-21.47h.14a73.27 73.27 0 0 1 51.82 21.47L391 255.88l-.15.15L505 391.52a73 73 0 0 1-51.82 21.46h-.14a73 73 0 0 1-51.82-21.46l-85.11-85.25a11.08 11.08 0 0 0-15.63 0l-84.91 84.92a73 73 0 0 1-51.75 21.46h-.14a73 73 0 0 1-51.82-21.46L7 255.88z" fill="#32BCAD" opacity=".5"/>
             </Box>
-          );
-        })}
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", my: 1.5 }} />
-        <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Typography sx={{ color: "#fff", fontWeight: 700 }}>Total</Typography>
-          <Typography sx={{ color: "#fff", fontWeight: 900, fontSize: "1.2rem" }}>{displayPrice}</Typography>
-        </Box>
-      </Box>
-
-      {bookingError && (
-        <Typography sx={{ color: "#f87171", fontSize: "0.8rem", textAlign: "center", mb: 1.5 }}>
-          {bookingError}
-        </Typography>
-      )}
-
-      <Box sx={{ display: "flex", gap: 1.5, opacity: bookingLoading ? 0.6 : 1, pointerEvents: bookingLoading ? "none" : "auto" }}>
-        <Box onClick={handlePayment} sx={{
-          flex: 1, backgroundColor: "#fff", borderRadius: "16px",
-          p: 2, cursor: "pointer", textAlign: "center",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 0.8,
-          "&:active": { transform: "scale(0.97)" },
-          transition: "transform 0.15s ease",
-        }}>
-          {bookingLoading
-            ? <CircularProgress size={24} sx={{ color: "#111" }} />
-            : <Typography sx={{ fontSize: "1.6rem", lineHeight: 1 }}>💳</Typography>
-          }
-          <Typography sx={{ color: "#111", fontWeight: 700, fontSize: "0.82rem", lineHeight: 1.3 }}>
-            Cartão de Crédito
-          </Typography>
-        </Box>
-        <Box onClick={handlePayment} sx={{
-          flex: 1,
-          backgroundColor: "rgba(255,255,255,0.06)",
-          border: "1px solid rgba(255,255,255,0.15)",
-          borderRadius: "16px",
-          p: 2, cursor: "pointer", textAlign: "center",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 0.8,
-          "&:active": { transform: "scale(0.97)" },
-          transition: "transform 0.15s ease",
-        }}>
-          {bookingLoading
-            ? <CircularProgress size={24} sx={{ color: "#32BCAD" }} />
-            : <Box component="svg" viewBox="0 0 512 512" sx={{ width: 32, height: 32 }}>
-                <path d="M112.57 391.19a73 73 0 0 0 51.82 21.46h.14a73 73 0 0 0 51.75-21.46l84.91-84.92a11.08 11.08 0 0 1 15.63 0l85.25 85.25a73 73 0 0 0 51.82 21.46h.14A73 73 0 0 0 505 391.52l-119.74-120a11.08 11.08 0 0 1 0-15.63L505 135.86a73.27 73.27 0 0 0-51.82-21.47h-.14a73.27 73.27 0 0 0-51.75 21.47L316 221.14a11.08 11.08 0 0 1-15.63 0l-84.91-84.92a73.27 73.27 0 0 0-51.82-21.47h-.14a73.27 73.27 0 0 0-51.82 21.47L7 255.88l-.15.15 105.72 135.16z" fill="#32BCAD"/>
-                <path d="M112.43 135.86a73.27 73.27 0 0 1 51.82-21.47h.14a73.27 73.27 0 0 1 51.82 21.47l84.91 84.92a11.08 11.08 0 0 0 15.63 0l85.11-85.25a73.27 73.27 0 0 1 51.75-21.47h.14a73.27 73.27 0 0 1 51.82 21.47L391 255.88l-.15.15L505 391.52a73 73 0 0 1-51.82 21.46h-.14a73 73 0 0 1-51.82-21.46l-85.11-85.25a11.08 11.08 0 0 0-15.63 0l-84.91 84.92a73 73 0 0 1-51.75 21.46h-.14a73 73 0 0 1-51.82-21.46L7 255.88z" fill="#32BCAD" opacity=".5"/>
-              </Box>
-          }
-          <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.82rem", lineHeight: 1.3 }}>
-            Pix
-          </Typography>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.92rem" }}>PIX</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>
+              Pagamento instantâneo · aprovação imediata
+            </Typography>
+          </Box>
+          <Box sx={{ backgroundColor: "rgba(50,188,173,0.15)", border: "1px solid rgba(50,188,173,0.3)", borderRadius: "8px", px: 1, py: 0.3 }}>
+            <Typography sx={{ color: "#32BCAD", fontSize: "0.62rem", fontWeight: 700 }}>Instantâneo</Typography>
+          </Box>
         </Box>
       </Box>
     </Box>

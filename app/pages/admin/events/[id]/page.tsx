@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   Box,
@@ -11,15 +11,14 @@ import {
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CasinoIcon from "@mui/icons-material/Casino";
-import CardGiftcardIcon from "@mui/icons-material/CardGiftcard";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import InfoIcon from "@mui/icons-material/Info";
 import MapIcon from "@mui/icons-material/Map";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
-import PhotoLibraryIcon from "@mui/icons-material/PhotoLibrary";
+import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import StorefrontIcon from "@mui/icons-material/Storefront";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
@@ -86,7 +85,7 @@ export default function EventManagePage() {
 
   if (!canAccess || !event) return null;
 
-  const FEATURE_CARDS = [
+  const FEATURE_CARDS: { label: string; description: string; icon: React.ReactNode; color: string; route?: string; soon?: boolean }[] = [
     {
       label: "Info do Evento",
       description: "Editar dados, datas e configurações",
@@ -109,21 +108,6 @@ export default function EventManagePage() {
       route: `/pages/admin/camping?eventId=${eventId}`,
     },
     {
-      label: "Brindes",
-      description: "Analytics por estande",
-      icon: <CardGiftcardIcon sx={{ fontSize: 26 }} />,
-      color: "#ec4899",
-      route: `/pages/admin/brindes`,
-    },
-    {
-      label: "Roleta",
-      description: "Prêmios e configurações",
-      icon: <CasinoIcon sx={{ fontSize: 26 }} />,
-      color: "#f59e0b",
-      route: null,
-      soon: true,
-    },
-    {
       label: "Mapa do Evento",
       description: "Imagens do mapa",
       icon: <MapIcon sx={{ fontSize: 26 }} />,
@@ -138,12 +122,18 @@ export default function EventManagePage() {
       route: `/pages/admin/events/${eventId}/lineup`,
     },
     {
-      label: "Photo Finder",
-      description: "Fotos do evento",
-      icon: <PhotoLibraryIcon sx={{ fontSize: 26 }} />,
-      color: "#64748b",
-      route: null,
-      soon: true,
+      label: "Restaurantes",
+      description: "Cardápio, fotos e preços",
+      icon: <RestaurantMenuIcon sx={{ fontSize: 26 }} />,
+      color: "#f97316",
+      route: `/pages/admin/events/${eventId}/restaurantes`,
+    },
+    {
+      label: "Passaportes",
+      description: "Pacotes e lotes de camping",
+      icon: <LocalOfferIcon sx={{ fontSize: 26 }} />,
+      color: "#10b981",
+      route: `/pages/admin/events/${eventId}/passaportes`,
     },
   ];
 

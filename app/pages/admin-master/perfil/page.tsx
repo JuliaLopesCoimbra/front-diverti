@@ -108,11 +108,11 @@ export default function AdminMasterPerfilPage() {
 
           {/* Avatar + info */}
           <Box sx={{ px: { xs: 2.5, sm: 4 }, pb: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 3, mt: "-52px", flexWrap: "wrap" }}>
+            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 3, mt: "-72px", flexWrap: "wrap" }}>
               <Box sx={{ position: "relative", flexShrink: 0 }}>
                 <Box
                   sx={{
-                    width: 104, height: 104, borderRadius: "50%",
+                    width: 144, height: 144, borderRadius: "50%",
                     border: "4px solid rgba(15,15,25,1)",
                     overflow: "hidden", backgroundColor: "rgba(255,255,255,0.08)",
                     display: "flex", alignItems: "center", justifyContent: "center",
@@ -123,19 +123,19 @@ export default function AdminMasterPerfilPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={displayPhoto} alt="Foto" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
-                    <AdminIcon sx={{ fontSize: 40, color: "#ffcc01" }} />
+                    <AdminIcon sx={{ fontSize: 52, color: "#ffcc01" }} />
                   )}
                 </Box>
                 <IconButton
                   onClick={() => fileInputRef.current?.click()}
                   size="small"
-                  sx={{ position: "absolute", bottom: 2, right: 2, backgroundColor: "#ffcc01", color: "#111", width: 28, height: 28, "&:hover": { backgroundColor: "#e6b800" }, boxShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
+                  sx={{ position: "absolute", bottom: 4, right: 4, backgroundColor: "#ffcc01", color: "#111", width: 32, height: 32, "&:hover": { backgroundColor: "#e6b800" }, boxShadow: "0 2px 8px rgba(0,0,0,0.5)" }}
                 >
-                  <CameraIcon sx={{ fontSize: 14 }} />
+                  <CameraIcon sx={{ fontSize: 16 }} />
                 </IconButton>
               </Box>
 
-              <Box sx={{ pt: { xs: 0, sm: "52px" }, pb: 0.5, flex: 1, minWidth: 180 }}>
+              <Box sx={{ pt: { xs: 0, sm: "72px" }, pb: 0.5, flex: 1, minWidth: 180 }}>
                 <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.35rem", lineHeight: 1.2, mb: 0.8 }}>
                   {userName ?? "Admin Master"}
                 </Typography>
@@ -182,14 +182,14 @@ export default function AdminMasterPerfilPage() {
               Sua foto aparece no menu lateral
             </Typography>
 
-            <Box sx={{ display: "flex", gap: 2, mb: 3, justifyContent: "center" }}>
+            <Box sx={{ display: "flex", gap: 3, mb: 3, justifyContent: "center" }}>
               <Box sx={{ textAlign: "center" }}>
-                <Box sx={{ width: 100, height: 100, borderRadius: "50%", margin: "0 auto", border: "3px solid rgba(255,255,255,0.1)", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", mb: 1 }}>
+                <Box sx={{ width: 140, height: 140, borderRadius: "50%", margin: "0 auto", border: "3px solid rgba(255,255,255,0.1)", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", mb: 1 }}>
                   {(preview ? photoUrl : displayPhoto) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={(preview ? photoUrl : displayPhoto) ?? ""} alt="Atual" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
-                    <AdminIcon sx={{ fontSize: 36, color: "rgba(255,255,255,0.2)" }} />
+                    <AdminIcon sx={{ fontSize: 48, color: "rgba(255,255,255,0.2)" }} />
                   )}
                 </Box>
                 <Typography sx={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem" }}>Atual</Typography>
@@ -199,7 +199,7 @@ export default function AdminMasterPerfilPage() {
                 <>
                   <Box sx={{ display: "flex", alignItems: "center", color: "rgba(255,255,255,0.2)", fontSize: "1.2rem" }}>→</Box>
                   <Box sx={{ textAlign: "center" }}>
-                    <Box sx={{ width: 100, height: 100, borderRadius: "50%", margin: "0 auto", border: "3px solid rgba(255,204,1,0.5)", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", mb: 1, boxShadow: "0 0 0 4px rgba(255,204,1,0.1)" }}>
+                    <Box sx={{ width: 140, height: 140, borderRadius: "50%", margin: "0 auto", border: "3px solid rgba(255,204,1,0.5)", overflow: "hidden", backgroundColor: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center", mb: 1, boxShadow: "0 0 0 4px rgba(255,204,1,0.1)" }}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={preview} alt="Nova" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     </Box>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Box, Typography, Paper, Chip, Button, Collapse, TextField, Divider, IconButton } from "@mui/material";
 import {
   Receipt as ReceiptIcon, TrendingUp as TrendingIcon, CreditCard as CardIcon,
@@ -11,6 +11,7 @@ import {
 import PatrocinadorShell from "@/app/components/PatrocinadorShell";
 import { BRAND_MOCKS, MOCK_PERFORMANCE, detectBrand } from "@/app/services/campaigns/mockData";
 import { useAuth } from "@/app/context/AuthContext";
+import { getPlataformaConfig } from "@/app/services/configuracoes/configuracaoService";
 
 /* ── Mock card data per brand ─────────────────────────────────────────────── */
 interface MockCard {
@@ -88,13 +89,18 @@ function NetworkLogo({ network }: { network: "visa" | "mastercard" }) {
   );
 }
 
-const CPC_PRICE = 0.14;
-const CPV_PRICE = 0.1;
-
 export default function ExtratoPage() {
   const { userName } = useAuth();
   const MOCK_CAMPAIGNS = BRAND_MOCKS[detectBrand(userName)] ?? [];
   const [cardOpen, setCardOpen] = useState(false);
+  const [CPC_PRICE, setCpcPrice] = useState(0.14);
+  const [CPV_PRICE, setCpvPrice] = useState(0.10);
+
+  useEffect(() => {
+    getPlataformaConfig()
+      .then((cfg) => { setCpcPrice(cfg.cpc); setCpvPrice(cfg.cpv); })
+      .catch(() => {});
+  }, []);
 
   const fieldSx = {
     "& .MuiInputBase-root": { backgroundColor: "rgba(255,255,255,0.05)", borderRadius: "10px", color: "#fff" },

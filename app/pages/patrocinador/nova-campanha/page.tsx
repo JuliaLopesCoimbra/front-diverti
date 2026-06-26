@@ -22,6 +22,7 @@ import { useAuth } from "@/app/context/AuthContext";
 import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 import Image from "next/image";
 import { uploadCreative, type CampaignPayload } from "@/app/services/campaigns/campaignService";
+import { getPlataformaConfig } from "@/app/services/configuracoes/configuracaoService";
 import { useToast } from "@/app/context/ToastContext";
 
 // Leaflet map — carregado apenas no cliente
@@ -37,8 +38,6 @@ const LocationMap = dynamic(() => import("@/app/components/common/LocationMap"),
 // ─── Constantes ───────────────────────────────────────────────────────────────
 
 const STEPS = ["Objetivo", "Criativo", "Público-alvo", "Localização", "Veiculação", "Orçamento"];
-const CPC_PRICE = 0.14;
-const CPV_PRICE = 0.1;
 
 const HOBBY_SUGGESTIONS = [
   "Sertanejo","Rodeio","Agronegócio","Música ao vivo","Festas","Gastronomia",
@@ -116,8 +115,8 @@ const emptyDraft = (): AdDraft => ({
 
 // ─── Preço ────────────────────────────────────────────────────────────────────
 
-function calcSurcharges(draft: AdDraft) {
-  const rate = draft.ad_type === "CPC" ? CPC_PRICE : CPV_PRICE;
+function calcSurcharges(draft: AdDraft, cpcPrice = 0.14, cpvPrice = 0.10) {
+  const rate = draft.ad_type === "CPC" ? cpcPrice : cpvPrice;
   const _hobbies     = draft.hobbies ?? [];
   const _professions = draft.professions ?? [];
   const _cidades     = draft.location_cidades ?? [];
@@ -233,7 +232,7 @@ function TagInput({ label, values, suggestions, color = "#ffcc01", onChange }: {
 
 // ─── STEP 1 ───────────────────────────────────────────────────────────────────
 
-function Step1({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unknown) => void }) {
+function Step1({ draft, set, cpcPrice = 0.14, cpvPrice = 0.10 }: { draft: AdDraft; set: (k: keyof AdDraft, v: unknown) => void; cpcPrice?: number; cpvPrice?: number }) {
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
       <Box>
@@ -248,8 +247,8 @@ function Step1({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
         <Label>Tipo de cobrança</Label>
         <Box sx={{ display: "flex", gap: 2 }}>
           {([
-            { value: "CPC" as const, label: "CPC — Custo por Clique", sub: "Você paga apenas quando o usuário clica no anúncio", price: `R$ ${CPC_PRICE} por clique`, color: "#4f46e5", Icon: ClickIcon },
-            { value: "CPV" as const, label: "CPV — Custo por View",   sub: "Você paga a cada vez que o anúncio é visualizado",    price: `R$ ${CPV_PRICE} por view`,   color: "#10b981", Icon: ViewIcon  },
+            { value: "CPC" as const, label: "CPC — Custo por Clique", sub: "Você paga apenas quando o usuário clica no anúncio", price: `R$ ${cpcPrice} por clique`, color: "#4f46e5", Icon: ClickIcon },
+            { value: "CPV" as const, label: "CPV — Custo por View",   sub: "Você paga a cada vez que o anúncio é visualizado",    price: `R$ ${cpvPrice} por view`,   color: "#10b981", Icon: ViewIcon  },
           ]).map((opt) => {
             const active = draft.ad_type === opt.value;
             return (
@@ -996,8 +995,8 @@ function InfoChip({ children, color = "rgba(255,255,255,0.1)", textColor = "rgba
   );
 }
 
-function Step6({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unknown) => void }) {
-  const { rate, hobbySurcharge, professionSurcharge, cidadesSurcharge, radiusSurcharge, totalSurchargePercent, effectiveRate } = calcSurcharges(draft);
+function Step6({ draft, set, cpcPrice = 0.14, cpvPrice = 0.10 }: { draft: AdDraft; set: (k: keyof AdDraft, v: unknown) => void; cpcPrice?: number; cpvPrice?: number }) {
+  const { rate, hobbySurcharge, professionSurcharge, cidadesSurcharge, radiusSurcharge, totalSurchargePercent, effectiveRate } = calcSurcharges(draft, cpcPrice, cpvPrice);
   const budget = parseFloat(draft.budget_amount) || 0;
   const computedUnits = budget > 0 ? Math.floor(budget / effectiveRate) : 0;
   const durationDays = parseInt(draft.duration_days, 10) || 0;
@@ -1155,7 +1154,7 @@ function Step6({ draft, set }: { draft: AdDraft; set: (k: keyof AdDraft, v: unkn
           {/* Objetivo */}
           <SummaryRow icon={draft.ad_type === "CPC" ? <ClickIcon /> : <ViewIcon />} label="Objetivo">
             <Chip
-              label={draft.ad_type === "CPC" ? `CPC · R$${CPC_PRICE}/clique` : `CPV · R$${CPV_PRICE}/view`}
+              label={draft.ad_type === "CPC" ? `CPC · R$${cpcPrice}/clique` : `CPV · R$${cpvPrice}/view`}
               size="small"
               sx={{ backgroundColor: "rgba(79,70,229,0.15)", border: "1px solid rgba(79,70,229,0.3)", color: "#a5b4fc", fontSize: "0.75rem", height: 24 }}
             />
@@ -1222,6 +1221,15 @@ export default function NovaCampanhaPage() {
   const router = useRouter();
   const { showToast } = useToast();
 
+  const [CPC_PRICE, setCpcPrice] = useState(0.14);
+  const [CPV_PRICE, setCpvPrice] = useState(0.10);
+
+  useEffect(() => {
+    getPlataformaConfig()
+      .then((cfg) => { setCpcPrice(cfg.cpc); setCpvPrice(cfg.cpv); })
+      .catch(() => {});
+  }, []);
+
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<AdDraft>({
     ...emptyDraft(),
@@ -1262,7 +1270,7 @@ export default function NovaCampanhaPage() {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const { effectiveRate } = calcSurcharges(draft);
+      const { effectiveRate } = calcSurcharges(draft, CPC_PRICE, CPV_PRICE);
       const budget = parseFloat(draft.budget_amount) || 0;
       const targetUnits = Math.max(1, Math.floor(budget / effectiveRate));
       const loc = locationSummary(draft);
@@ -1312,17 +1320,17 @@ export default function NovaCampanhaPage() {
   };
 
   const stepContent = [
-    <Step1 key={0} draft={draft} set={set} />,
+    <Step1 key={0} draft={draft} set={set} cpcPrice={CPC_PRICE} cpvPrice={CPV_PRICE} />,
     <Step2 key={1} draft={draft} set={set} />,
     <Step3 key={2} draft={draft} set={set} />,
     <Step4 key={3} draft={draft} set={set} />,
     <Step5 key={4} draft={draft} set={set} />,
-    <Step6 key={5} draft={draft} set={set} />,
+    <Step6 key={5} draft={draft} set={set} cpcPrice={CPC_PRICE} cpvPrice={CPV_PRICE} />,
   ];
 
   return (
-    <Box sx={{ minHeight: "100vh", ...dashboardBackgroundSx }}>
-      <Paper elevation={0} sx={{ position: "sticky", top: 0, zIndex: 100, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.08)", px: { xs: 2, sm: 4 }, py: 1.5 }}>
+    <Box sx={{ height: "100vh", overflow: "hidden", display: "flex", flexDirection: "column", ...dashboardBackgroundSx }}>
+      <Paper elevation={0} sx={{ flexShrink: 0, zIndex: 100, backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.08)", px: { xs: 2, sm: 4 }, py: 1.5 }}>
         <Box sx={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton onClick={() => step === 0 ? router.push("/pages/patrocinador/home") : setStep((s) => s - 1)}
             sx={{ color: "rgba(255,255,255,0.6)", "&:hover": { color: "#fff", backgroundColor: "rgba(255,255,255,0.08)" } }}>
@@ -1338,9 +1346,10 @@ export default function NovaCampanhaPage() {
         </Box>
       </Paper>
 
+      <Box sx={{ flex: 1, overflowY: "auto" }}>
       <Box sx={{ maxWidth: 1000, margin: "0 auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 }, display: "flex", gap: 4, alignItems: "flex-start" }}>
         {/* Stepper lateral */}
-        <Box sx={{ display: { xs: "none", md: "block" }, width: 200, flexShrink: 0, position: "sticky", top: 80 }}>
+        <Box sx={{ display: { xs: "none", md: "block" }, width: 200, flexShrink: 0, position: "sticky", top: 40 }}>
           <Stepper activeStep={step} orientation="vertical"
             sx={{ "& .MuiStepConnector-line": { borderColor: "rgba(255,255,255,0.1)", minHeight: 24 }, "& .MuiStepConnector-root.Mui-active .MuiStepConnector-line": { borderColor: "#ffcc01" }, "& .MuiStepConnector-root.Mui-completed .MuiStepConnector-line": { borderColor: "#ffcc01" } }}>
             {STEPS.map((label, idx) => (
@@ -1395,6 +1404,7 @@ export default function NovaCampanhaPage() {
             )}
           </Box>
         </Box>
+      </Box>
       </Box>
     </Box>
   );

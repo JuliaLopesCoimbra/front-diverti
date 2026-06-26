@@ -214,3 +214,46 @@ export const listUsers = async (limit?: number, offset?: number): Promise<UserRe
     throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao listar usuários");
   }
 };
+
+// ---------------------------
+// OPERADORES
+// ---------------------------
+
+export interface OperadorResponse {
+  id: number;
+  name: string | null;
+  email: string;
+  role: string;
+  status: string;
+  restaurant_id: number | null;
+  created_at: string;
+}
+
+export const createOperador = async (data: { name: string; email: string; password: string; restaurant_id?: number | null }): Promise<OperadorResponse> => {
+  try {
+    const response = await api.post<OperadorResponse>("/auth/admin/operadores", data);
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao criar operador");
+  }
+};
+
+export const listOperadores = async (): Promise<OperadorResponse[]> => {
+  try {
+    const response = await api.get<OperadorResponse[]>("/auth/admin/operadores");
+    return response.data;
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao listar operadores");
+  }
+};
+
+export const deleteOperador = async (id: number): Promise<void> => {
+  try {
+    await api.delete(`/auth/admin/operadores/${id}`);
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: { detail?: string; message?: string } }; message?: string };
+    throw new Error(err.response?.data?.detail || err.response?.data?.message || err.message || "Erro ao remover operador");
+  }
+};

@@ -167,10 +167,10 @@ function CampaignDetailPanel({ campaign: c, group }: { campaign: Campaign; group
 
       {/* Orçamento */}
       <Box>
-        <SectionLabel>Orçamento</SectionLabel>
+        <SectionLabel>Orçamento e pagamento</SectionLabel>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <DetailRow
-            label="Valor"
+            label="Valor pago"
             value={`R$ ${(c.budget_value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}${c.budget_type === "diario" ? " / dia" : " total"}`}
           />
           {c.duration_days != null && (
@@ -178,7 +178,7 @@ function CampaignDetailPanel({ campaign: c, group }: { campaign: Campaign; group
           )}
           {c.start_at && (
             <DetailRow
-              label="Início"
+              label="Início da veiculação"
               value={new Date(c.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
             />
           )}
@@ -188,6 +188,28 @@ function CampaignDetailPanel({ campaign: c, group }: { campaign: Campaign; group
               value={`${c.target_units.toLocaleString("pt-BR")} ${c.ad_type === "CPC" ? "cliques" : "visualizações"}`}
             />
           )}
+          <Box sx={{ mt: 0.5, pt: 1, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+            <DetailRow
+              label="Forma de pagamento"
+              value={
+                <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.8 }}>
+                  <Box sx={{ position: "relative", width: 28, height: 18, flexShrink: 0 }}>
+                    <Box sx={{ position: "absolute", left: 0, width: 18, height: 18, borderRadius: "50%", backgroundColor: "#eb001b", opacity: 0.9 }} />
+                    <Box sx={{ position: "absolute", right: 0, width: 18, height: 18, borderRadius: "50%", backgroundColor: "#f79e1b", opacity: 0.85 }} />
+                  </Box>
+                  <Typography sx={{ color: "#fff", fontSize: "0.78rem", fontWeight: 600 }}>Cartão de crédito</Typography>
+                </Box>
+              }
+            />
+            {c.created_at && (
+              <Box sx={{ mt: 1 }}>
+                <DetailRow
+                  label="Pago em"
+                  value={new Date(c.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                />
+              </Box>
+            )}
+          </Box>
         </Box>
       </Box>
 

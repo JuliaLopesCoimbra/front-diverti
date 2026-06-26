@@ -99,12 +99,22 @@ export const deleteCampingArea = async (areaId: number): Promise<void> => {
   await api.delete(`/admin/camping-areas/${areaId}`);
 };
 
+export const uploadCampingAreaImage = async (areaId: number, file: File): Promise<CampingAreaResponse> => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const response = await api.put<CampingAreaResponse>(`/admin/camping-areas/${areaId}`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
 export interface CampingBookingInfo {
   id: number;
   user_id: number;
   user_name: string;
   user_email: string;
   user_cpf?: string | null;
+  user_profile_photo?: string | null;
   created_at: string;
   checked_in_at?: string | null;
 }

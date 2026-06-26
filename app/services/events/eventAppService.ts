@@ -9,6 +9,7 @@ export interface EventResponse {
   location?: string;
   banner_image?: string;
   image_map?: string; // Mantido para compatibilidade, mas usar map_images
+  camping_map_url?: string;
   map_images?: Array<{
     id: number;
     event_id: number;
@@ -243,6 +244,15 @@ export const updatePostApprovalRequirement = async (
 
 export const getPendingPostsCount = async (eventId: number): Promise<{ event_id: number; pending_count: number }> => {
   const response = await api.get<{ event_id: number; pending_count: number }>(`/admin/events/${eventId}/pending-posts-count`);
+  return response.data;
+};
+
+export const uploadCampingMap = async (eventId: number, file: File): Promise<EventResponse> => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const response = await api.patch<EventResponse>(`/admin/events/${eventId}/camping-map`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
   return response.data;
 };
 

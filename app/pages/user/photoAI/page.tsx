@@ -36,7 +36,7 @@ interface PhotoAIPageProps {
 }
 
 export default function PhotoAIPage({ eventId: eventIdProp }: PhotoAIPageProps) {
-  const eventId = eventIdProp ?? (parseInt(localStorage.getItem("circuito_selectedEventId") ?? "0") || 0);
+  const eventId = eventIdProp ?? (typeof window !== "undefined" ? parseInt(localStorage.getItem("circuito_selectedEventId") ?? "0") || 0 : 0);
   const { getCache, setCache } = useFeedCache();
   const cacheKey = `photo-ai-results-event-${eventId}`;
   
