@@ -45,6 +45,39 @@ function formatCents(cents: number): string {
   return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+const FALLBACK_PACKAGES: Package[] = [
+  {
+    id: "diaria",
+    label: "Diária",
+    badge: "Diária",
+    badgeColor: "rgba(255,255,255,0.08)",
+    priceStr: "R$ 754,60",
+    priceLabel: "por vaga",
+    period: "1 dia",
+    days: [],
+  },
+  {
+    id: "pacote4",
+    label: "Pacote 4 dias",
+    badge: "1° Lote",
+    badgeColor: "rgba(255,204,1,0.18)",
+    priceStr: "R$ 2.264,00",
+    priceLabel: "total",
+    period: "Qui 20/08 a Dom 23/08",
+    days: ["Qui 20/08", "Sex 21/08", "Sáb 22/08", "Dom 23/08"],
+  },
+  {
+    id: "pacote10",
+    label: "Pacote 11 dias",
+    badge: "1° Lote",
+    badgeColor: "rgba(255,204,1,0.18)",
+    priceStr: "R$ 3.751,00",
+    priceLabel: "total",
+    period: "Qui 20/08 a Dom 30/08",
+    days: ["Qui 20/08", "Sex 21/08", "Sáb 22/08", "Dom 23/08", "Seg 24/08", "Ter 25/08", "Qua 26/08", "Qui 27/08", "Sex 28/08", "Sáb 29/08", "Dom 30/08"],
+  },
+];
+
 function CampingQRCode({ value, size = 140 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -118,6 +151,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   const [stage, setStage] = useState<Stage>(initialStage ?? "pricing");
   const [selectedPkg, setSelectedPkg] = useState<Package | null>(null);
   const [packages, setPackages] = useState<Package[]>([]);
+  const [packagesLoading, setPackagesLoading] = useState(true);
 
   // calendário (só para diária) — multi-seleção
   const [selectedDates, setSelectedDates] = useState<number[]>([]);
@@ -150,21 +184,27 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   }, [eventId]);
 
   useEffect(() => {
+    setPackagesLoading(true);
     getPublicCampingPackages(eventId)
       .then((apiPkgs) => {
-        const mapped: Package[] = apiPkgs.map((p) => ({
-          id: String(p.id),
-          label: p.label,
-          badge: p.badge ?? "1° Lote",
-          badgeColor: p.badge_color ?? "rgba(255,204,1,0.18)",
-          priceStr: `R$ ${formatCents(p.price_cents)}`,
-          priceLabel: p.price_label ?? "total",
-          period: p.period ?? (p.days && p.days.length === 0 ? "1 dia" : ""),
-          days: p.days ?? [],
-        }));
-        setPackages(mapped);
+        if (apiPkgs.length > 0) {
+          const mapped: Package[] = apiPkgs.map((p) => ({
+            id: String(p.id),
+            label: p.label,
+            badge: p.badge ?? "1° Lote",
+            badgeColor: p.badge_color ?? "rgba(255,204,1,0.18)",
+            priceStr: `R$ ${formatCents(p.price_cents)}`,
+            priceLabel: p.price_label ?? "total",
+            period: p.period ?? (p.days && p.days.length === 0 ? "1 dia" : ""),
+            days: p.days ?? [],
+          }));
+          setPackages(mapped);
+        } else {
+          setPackages(FALLBACK_PACKAGES);
+        }
       })
-      .catch(() => {});
+      .catch(() => { setPackages(FALLBACK_PACKAGES); })
+      .then(() => { setPackagesLoading(false); });
   }, [eventId]);
 
   async function handlePayment() {
@@ -495,7 +535,12 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          {packages.map((pkg) => (
+          {packagesLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+              <CircularProgress sx={{ color: "rgba(255,255,255,0.5)" }} size={32} />
+            </Box>
+          ) : null}
+          {!packagesLoading && packages.map((pkg) => (
             <Box key={pkg.id} sx={{
               backgroundColor: "rgba(255,255,255,0.05)",
               border: "1px solid rgba(255,255,255,0.1)",
