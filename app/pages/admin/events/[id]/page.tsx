@@ -16,7 +16,6 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import InfoIcon from "@mui/icons-material/Info";
 import MapIcon from "@mui/icons-material/Map";
-import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import QueueMusicIcon from "@mui/icons-material/QueueMusic";
@@ -127,13 +126,6 @@ export default function EventManagePage() {
       icon: <RestaurantMenuIcon sx={{ fontSize: 26 }} />,
       color: "#f97316",
       route: `/pages/admin/events/${eventId}/restaurantes`,
-    },
-    {
-      label: "Passaportes",
-      description: "Pacotes e lotes de camping",
-      icon: <LocalOfferIcon sx={{ fontSize: 26 }} />,
-      color: "#10b981",
-      route: `/pages/admin/events/${eventId}/passaportes`,
     },
   ];
 
