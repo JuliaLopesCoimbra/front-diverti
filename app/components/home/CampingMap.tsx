@@ -536,10 +536,10 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                     </Box>
 
                     {/* Mini mapa de camping com área destacada */}
-                    {campingMapUrl && (
+                    {(mapImageUrl || campingMapUrl) && (
                       <Box sx={{ width: "100%", position: "relative", borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,204,1,0.15)", mt: 0.5 }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={campingMapUrl} alt="Mapa camping" draggable={false} style={{ display: "block", width: "100%" }} />
+                        <img src={mapImageUrl || campingMapUrl!} alt="Mapa camping" draggable={false} style={{ display: "block", width: "100%" }} />
                         {areas.filter((a) => a.x_position != null).map((a) => {
                           const isMine = a.id === booking.area_id;
                           return (
