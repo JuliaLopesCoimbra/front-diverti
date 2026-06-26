@@ -27,6 +27,7 @@ import {
   adminDeleteParkingSpot,
   adminUpdateParkingMapImage,
   adminGenerateParkingFromCamping,
+  uploadParkingMap,
 } from "@/app/services/camping/parkingService";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
@@ -108,7 +109,9 @@ export default function ParkingAdminPage() {
   const [savedMapImageUrl, setSavedMapImageUrl] = useState<string | null>(null);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [savingImage, setSavingImage] = useState(false);
+  const [uploadingMap, setUploadingMap] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const mapFileRef = useRef<HTMLInputElement>(null);
 
   const [selectedSpotId, setSelectedSpotId] = useState<number | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -251,6 +254,23 @@ export default function ParkingAdminPage() {
       .then(() => setGenerating(false));
   }
 
+  async function handleMapFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    setUploadingMap(true);
+    try {
+      const res = await uploadParkingMap(eventId, file);
+      setSavedMapImageUrl(res.parking_map_image_url);
+      setMapImageUrl(res.parking_map_image_url);
+      showToast("Mapa de estacionamento atualizado.", "success");
+    } catch {
+      showToast("Erro ao enviar imagem.", "error");
+    } finally {
+      setUploadingMap(false);
+    }
+  }
+
   function handleSaveMapImage() {
     if (!imageUrlInput.trim()) return;
     setSavingImage(true);
@@ -343,8 +363,20 @@ export default function ParkingAdminPage() {
                 {generating ? "Gerando vagas..." : "Gerar vagas automaticamente (mesmo que camping)"}
               </Button>
 
+              <input ref={mapFileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleMapFileUpload} />
+
+              <Button
+                fullWidth variant="outlined"
+                onClick={() => mapFileRef.current?.click()}
+                disabled={uploadingMap}
+                sx={{ borderColor: "rgba(255,255,255,0.15)", color: "#fff", borderRadius: "12px", textTransform: "none", fontWeight: 700, py: 1.2, mb: 1.5, "&:hover": { borderColor: "rgba(255,255,255,0.4)", backgroundColor: "rgba(255,255,255,0.04)" } }}
+              >
+                {uploadingMap ? <CircularProgress size={18} sx={{ color: "#fff", mr: 1 }} /> : "📷"}
+                {uploadingMap ? "Enviando..." : " Subir foto do mapa"}
+              </Button>
+
               <Typography sx={{ color: "rgba(255,255,255,0.25)", fontSize: "0.75rem", textAlign: "center", mb: 1.5 }}>
-                — ou cole uma imagem de mapa —
+                — ou cole a URL da imagem —
               </Typography>
 
               <Box sx={{ display: "flex", gap: 1.5 }}>
