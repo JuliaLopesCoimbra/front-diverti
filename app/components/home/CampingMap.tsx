@@ -13,6 +13,7 @@ import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRound
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LockIcon from "@mui/icons-material/Lock";
+import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import {
   getUserCampingAreas,
   getMyCampingBookings,
@@ -1549,9 +1550,12 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                         zIndex: isSelected ? 10 : 5,
                       }}
                     >
-                      <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.48rem", lineHeight: 1, pointerEvents: "none" }}>
-                        {spot.label}
-                      </Typography>
+                      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", pointerEvents: "none", gap: 0 }}>
+                        <DirectionsCarIcon sx={{ fontSize: isSelected ? 13 : 10, color: "#fff" }} />
+                        <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: isSelected ? "0.42rem" : "0.36rem", lineHeight: 1, mt: "1px" }}>
+                          {spot.label}
+                        </Typography>
+                      </Box>
                     </Box>
                   );
                 })}
