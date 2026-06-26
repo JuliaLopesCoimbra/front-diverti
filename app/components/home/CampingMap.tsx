@@ -568,6 +568,119 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </>
         )}
 
+        {/* Mini mapas de localização */}
+        {!bookingLoading && myBookings.length > 0 && (
+          <Box sx={{ mt: 3, display: "flex", flexDirection: "column", gap: 2 }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              Minha localização
+            </Typography>
+
+            {/* Mapa de camping */}
+            {campingMapUrl && (() => {
+              const myAreaIds = new Set(myBookings.map((b) => b.area_id));
+              const myAreas = areas.filter((a) => myAreaIds.has(a.id) && a.x_position != null && a.y_position != null);
+              return (
+                <Box sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,204,1,0.2)", borderRadius: "20px", overflow: "hidden" }}>
+                  <Box sx={{ px: 2, pt: 2, pb: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>Área de Camping</Typography>
+                    <Typography sx={{ color: "#ffcc01", fontWeight: 700, fontSize: "0.8rem" }}>
+                      {[...new Set(myBookings.map((b) => b.area_name))].join(", ")}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ position: "relative", mx: 2, mb: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={campingMapUrl} alt="Mapa camping" draggable={false}
+                      style={{ display: "block", width: "100%", maxHeight: 200, objectFit: "contain", backgroundColor: "#1a1f2e" }} />
+                    {/* All areas */}
+                    {areas.filter((a) => a.x_position != null).map((area) => {
+                      const isMine = myAreaIds.has(area.id);
+                      return (
+                        <Box key={area.id} sx={{
+                          position: "absolute",
+                          left: `${area.x_position}%`, top: `${area.y_position}%`,
+                          transform: "translate(-50%, -50%)",
+                          width: isMine ? 34 : 26, height: isMine ? 34 : 26,
+                          borderRadius: "50%",
+                          backgroundColor: isMine ? "rgba(255,204,1,0.9)" : "rgba(255,255,255,0.15)",
+                          border: isMine ? "2px solid #fff" : "1px solid rgba(255,255,255,0.2)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: isMine ? "0 0 0 4px rgba(255,204,1,0.3), 0 0 12px rgba(255,204,1,0.5)" : "none",
+                          zIndex: isMine ? 10 : 3,
+                          ...(isMine && {
+                            "@keyframes campingPulse": {
+                              "0%": { boxShadow: "0 0 0 0 rgba(255,204,1,0.5)" },
+                              "70%": { boxShadow: "0 0 0 8px rgba(255,204,1,0)" },
+                              "100%": { boxShadow: "0 0 0 0 rgba(255,204,1,0)" },
+                            },
+                            animation: "campingPulse 2s ease-out infinite",
+                          }),
+                        }}>
+                          <Typography sx={{ color: isMine ? "#111" : "rgba(255,255,255,0.5)", fontWeight: 800, fontSize: "0.55rem", lineHeight: 1, pointerEvents: "none" }}>
+                            {area.name.slice(0, 4)}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              );
+            })()}
+
+            {/* Mapa de estacionamento */}
+            {myParkingBooking && (() => {
+              const mySpot = parkingSpots.find((s) => s.id === myParkingBooking.parking_spot_id);
+              return (
+                <Box sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: "20px", overflow: "hidden" }}>
+                  <Box sx={{ px: 2, pt: 2, pb: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>Estacionamento</Typography>
+                    <Typography sx={{ color: "#a5b4fc", fontWeight: 700, fontSize: "0.8rem" }}>
+                      {myParkingBooking.spot_label ?? "—"}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ position: "relative", mx: 2, mb: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    {parkingMapUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={parkingMapUrl} alt="Mapa estacionamento" draggable={false}
+                        style={{ display: "block", width: "100%", maxHeight: 200, objectFit: "contain", backgroundColor: "#1a1f2e" }} />
+                    ) : (
+                      <UserParkingLotSVG spots={parkingSpots} />
+                    )}
+                    {parkingSpots.filter((s) => s.x_position != null).map((spot) => {
+                      const isMine = spot.id === myParkingBooking.parking_spot_id;
+                      return (
+                        <Box key={spot.id} sx={{
+                          position: "absolute",
+                          left: `${spot.x_position}%`, top: `${spot.y_position}%`,
+                          transform: "translate(-50%, -50%)",
+                          width: isMine ? 36 : 26, height: isMine ? 36 : 26,
+                          borderRadius: "50%",
+                          backgroundColor: isMine ? "rgba(99,102,241,0.95)" : "rgba(255,255,255,0.1)",
+                          border: isMine ? "2px solid #c7d2fe" : "1px solid rgba(255,255,255,0.15)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          boxShadow: isMine ? "0 0 0 4px rgba(99,102,241,0.3), 0 0 12px rgba(99,102,241,0.5)" : "none",
+                          zIndex: isMine ? 10 : 3,
+                          ...(isMine && {
+                            "@keyframes parkingPulse": {
+                              "0%": { boxShadow: "0 0 0 0 rgba(99,102,241,0.5)" },
+                              "70%": { boxShadow: "0 0 0 8px rgba(99,102,241,0)" },
+                              "100%": { boxShadow: "0 0 0 0 rgba(99,102,241,0)" },
+                            },
+                            animation: "parkingPulse 2s ease-out infinite",
+                          }),
+                        }}>
+                          <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.55rem", lineHeight: 1, pointerEvents: "none" }}>
+                            {spot.label}
+                          </Typography>
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                </Box>
+              );
+            })()}
+          </Box>
+        )}
+
         {/* Estacionamento */}
         {!bookingLoading && myBookings.length > 0 && (
           <Box sx={{ mt: 3 }}>
