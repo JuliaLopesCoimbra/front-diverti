@@ -25,6 +25,7 @@ import {
   ParkingBooking,
   ParkingSpot,
   getUserParkingMap,
+  getUserParkingBookingForEvent,
   createUserParkingBooking,
 } from "@/app/services/camping/parkingService";
 
@@ -269,6 +270,15 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
       getMyCampingBookings()
         .then((data) => { setMyBookings([...data].sort((a, b) => a.check_in_date.localeCompare(b.check_in_date))); setBookingLoading(false); })
         .catch(() => { setBookingLoading(false); });
+      getUserParkingMap(eventId)
+        .then((data) => {
+          setParkingMapUrl(data.image_url);
+          setParkingSpots(data.spots);
+        })
+        .catch(() => {});
+      getUserParkingBookingForEvent(eventId)
+        .then((b) => setMyParkingBooking(b))
+        .catch(() => {});
     }
     if (stage === "parking") {
       setParkingLoading(true);
@@ -515,6 +525,64 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
               </Typography>
             )}
           </>
+        )}
+
+        {/* Estacionamento */}
+        {!bookingLoading && myBookings.length > 0 && (
+          <Box sx={{ mt: 3 }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", mb: 1.5 }}>
+              Estacionamento / Trailer
+            </Typography>
+            {myParkingBooking ? (
+              <Box sx={{
+                backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
+                borderRadius: "20px", p: 2.5,
+                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2,
+              }}>
+                <Box>
+                  <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>Sua vaga</Typography>
+                  <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem" }}>
+                    {myParkingBooking.spot_label ?? "—"}
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mt: 0.3 }}>
+                    {`PARK-${myParkingBooking.qr_token.slice(0, 8).toUpperCase()}`}
+                  </Typography>
+                </Box>
+                <Box
+                  onClick={() => setStage("parkingSuccess")}
+                  sx={{
+                    backgroundColor: "rgba(99,102,241,0.15)", border: "1px solid rgba(99,102,241,0.3)",
+                    borderRadius: "12px", px: 2, py: 1, cursor: "pointer",
+                    "&:active": { transform: "scale(0.96)" }, transition: "transform 0.15s ease",
+                  }}
+                >
+                  <Typography sx={{ color: "#a5b4fc", fontWeight: 700, fontSize: "0.8rem", whiteSpace: "nowrap" }}>
+                    Ver QR code
+                  </Typography>
+                </Box>
+              </Box>
+            ) : (
+              <Box
+                onClick={() => setStage("parking")}
+                sx={{
+                  backgroundColor: "rgba(99,102,241,0.08)", border: "1px dashed rgba(99,102,241,0.3)",
+                  borderRadius: "20px", p: 2.5, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2,
+                  "&:active": { transform: "scale(0.98)" }, transition: "transform 0.15s ease",
+                }}
+              >
+                <Box>
+                  <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem" }}>
+                    Reservar vaga de estacionamento
+                  </Typography>
+                  <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.78rem", mt: 0.3 }}>
+                    Escolha onde estacionar seu trailer ou carro
+                  </Typography>
+                </Box>
+                <Typography sx={{ color: "#a5b4fc", fontSize: "1.3rem", flexShrink: 0 }}>→</Typography>
+              </Box>
+            )}
+          </Box>
         )}
       </Box>
     );
