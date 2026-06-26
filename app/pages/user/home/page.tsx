@@ -646,7 +646,8 @@ const HomeContent: React.FC = () => {
                 className={shouldAnimate ? "slide-up-delay-3" : ""}
                 onClick={() => { setCampingInitialStage("mypassports"); handleTabChange("camping"); }}
                 sx={{
-                  mx: 2, mt: 1, mb: 0.5,
+                  mx: "auto", mt: 1, mb: 0.5,
+                  maxWidth: 480, width: "calc(100% - 32px)",
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   gap: 1.5,
                   backgroundColor: "rgba(255,204,1,0.07)",
