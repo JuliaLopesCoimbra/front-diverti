@@ -182,13 +182,14 @@ export default function ParkingAdminPage() {
   }
 
   function handleContainerMouseMove(e: React.MouseEvent) {
-    if (!draggingRef.current || !containerRef.current) return;
+    const dragging = draggingRef.current;
+    if (!dragging || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
     const x = Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
     const y = Math.max(0, Math.min(100, ((e.clientY - rect.top) / rect.height) * 100));
     setSpots((prev) =>
       prev.map((s) =>
-        s.id === draggingRef.current!.spotId
+        s.id === dragging.spotId
           ? { ...s, x_position: Math.round(x * 100) / 100, y_position: Math.round(y * 100) / 100 }
           : s
       )
