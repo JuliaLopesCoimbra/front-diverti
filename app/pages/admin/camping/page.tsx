@@ -157,26 +157,40 @@ function CampingPageContent() {
     try {
       const { getEvents } = await import("@/app/services/events/eventAppService");
       const allEvents = await getEvents();
-      const results = await Promise.allSettled(
-        allEvents.map(async (ev) => {
-          const areasData = await getCampingAreasByEvent(ev.id);
-          const sessionResults = await Promise.allSettled(areasData.map((a) => getCampingSessionsByArea(a.id)));
+
+      // 1ª fase: buscar áreas de todos os eventos em paralelo
+      const areaResults = await Promise.allSettled(
+        allEvents.map((ev) => getCampingAreasByEvent(ev.id).then((areas) => ({ ev, areas })))
+      );
+
+      const withAreas = areaResults
+        .filter((r): r is PromiseFulfilledResult<{ ev: typeof allEvents[0]; areas: CampingAreaResponse[] }> => r.status === "fulfilled")
+        .map((r) => r.value)
+        .filter(({ areas }) => areas.length > 0);
+
+      // Mostra o mapa imediatamente — sem esperar sessões
+      setMappedEvents(withAreas.map(({ ev, areas }) => ({
+        eventId: ev.id,
+        title: ev.title,
+        campingMapUrl: ev.camping_map_url ?? null,
+        areas,
+        sessions: {},
+      })));
+      setListLoading(false);
+
+      // 2ª fase: sessões em background — atualiza markers conforme chegam
+      withAreas.forEach(({ ev, areas }) => {
+        Promise.allSettled(areas.map((a) => getCampingSessionsByArea(a.id))).then((sessionResults) => {
           const sessionMap: Record<number, CampingSessionResponse[]> = {};
           sessionResults.forEach((r, i) => {
-            if (r.status === "fulfilled") sessionMap[areasData[i].id] = r.value;
+            if (r.status === "fulfilled") sessionMap[areas[i].id] = r.value;
           });
-          return { eventId: ev.id, title: ev.title, campingMapUrl: ev.camping_map_url ?? null, areas: areasData, sessions: sessionMap } satisfies MappedEvent;
-        })
-      );
-      setMappedEvents(
-        results
-          .filter((r): r is PromiseFulfilledResult<MappedEvent> => r.status === "fulfilled")
-          .map((r) => r.value)
-          .filter((m) => m.areas.length > 0)
-      );
+          setMappedEvents((prev) =>
+            prev.map((m) => m.eventId === ev.id ? { ...m, sessions: sessionMap } : m)
+          );
+        });
+      });
     } catch {
-      // non-critical
-    } finally {
       setListLoading(false);
     }
   }, []);
@@ -221,19 +235,19 @@ function CampingPageContent() {
         getCampingAreasByEvent(requestedEventId),
       ]);
       setEvent(selectedEvent);
-      if (!selectedEvent) { setAreas([]); return; }
+      if (!selectedEvent) { setAreas([]); setLoading(false); return; }
       setAreas(areasData);
 
-      // Sessões de todas as áreas em paralelo
+      // Página abre imediatamente após ter evento + áreas
+      setLoading(false);
+
+      // Sessões em background — atualiza markers conforme chegam
       const sessionResults = await Promise.allSettled(areasData.map((a) => getCampingSessionsByArea(a.id)));
       const sessionMap: Record<number, CampingSessionResponse[]> = {};
       sessionResults.forEach((r, i) => {
         if (r.status === "fulfilled") sessionMap[areasData[i].id] = r.value;
       });
       setSessions(sessionMap);
-
-      // Página já abre aqui — bookings carregam em background sem bloquear
-      setLoading(false);
       const reserved = Object.values(sessionMap).flat().filter((s) => s.quantity_bookings > 0);
       if (reserved.length === 0) return;
       const bookingResults = await Promise.allSettled(reserved.map((s) => getCampingSessionBookings(s.id)));
