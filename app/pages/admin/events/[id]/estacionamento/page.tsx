@@ -18,6 +18,7 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckIcon from "@mui/icons-material/Check";
 import LocalParkingIcon from "@mui/icons-material/LocalParking";
+import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import {
   ParkingSpot,
   adminGetParkingSpots,
@@ -25,6 +26,7 @@ import {
   adminUpdateParkingSpot,
   adminDeleteParkingSpot,
   adminUpdateParkingMapImage,
+  adminGenerateParkingFromCamping,
 } from "@/app/services/camping/parkingService";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
@@ -33,6 +35,64 @@ import { dashboardBackgroundSx } from "@/app/utils/backgroundStyles";
 interface SpotWithLocal extends ParkingSpot {
   _localX?: number;
   _localY?: number;
+}
+
+function ParkingLotSVG({ spots }: { spots: ParkingSpot[] }) {
+  const W = 800;
+  const H = 500;
+  const cols = Math.min(8, Math.max(1, spots.length));
+  const rows = Math.ceil(spots.length / cols);
+  const laneH = rows > 0 ? Math.floor((H - 80) / rows) : H - 80;
+  const spotW = cols > 0 ? Math.floor((W - 60) / cols) : W - 60;
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      style={{ display: "block", width: "100%", height: "auto", maxHeight: 520 }}
+    >
+      {/* Background */}
+      <rect width={W} height={H} fill="#1a1f2e" />
+      {/* Road surface */}
+      <rect x={0} y={40} width={W} height={H - 40} fill="#252b3b" />
+      {/* Entry/Exit labels */}
+      <text x={W / 2} y={22} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={13} fontWeight="bold">ENTRADA / SAÍDA</text>
+      <rect x={W / 2 - 1} y={0} width={2} height={40} fill="rgba(255,255,255,0.2)" />
+
+      {/* Parking lanes */}
+      {Array.from({ length: rows }).map((_, row) => {
+        const laneY = 50 + row * laneH;
+        const midY = laneY + laneH / 2;
+        const spotsInRow = row < rows - 1 ? cols : spots.length - row * cols;
+
+        return (
+          <g key={row}>
+            {/* Lane divider line */}
+            {row > 0 && <line x1={30} y1={laneY} x2={W - 30} y2={laneY} stroke="rgba(255,255,255,0.07)" strokeWidth={1} strokeDasharray="8 6" />}
+            {/* Lane arrow */}
+            <text x={18} y={midY + 5} textAnchor="middle" fill="rgba(255,255,255,0.12)" fontSize={16}>⟶</text>
+
+            {/* Spot slots */}
+            {Array.from({ length: spotsInRow }).map((_, col) => {
+              const spotX = 30 + col * spotW + 4;
+              const spotY = laneY + 6;
+              const sw = spotW - 8;
+              const sh = laneH - 12;
+              return (
+                <g key={col}>
+                  <rect x={spotX} y={spotY} width={sw} height={sh} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth={1} rx={4} />
+                  {/* Lane marker lines */}
+                  <line x1={spotX} y1={spotY} x2={spotX} y2={spotY + sh} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+
+      {/* Border */}
+      <rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={2} rx={8} />
+    </svg>
+  );
 }
 
 export default function ParkingAdminPage() {
@@ -48,6 +108,7 @@ export default function ParkingAdminPage() {
   const [savedMapImageUrl, setSavedMapImageUrl] = useState<string | null>(null);
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [savingImage, setSavingImage] = useState(false);
+  const [generating, setGenerating] = useState(false);
 
   const [selectedSpotId, setSelectedSpotId] = useState<number | null>(null);
   const [editLabel, setEditLabel] = useState("");
@@ -175,6 +236,20 @@ export default function ParkingAdminPage() {
       .then(() => setDeleting(false));
   }
 
+  function handleGenerate() {
+    setGenerating(true);
+    adminGenerateParkingFromCamping(eventId)
+      .then((data) => {
+        setSpots(data);
+        showToast(`${data.length} vagas geradas com sucesso`, "success");
+      })
+      .catch((err: any) => {
+        const msg = err?.response?.data?.detail ?? "Erro ao gerar vagas";
+        showToast(msg, "error");
+      })
+      .then(() => setGenerating(false));
+  }
+
   function handleSaveMapImage() {
     if (!imageUrlInput.trim()) return;
     setSavingImage(true);
@@ -245,18 +320,32 @@ export default function ParkingAdminPage() {
         {/* Map area */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
 
-          {/* Image URL input */}
+          {/* Image URL input or auto-generate */}
           {!savedMapImageUrl && (
             <Box sx={{
               backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)",
               borderRadius: "20px", p: 3, mb: 3,
             }}>
               <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.95rem", mb: 0.5 }}>
-                Imagem do mapa de estacionamento
+                Mapa de estacionamento
               </Typography>
               <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", mb: 2 }}>
-                Cole a URL da imagem do mapa e clique em salvar. Depois clique no mapa para posicionar as vagas.
+                Gere as vagas automaticamente (baseado nas áreas de camping) ou cole a URL de um mapa customizado.
               </Typography>
+
+              {/* Auto-generate */}
+              <Button
+                fullWidth variant="contained" onClick={handleGenerate} disabled={generating}
+                startIcon={generating ? <CircularProgress size={16} sx={{ color: "#fff" }} /> : <AutoFixHighIcon />}
+                sx={{ backgroundColor: "#6366f1", color: "#fff", borderRadius: "12px", textTransform: "none", fontWeight: 700, py: 1.3, mb: 2, "&:hover": { backgroundColor: "#4f46e5" } }}
+              >
+                {generating ? "Gerando vagas..." : "Gerar vagas automaticamente (mesmo que camping)"}
+              </Button>
+
+              <Typography sx={{ color: "rgba(255,255,255,0.25)", fontSize: "0.75rem", textAlign: "center", mb: 1.5 }}>
+                — ou cole uma imagem de mapa —
+              </Typography>
+
               <Box sx={{ display: "flex", gap: 1.5 }}>
                 <TextField
                   fullWidth size="small" placeholder="https://..."
@@ -281,18 +370,27 @@ export default function ParkingAdminPage() {
             </Box>
           )}
 
-          {savedMapImageUrl && (
+          {(savedMapImageUrl || spots.length > 0) && (
             <>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                 <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.8rem", flex: 1 }}>
                   Clique no mapa para adicionar vagas · Arraste vagas para reposicionar
                 </Typography>
                 <Button
-                  size="small" onClick={() => { setSavedMapImageUrl(null); setMapImageUrl(""); setImageUrlInput(""); }}
-                  sx={{ color: "rgba(255,255,255,0.4)", textTransform: "none", fontSize: "0.75rem" }}
+                  size="small" onClick={handleGenerate} disabled={generating}
+                  startIcon={generating ? <CircularProgress size={12} /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                  sx={{ color: "rgba(99,102,241,0.8)", textTransform: "none", fontSize: "0.75rem" }}
                 >
-                  Trocar imagem
+                  Regenerar
                 </Button>
+                {savedMapImageUrl && (
+                  <Button
+                    size="small" onClick={() => { setSavedMapImageUrl(null); setMapImageUrl(""); setImageUrlInput(""); }}
+                    sx={{ color: "rgba(255,255,255,0.4)", textTransform: "none", fontSize: "0.75rem" }}
+                  >
+                    Trocar imagem
+                  </Button>
+                )}
               </Box>
 
               <Box
@@ -303,15 +401,21 @@ export default function ParkingAdminPage() {
                   borderRadius: "20px", overflow: "hidden",
                   border: "1px solid rgba(255,255,255,0.1)",
                   userSelect: "none",
+                  backgroundColor: "rgba(255,255,255,0.03)",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={savedMapImageUrl}
-                  alt="Mapa de estacionamento"
-                  draggable={false}
-                  style={{ display: "block", width: "100%", maxHeight: 520, objectFit: "contain" }}
-                />
+                {savedMapImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={savedMapImageUrl}
+                    alt="Mapa de estacionamento"
+                    draggable={false}
+                    style={{ display: "block", width: "100%", maxHeight: 520, objectFit: "contain" }}
+                  />
+                ) : (
+                  /* Auto-generated SVG parking lot */
+                  <ParkingLotSVG spots={spots} />
+                )}
 
                 {spots.map((spot) => {
                   const x = spot.x_position ?? 50;

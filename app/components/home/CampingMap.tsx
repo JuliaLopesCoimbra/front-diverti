@@ -85,6 +85,44 @@ const FALLBACK_PACKAGES: Package[] = [
   },
 ];
 
+function UserParkingLotSVG({ spots }: { spots: { id: number; x_position: number | null; y_position: number | null; label: string }[] }) {
+  const W = 800;
+  const H = 500;
+  const cols = Math.min(8, Math.max(1, spots.length));
+  const rows = Math.ceil(spots.length / cols);
+  const laneH = rows > 0 ? Math.floor((H - 80) / rows) : H - 80;
+  const spotW = cols > 0 ? Math.floor((W - 60) / cols) : W - 60;
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ display: "block", width: "100%", height: "auto", maxHeight: 400 }}>
+      <rect width={W} height={H} fill="#1a1f2e" />
+      <rect x={0} y={40} width={W} height={H - 40} fill="#252b3b" />
+      <text x={W / 2} y={22} textAnchor="middle" fill="rgba(255,255,255,0.4)" fontSize={13} fontWeight="bold">ENTRADA / SAÍDA</text>
+      <rect x={W / 2 - 1} y={0} width={2} height={40} fill="rgba(255,255,255,0.2)" />
+      {Array.from({ length: rows }).map((_, row) => {
+        const laneY = 50 + row * laneH;
+        const spotsInRow = row < rows - 1 ? cols : spots.length - row * cols;
+        return (
+          <g key={row}>
+            {row > 0 && <line x1={30} y1={laneY} x2={W - 30} y2={laneY} stroke="rgba(255,255,255,0.07)" strokeWidth={1} strokeDasharray="8 6" />}
+            {Array.from({ length: spotsInRow }).map((_, col) => {
+              const spotX = 30 + col * spotW + 4;
+              const spotY = laneY + 6;
+              return (
+                <g key={col}>
+                  <rect x={spotX} y={spotY} width={spotW - 8} height={laneH - 12} fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" strokeWidth={1} rx={4} />
+                  <line x1={spotX} y1={spotY} x2={spotX} y2={spotY + laneH - 12} stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+                </g>
+              );
+            })}
+          </g>
+        );
+      })}
+      <rect x={1} y={1} width={W - 2} height={H - 2} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={2} rx={8} />
+    </svg>
+  );
+}
+
 function CampingQRCode({ value, size = 140 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -1364,17 +1402,22 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Box>
         ) : (
           <>
-            {parkingMapUrl ? (
+            {(parkingMapUrl || parkingSpots.length > 0) ? (
               <Box
                 ref={(el: HTMLDivElement | null) => { parkingContainerRef.current = el; }}
                 sx={{
                   position: "relative", borderRadius: "20px", overflow: "hidden",
                   border: "1px solid rgba(255,255,255,0.1)", mb: 2, userSelect: "none",
+                  backgroundColor: "rgba(255,255,255,0.03)",
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={parkingMapUrl} alt="Mapa de estacionamento" draggable={false}
-                  style={{ display: "block", width: "100%", maxHeight: 400, objectFit: "contain" }} />
+                {parkingMapUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={parkingMapUrl} alt="Mapa de estacionamento" draggable={false}
+                    style={{ display: "block", width: "100%", maxHeight: 400, objectFit: "contain" }} />
+                ) : (
+                  <UserParkingLotSVG spots={parkingSpots} />
+                )}
 
                 {parkingSpots.map((spot) => {
                   const x = spot.x_position ?? 50;

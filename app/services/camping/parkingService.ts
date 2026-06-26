@@ -75,6 +75,11 @@ export const adminUpdateParkingMapImage = async (eventId: number, url: string): 
   await api.patch(`/admin/events/${eventId}/parking-map-image`, { parking_map_image_url: url });
 };
 
+export const adminGenerateParkingFromCamping = async (eventId: number): Promise<ParkingSpot[]> => {
+  const r = await api.post<ParkingSpot[]>(`/admin/events/${eventId}/parking/generate-from-camping`);
+  return r.data;
+};
+
 export const adminGetParkingBookings = async (eventId: number): Promise<ParkingBooking[]> => {
   const r = await api.get<ParkingBooking[]>(`/admin/events/${eventId}/parking-bookings`);
   return r.data;
