@@ -101,9 +101,8 @@ export default function AdminRestaurantesPage() {
   useEffect(() => {
     if (!authReady || !canAccess) return;
     getAdminRestaurants(eventId)
-      .then(setRestaurants)
-      .catch(() => showToast("Erro ao carregar restaurantes", "error"))
-      .finally(() => setLoadingList(false));
+      .then((data) => { setRestaurants(data); setLoadingList(false); })
+      .catch(() => { showToast("Erro ao carregar restaurantes", "error"); setLoadingList(false); });
   }, [authReady, canAccess, eventId, showToast]);
 
   const openRestaurant = async (rest: Restaurant) => {
