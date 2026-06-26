@@ -113,11 +113,10 @@ export default function MyPhotosPage() {
       .then((data) => {
         setEvents(data);
         updateCurrentEventFromStorage(data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Erro ao carregar eventos", error);
-      })
-      .finally(() => {
         setLoading(false);
       });
   }, [isAuthenticated, router, isRegularUser, updateCurrentEventFromStorage]);

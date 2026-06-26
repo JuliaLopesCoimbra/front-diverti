@@ -30,11 +30,11 @@ export default function AdminMasterEventosPage() {
 
   useEffect(() => {
     getEvents(100, 0)
-      .then((data) =>
-        setEvents([...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()))
-      )
-      .catch(() => showToast("Erro ao carregar eventos", "error"))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        setEvents([...data].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        setLoading(false);
+      })
+      .catch(() => { showToast("Erro ao carregar eventos", "error"); setLoading(false); });
   }, [showToast]);
 
   const active   = events.filter((e) => e.is_active).length;

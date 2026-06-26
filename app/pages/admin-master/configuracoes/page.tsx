@@ -64,9 +64,8 @@ export default function ConfiguracoesPage() {
 
   useEffect(() => {
     getPlataformaConfig()
-      .then(setConfig)
-      .catch(() => setConfig(DEFAULTS))
-      .finally(() => setLoading(false));
+      .then((data) => { setConfig(data); setLoading(false); })
+      .catch(() => { setConfig(DEFAULTS); setLoading(false); });
   }, []);
 
   function update(key: keyof PlataformaConfig, val: PlataformaConfig[keyof PlataformaConfig]) {

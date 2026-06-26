@@ -42,9 +42,8 @@ export default function OperadoresPage() {
   function load() {
     setLoading(true);
     listOperadores()
-      .then(setOperadores)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((data) => { setOperadores(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
   }
 
   useEffect(() => {

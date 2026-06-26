@@ -52,12 +52,12 @@ export default function EventManagePage() {
   useEffect(() => {
     if (!authReady || !canAccess) return;
     getEventById(eventId)
-      .then(setEvent)
+      .then((data) => { setEvent(data); setLoading(false); })
       .catch((err: any) => {
         showToast("Erro ao carregar evento", "error");
         if (err?.response?.status === 404) router.replace("/pages/admin/home");
-      })
-      .finally(() => setLoading(false));
+        setLoading(false);
+      });
   }, [authReady, canAccess, eventId, showToast, router]);
 
   const handleDelete = async () => {

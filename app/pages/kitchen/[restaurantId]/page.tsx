@@ -52,9 +52,8 @@ export default function KitchenPage() {
 
   const load = useCallback(() => {
     getKitchenOrders(id)
-      .then(setOrders)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((data) => { setOrders(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
   }, [id]);
 
   useEffect(() => {

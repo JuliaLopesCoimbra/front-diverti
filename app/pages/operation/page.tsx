@@ -110,17 +110,15 @@ export default function OperationPage() {
   const loadAllRestaurants = useCallback(() => {
     setLoadingRestaurants(true);
     getOperationRestaurants()
-      .then(setRestaurants)
-      .catch(() => {})
-      .finally(() => setLoadingRestaurants(false));
+      .then((data) => { setRestaurants(data); setLoadingRestaurants(false); })
+      .catch(() => { setLoadingRestaurants(false); });
   }, []);
 
   const loadMyRestaurant = useCallback((restaurantId: number) => {
     setLoadingMyRestaurant(true);
     getOperationRestaurantDetails(restaurantId)
-      .then(setMyRestaurant)
-      .catch(() => {})
-      .finally(() => setLoadingMyRestaurant(false));
+      .then((data) => { setMyRestaurant(data); setLoadingMyRestaurant(false); })
+      .catch(() => { setLoadingMyRestaurant(false); });
   }, []);
 
   const enterDashboard = useCallback(

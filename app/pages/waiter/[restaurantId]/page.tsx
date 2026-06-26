@@ -70,9 +70,8 @@ function CampingMapOverlay({
     setMapLoading(true);
     getUserCampingAreas(eventId).then(setAreas).catch(() => {});
     getPublicEventById(eventId)
-      .then((ev) => { setMapUrl(ev.camping_map_url ?? null); })
-      .catch(() => {})
-      .finally(() => setMapLoading(false));
+      .then((ev) => { setMapUrl(ev.camping_map_url ?? null); setMapLoading(false); })
+      .catch(() => { setMapLoading(false); });
   }, [open, eventId]);
 
   // Reset zoom on open
@@ -338,9 +337,8 @@ function WaiterPageContent() {
 
   const load = useCallback(() => {
     getWaiterOrders(id)
-      .then(setOrders)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((data) => { setOrders(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
   }, [id]);
 
   useEffect(() => {

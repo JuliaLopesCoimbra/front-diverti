@@ -221,8 +221,9 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
           setSchools(schoolsData);
           setMusics(musicsData);
           setInitialized(true);
+          setLoading(false);
         })
-        .finally(() => setLoading(false));
+        .catch(() => { setLoading(false); });
     }
     
     // Cleanup: limpa timeouts quando o componente é desmontado ou eventId muda
@@ -315,12 +316,11 @@ const Enredo: React.FC<Props> = ({ eventId, spotifyPlaylistUrl }) => {
       getMusicLyricsBySambaSchool(selectedSchoolId)
         .then((music) => {
           setSelectedSchoolMusic(music);
+          setLoadingMusic(false);
         })
         .catch(() => {
           // Não há música cadastrada para esta escola
           setSelectedSchoolMusic(null);
-        })
-        .finally(() => {
           setLoadingMusic(false);
         });
     } else {

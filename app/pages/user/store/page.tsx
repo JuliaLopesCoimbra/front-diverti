@@ -169,11 +169,10 @@ export default function StorePage() {
       .then((data) => {
         setEvents(data);
         updateCurrentEventFromStorage(data);
+        setLoadingEvents(false);
       })
       .catch((error) => {
         console.error("Erro ao carregar eventos", error);
-      })
-      .finally(() => {
         setLoadingEvents(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps

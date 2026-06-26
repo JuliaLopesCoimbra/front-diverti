@@ -75,7 +75,8 @@ export default function CheckInScanner({ open, onClose, sessions, onCheckedIn }:
     ).then((results) => {
       if (!active) return;
       setAllBookings(results.flat());
-    }).finally(() => {
+      if (active) setLoadingBookings(false);
+    }).catch(() => {
       if (active) setLoadingBookings(false);
     });
 

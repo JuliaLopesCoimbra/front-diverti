@@ -205,18 +205,16 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
 
   useEffect(() => {
     getUserCampingAreas(eventId)
-      .then(setAreas)
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .then((data) => { setAreas(data); setLoading(false); })
+      .catch(() => { setLoading(false); });
   }, [eventId]);
 
   useEffect(() => {
     if (stage === "mypassports") {
       setBookingLoading(true);
       getMyCampingBookings()
-        .then((data) => setMyBookings([...data].sort((a, b) => a.check_in_date.localeCompare(b.check_in_date))))
-        .catch(() => {})
-        .finally(() => setBookingLoading(false));
+        .then((data) => { setMyBookings([...data].sort((a, b) => a.check_in_date.localeCompare(b.check_in_date))); setBookingLoading(false); })
+        .catch(() => { setBookingLoading(false); });
     }
   }, [stage]);
 
