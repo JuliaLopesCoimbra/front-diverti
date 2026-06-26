@@ -626,58 +626,6 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
               );
             })()}
 
-            {/* Mapa de estacionamento */}
-            {myParkingBooking && (() => {
-              const mySpot = parkingSpots.find((s) => s.id === myParkingBooking.parking_spot_id);
-              return (
-                <Box sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(99,102,241,0.25)", borderRadius: "20px", overflow: "hidden" }}>
-                  <Box sx={{ px: 2, pt: 2, pb: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "0.88rem" }}>Estacionamento</Typography>
-                    <Typography sx={{ color: "#a5b4fc", fontWeight: 700, fontSize: "0.8rem" }}>
-                      {myParkingBooking.spot_label ?? "—"}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ position: "relative", mx: 2, mb: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    {parkingMapUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={parkingMapUrl} alt="Mapa estacionamento" draggable={false}
-                        style={{ display: "block", width: "100%" }} />
-                    ) : (
-                      <UserParkingLotSVG spots={parkingSpots} />
-                    )}
-                    {parkingSpots.filter((s) => s.x_position != null).map((spot) => {
-                      const isMine = spot.id === myParkingBooking.parking_spot_id;
-                      return (
-                        <Box key={spot.id} sx={{
-                          position: "absolute",
-                          left: `${spot.x_position}%`, top: `${spot.y_position}%`,
-                          transform: "translate(-50%, -50%)",
-                          width: isMine ? 36 : 26, height: isMine ? 36 : 26,
-                          borderRadius: "50%",
-                          backgroundColor: isMine ? "rgba(99,102,241,0.95)" : "rgba(255,255,255,0.1)",
-                          border: isMine ? "2px solid #c7d2fe" : "1px solid rgba(255,255,255,0.15)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          boxShadow: isMine ? "0 0 0 4px rgba(99,102,241,0.3), 0 0 12px rgba(99,102,241,0.5)" : "none",
-                          zIndex: isMine ? 10 : 3,
-                          ...(isMine && {
-                            "@keyframes parkingPulse": {
-                              "0%": { boxShadow: "0 0 0 0 rgba(99,102,241,0.5)" },
-                              "70%": { boxShadow: "0 0 0 8px rgba(99,102,241,0)" },
-                              "100%": { boxShadow: "0 0 0 0 rgba(99,102,241,0)" },
-                            },
-                            animation: "parkingPulse 2s ease-out infinite",
-                          }),
-                        }}>
-                          <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.55rem", lineHeight: 1, pointerEvents: "none" }}>
-                            {spot.label}
-                          </Typography>
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                </Box>
-              );
-            })()}
           </Box>
         )}
 
@@ -691,17 +639,17 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
               <Box sx={{
                 backgroundColor: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.25)",
                 borderRadius: "20px", p: 2.5,
-                display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2,
               }}>
-                <Box>
-                  <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>Sua vaga</Typography>
-                  <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem" }}>
-                    {myParkingBooking.spot_label ?? "—"}
-                  </Typography>
-                  <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mt: 0.3 }}>
-                    {`PARK-${myParkingBooking.qr_token.slice(0, 8).toUpperCase()}`}
-                  </Typography>
-                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 2, mb: 0 }}>
+                  <Box>
+                    <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>Sua vaga</Typography>
+                    <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.3rem" }}>
+                      {myParkingBooking.spot_label ?? "—"}
+                    </Typography>
+                    <Typography sx={{ color: "rgba(255,255,255,0.35)", fontSize: "0.72rem", mt: 0.3 }}>
+                      {`PARK-${myParkingBooking.qr_token.slice(0, 8).toUpperCase()}`}
+                    </Typography>
+                  </Box>
                 <Box
                   onClick={() => setStage("parkingSuccess")}
                   sx={{
@@ -715,6 +663,48 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                   </Typography>
                 </Box>
               </Box>
+
+              {/* Mini mapa de estacionamento */}
+              {parkingSpots.length > 0 && (
+                <Box sx={{ position: "relative", mt: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(99,102,241,0.15)" }}>
+                  {parkingMapUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={parkingMapUrl} alt="Mapa estacionamento" draggable={false} style={{ display: "block", width: "100%" }} />
+                  ) : (
+                    <UserParkingLotSVG spots={parkingSpots} />
+                  )}
+                  {parkingSpots.filter((s) => s.x_position != null).map((spot) => {
+                    const isMine = spot.id === myParkingBooking.parking_spot_id;
+                    return (
+                      <Box key={spot.id} sx={{
+                        position: "absolute",
+                        left: `${spot.x_position}%`, top: `${spot.y_position}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: isMine ? 36 : 24, height: isMine ? 36 : 24,
+                        borderRadius: "50%",
+                        backgroundColor: isMine ? "rgba(99,102,241,0.95)" : "rgba(255,255,255,0.08)",
+                        border: isMine ? "2px solid #c7d2fe" : "1px solid rgba(255,255,255,0.12)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        zIndex: isMine ? 10 : 3,
+                        boxShadow: isMine ? "0 0 0 4px rgba(99,102,241,0.3)" : "none",
+                        ...(isMine && {
+                          "@keyframes parkingPulse": {
+                            "0%": { boxShadow: "0 0 0 0 rgba(99,102,241,0.5)" },
+                            "70%": { boxShadow: "0 0 0 8px rgba(99,102,241,0)" },
+                            "100%": { boxShadow: "0 0 0 0 rgba(99,102,241,0)" },
+                          },
+                          animation: "parkingPulse 2s ease-out infinite",
+                        }),
+                      }}>
+                        <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.55rem", lineHeight: 1, pointerEvents: "none" }}>
+                          {spot.label}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
+            </Box>
             ) : (
               <Box
                 onClick={() => setStage("parking")}
