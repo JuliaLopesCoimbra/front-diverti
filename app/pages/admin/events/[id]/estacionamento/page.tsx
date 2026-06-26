@@ -28,6 +28,7 @@ import {
   adminUpdateParkingMapImage,
   adminGenerateParkingFromCamping,
   uploadParkingMap,
+  getUserParkingMap,
 } from "@/app/services/camping/parkingService";
 import { useAuth } from "@/app/context/AuthContext";
 import { useToast } from "@/app/context/ToastContext";
@@ -138,8 +139,22 @@ export default function ParkingAdminPage() {
   useEffect(() => {
     if (!authReady || !canAccess) return;
     loadSpots();
-    const saved = localStorage.getItem(`parking_map_${eventId}`);
-    if (saved) { setSavedMapImageUrl(saved); setMapImageUrl(saved); }
+    // Load parking map URL: API is source of truth, localStorage as fast cache
+    getUserParkingMap(eventId)
+      .then((data) => {
+        if (data.image_url) {
+          setSavedMapImageUrl(data.image_url);
+          setMapImageUrl(data.image_url);
+          localStorage.setItem(`parking_map_${eventId}`, data.image_url);
+        } else {
+          const saved = localStorage.getItem(`parking_map_${eventId}`);
+          if (saved) { setSavedMapImageUrl(saved); setMapImageUrl(saved); }
+        }
+      })
+      .catch(() => {
+        const saved = localStorage.getItem(`parking_map_${eventId}`);
+        if (saved) { setSavedMapImageUrl(saved); setMapImageUrl(saved); }
+      });
   }, [authReady, canAccess, loadSpots, eventId]);
 
   const selectedSpot = spots.find((s) => s.id === selectedSpotId) ?? null;
@@ -263,6 +278,7 @@ export default function ParkingAdminPage() {
       const res = await uploadParkingMap(eventId, file);
       setSavedMapImageUrl(res.parking_map_image_url);
       setMapImageUrl(res.parking_map_image_url);
+      localStorage.setItem(`parking_map_${eventId}`, res.parking_map_image_url);
       showToast("Mapa de estacionamento atualizado.", "success");
     } catch {
       showToast("Erro ao enviar imagem.", "error");
