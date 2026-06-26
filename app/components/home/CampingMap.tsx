@@ -1535,21 +1535,21 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                         position: "absolute",
                         left: `${x}%`, top: `${y}%`,
                         transform: "translate(-50%, -50%)",
-                        width: 38, height: 38, borderRadius: "50%",
+                        width: isSelected ? 28 : 22, height: isSelected ? 28 : 22, borderRadius: "50%",
                         backgroundColor: isSelected
                           ? "rgba(99,102,241,0.9)"
                           : isFull
                           ? "rgba(239,68,68,0.8)"
                           : "rgba(16,185,129,0.85)",
-                        border: isSelected ? "2px solid #a5b4fc" : "2px solid rgba(255,255,255,0.4)",
+                        border: isSelected ? "2px solid #a5b4fc" : "1px solid rgba(255,255,255,0.35)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         cursor: isFull ? "not-allowed" : "pointer",
-                        boxShadow: isSelected ? "0 0 0 4px rgba(99,102,241,0.35)" : "0 2px 8px rgba(0,0,0,0.4)",
+                        boxShadow: isSelected ? "0 0 0 3px rgba(99,102,241,0.35)" : "0 1px 4px rgba(0,0,0,0.4)",
                         transition: "all 0.15s ease",
                         zIndex: isSelected ? 10 : 5,
                       }}
                     >
-                      <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.62rem", lineHeight: 1, pointerEvents: "none" }}>
+                      <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.48rem", lineHeight: 1, pointerEvents: "none" }}>
                         {spot.label}
                       </Typography>
                     </Box>
