@@ -126,6 +126,11 @@ export const getCampingSessionsByArea = async (areaId: number): Promise<CampingS
   return response.data;
 };
 
+export const getCampingSessionsByEvent = async (eventId: number): Promise<CampingSessionResponse[]> => {
+  const response = await api.get<CampingSessionResponse[]>(`/admin/events/${eventId}/camping/sessions`);
+  return response.data;
+};
+
 export const createCampingSession = async (
   areaId: number,
   data: { label: string; check_in_date: string; check_out_date: string; capacity: number; status?: string }

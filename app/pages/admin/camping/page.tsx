@@ -45,7 +45,7 @@ import {
   generateDailySessions,
   getCampingAreasByEvent,
   getCampingSessionBookings,
-  getCampingSessionsByArea,
+  getCampingSessionsByEvent,
   updateCampingArea,
   uploadCampingAreaImage,
 } from "@/app/services/camping/campingAdminService";
@@ -178,17 +178,18 @@ function CampingPageContent() {
       })));
       setListLoading(false);
 
-      // 2ª fase: sessões em background — atualiza markers conforme chegam
-      withAreas.forEach(({ ev, areas }) => {
-        Promise.allSettled(areas.map((a) => getCampingSessionsByArea(a.id))).then((sessionResults) => {
+      // 2ª fase: sessões em background — 1 request por evento (não por área)
+      withAreas.forEach(({ ev }) => {
+        getCampingSessionsByEvent(ev.id).then((allSessions) => {
           const sessionMap: Record<number, CampingSessionResponse[]> = {};
-          sessionResults.forEach((r, i) => {
-            if (r.status === "fulfilled") sessionMap[areas[i].id] = r.value;
+          allSessions.forEach((s) => {
+            if (!sessionMap[s.area_id]) sessionMap[s.area_id] = [];
+            sessionMap[s.area_id].push(s);
           });
           setMappedEvents((prev) =>
             prev.map((m) => m.eventId === ev.id ? { ...m, sessions: sessionMap } : m)
           );
-        });
+        }).catch(() => {});
       });
     } catch {
       setListLoading(false);
@@ -241,11 +242,12 @@ function CampingPageContent() {
       // Página abre imediatamente após ter evento + áreas
       setLoading(false);
 
-      // Sessões em background — atualiza markers conforme chegam
-      const sessionResults = await Promise.allSettled(areasData.map((a) => getCampingSessionsByArea(a.id)));
+      // Sessões em background — 1 request para todas as áreas do evento
+      const allSessions = await getCampingSessionsByEvent(requestedEventId);
       const sessionMap: Record<number, CampingSessionResponse[]> = {};
-      sessionResults.forEach((r, i) => {
-        if (r.status === "fulfilled") sessionMap[areasData[i].id] = r.value;
+      allSessions.forEach((s) => {
+        if (!sessionMap[s.area_id]) sessionMap[s.area_id] = [];
+        sessionMap[s.area_id].push(s);
       });
       setSessions(sessionMap);
       const reserved = Object.values(sessionMap).flat().filter((s) => s.quantity_bookings > 0);
@@ -282,14 +284,15 @@ function CampingPageContent() {
   // Reload sessions whenever selected day changes so occupancy is always fresh
   useEffect(() => {
     if (!canAccess || !requestedEventId || areas.length === 0) return;
-    Promise.allSettled(areas.map((a) => getCampingSessionsByArea(a.id))).then((results) => {
+    getCampingSessionsByEvent(requestedEventId).then((allSessions) => {
       const sessionMap: Record<number, CampingSessionResponse[]> = {};
-      results.forEach((r, i) => {
-        if (r.status === "fulfilled") sessionMap[areas[i].id] = r.value;
+      allSessions.forEach((s) => {
+        if (!sessionMap[s.area_id]) sessionMap[s.area_id] = [];
+        sessionMap[s.area_id].push(s);
       });
       setSessions(sessionMap);
-    });
-  }, [selectedDay, areas, canAccess, requestedEventId]);
+    }).catch(() => {});
+  }, [selectedDay, canAccess, requestedEventId]);
 
   // ── Map upload ─────────────────────────────────────────────────────────────
   const handleMapUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
