@@ -590,7 +590,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                   <Box sx={{ position: "relative", mx: 2, mb: 2, borderRadius: "12px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={campingMapUrl} alt="Mapa camping" draggable={false}
-                      style={{ display: "block", width: "100%", maxHeight: 200, objectFit: "contain", backgroundColor: "#1a1f2e" }} />
+                      style={{ display: "block", width: "100%" }} />
                     {/* All areas */}
                     {areas.filter((a) => a.x_position != null).map((area) => {
                       const isMine = myAreaIds.has(area.id);
@@ -641,7 +641,7 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
                     {parkingMapUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={parkingMapUrl} alt="Mapa estacionamento" draggable={false}
-                        style={{ display: "block", width: "100%", maxHeight: 200, objectFit: "contain", backgroundColor: "#1a1f2e" }} />
+                        style={{ display: "block", width: "100%" }} />
                     ) : (
                       <UserParkingLotSVG spots={parkingSpots} />
                     )}
