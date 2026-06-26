@@ -300,6 +300,13 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
     getUserCampingAreas(eventId)
       .then((data) => { setAreas(data); setLoading(false); })
       .catch(() => { setLoading(false); });
+    // prefetch parking in background so it's instant when user navigates there
+    getUserParkingMap(eventId)
+      .then((data) => { setParkingMapUrl(data.image_url); setParkingSpots(data.spots); setParkingLoading(false); })
+      .catch(() => { setParkingLoading(false); });
+    getUserParkingBookingForEvent(eventId)
+      .then((b) => setMyParkingBooking(b))
+      .catch(() => {});
   }, [eventId]);
 
   useEffect(() => {
@@ -319,15 +326,11 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         .catch(() => {});
     }
     if (stage === "parking") {
-      setParkingLoading(true);
       setSelectedParkingSpotId(null);
+      // refresh spots in background (data already prefetched on mount)
       getUserParkingMap(eventId)
-        .then((data) => {
-          setParkingMapUrl(data.image_url);
-          setParkingSpots(data.spots);
-          setParkingLoading(false);
-        })
-        .catch(() => { setParkingLoading(false); });
+        .then((data) => { setParkingMapUrl(data.image_url); setParkingSpots(data.spots); })
+        .catch(() => {});
     }
   }, [stage, eventId]);
 
@@ -663,6 +666,23 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
               Meus passaportes
             </Typography>
           </Box>
+        </Box>
+
+        <Box sx={{
+          backgroundColor: "rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "16px",
+          p: 2,
+          mb: 2,
+        }}>
+          <Typography sx={{ color: "rgba(255,255,255,0.85)", fontSize: "0.82rem", lineHeight: 1.6, mb: 1.5 }}>
+            <strong style={{ color: "#fff" }}>O CAMPING INDEPENDENTES</strong> é um complexo composto toda infraestrutura necessária, como pias, pontos de energia, banheiros equipados com chuveiros, iluminação própria e segurança.
+            {" "}É o lugar certo para quem deseja se hospedar na Festa do Peão de Barretos.
+          </Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.85)", fontSize: "0.82rem", lineHeight: 1.6 }}>
+            O Passaporte Camping contempla o acesso individual ao Camping e ao setor: Parque, Rodeio e Show.
+            {" "}Também é comercializado o Tag Estacionamento que permite o acesso do veículo ao camping escolhido. O Titular da compra deverá encaminhar-se ao Credenciamento do Camping para escanear o Qr Code de reserva.
+          </Typography>
         </Box>
 
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
