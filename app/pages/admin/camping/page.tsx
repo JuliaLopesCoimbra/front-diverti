@@ -645,7 +645,7 @@ function CampingPageContent() {
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
           <IconButton
-            onClick={() => router.push(`/pages/admin/events/${requestedEventId}`)}
+            onClick={() => router.push("/pages/admin/camping")}
             sx={{ color: "#fff", width: 44, height: 44, backgroundColor: "rgba(255,255,255,0.06)", "&:hover": { backgroundColor: "rgba(255,255,255,0.1)" } }}
           >
             <ArrowBackIcon />
