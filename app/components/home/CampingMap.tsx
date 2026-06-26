@@ -21,8 +21,14 @@ import {
   UserCampingArea,
   UserCampingBooking,
 } from "@/app/services/camping/campingUserService";
+import {
+  ParkingBooking,
+  ParkingSpot,
+  getUserParkingMap,
+  createUserParkingBooking,
+} from "@/app/services/camping/parkingService";
 
-type Stage = "pricing" | "calendar" | "map" | "review" | "payment" | "success" | "mypassports";
+type Stage = "pricing" | "calendar" | "map" | "review" | "payment" | "success" | "mypassports" | "parking" | "parkingSuccess";
 
 interface Package {
   id: string;
@@ -178,6 +184,14 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
   const [paymentMethod, setPaymentMethod] = useState<"pix" | "credit_card" | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
 
+  // ── Parking ───────────────────────────────────────────────────────────────
+  const [parkingSpots, setParkingSpots] = useState<ParkingSpot[]>([]);
+  const [parkingMapUrl, setParkingMapUrl] = useState<string | null>(null);
+  const [parkingLoading, setParkingLoading] = useState(false);
+  const [selectedParkingSpotId, setSelectedParkingSpotId] = useState<number | null>(null);
+  const [myParkingBooking, setMyParkingBooking] = useState<ParkingBooking | null>(null);
+  const [parkingBookingLoading, setParkingBookingLoading] = useState(false);
+
   useEffect(() => {
     const saved = localStorage.getItem(`camping_map_${eventId}`);
     if (saved) setCampingMapUrl(saved);
@@ -256,7 +270,18 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
         .then((data) => { setMyBookings([...data].sort((a, b) => a.check_in_date.localeCompare(b.check_in_date))); setBookingLoading(false); })
         .catch(() => { setBookingLoading(false); });
     }
-  }, [stage]);
+    if (stage === "parking") {
+      setParkingLoading(true);
+      setSelectedParkingSpotId(null);
+      getUserParkingMap(eventId)
+        .then((data) => {
+          setParkingMapUrl(data.image_url);
+          setParkingSpots(data.spots);
+          setParkingLoading(false);
+        })
+        .catch(() => { setParkingLoading(false); });
+    }
+  }, [stage, eventId]);
 
   // dias ativos para o pacote selecionado
   const activeDays: string[] =
@@ -1179,6 +1204,26 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           </Box>
         </Box>
 
+        {myParkingBooking ? (
+          <Button fullWidth onClick={() => setStage("parkingSuccess")} sx={{
+            backgroundColor: "#6366f1", color: "#fff",
+            borderRadius: "14px", textTransform: "none",
+            fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+            "&:hover": { backgroundColor: "#4f46e5" },
+          }}>
+            Ver minha vaga de estacionamento
+          </Button>
+        ) : (
+          <Button fullWidth onClick={() => setStage("parking")} sx={{
+            backgroundColor: "#6366f1", color: "#fff",
+            borderRadius: "14px", textTransform: "none",
+            fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+            "&:hover": { backgroundColor: "#4f46e5" },
+          }}>
+            Escolher vaga de estacionamento →
+          </Button>
+        )}
+
         <Button fullWidth onClick={() => {
           setStage("pricing");
           setSelectedPkg(null);
@@ -1198,6 +1243,241 @@ export default function CampingMap({ eventId, mapImageUrl, initialStage }: Props
           "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" },
         }}>
           Voltar ao início
+        </Button>
+      </Box>
+    );
+  }
+
+  // ─── Parking ─────────────────────────────────────────────────────────────────
+
+  if (stage === "parking") {
+    const parkingContainerRef = { current: null as HTMLDivElement | null };
+
+    function handleParkingConfirm() {
+      if (!selectedParkingSpotId) return;
+      setParkingBookingLoading(true);
+      createUserParkingBooking(eventId, selectedParkingSpotId)
+        .then((booking) => {
+          setMyParkingBooking(booking);
+          setStage("parkingSuccess");
+        })
+        .catch((err: any) => {
+          const msg = err?.response?.data?.detail ?? "Erro ao reservar vaga";
+          alert(msg);
+        })
+        .then(() => setParkingBookingLoading(false));
+    }
+
+    const selectedParking = parkingSpots.find((s) => s.id === selectedParkingSpotId) ?? null;
+
+    return (
+      <Box sx={{ px: 2, pb: 14, pt: 2.5, maxWidth: 560, mx: "auto" }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+          <Box onClick={() => setStage("success")} sx={{ cursor: "pointer", color: "rgba(255,255,255,0.55)", display: "flex" }}>
+            <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />
+          </Box>
+          <Box>
+            <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>Estacionamento</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.72rem" }}>Escolha sua vaga para o trailer/carro</Typography>
+          </Box>
+        </Box>
+
+        {parkingLoading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+            <CircularProgress sx={{ color: "#fff" }} />
+          </Box>
+        ) : parkingSpots.length === 0 ? (
+          <Box sx={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", p: 4, textAlign: "center" }}>
+            <Typography sx={{ fontSize: "2.2rem", mb: 1.5 }}>🚗</Typography>
+            <Typography sx={{ color: "#fff", fontWeight: 700, fontSize: "1rem", mb: 0.5 }}>Mapa em breve</Typography>
+            <Typography sx={{ color: "rgba(255,255,255,0.4)", fontSize: "0.82rem" }}>
+              O mapa de estacionamento ainda não foi configurado. Em breve as vagas estarão disponíveis.
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            {parkingMapUrl ? (
+              <Box
+                ref={(el: HTMLDivElement | null) => { parkingContainerRef.current = el; }}
+                sx={{
+                  position: "relative", borderRadius: "20px", overflow: "hidden",
+                  border: "1px solid rgba(255,255,255,0.1)", mb: 2, userSelect: "none",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={parkingMapUrl} alt="Mapa de estacionamento" draggable={false}
+                  style={{ display: "block", width: "100%", maxHeight: 400, objectFit: "contain" }} />
+
+                {parkingSpots.map((spot) => {
+                  const x = spot.x_position ?? 50;
+                  const y = spot.y_position ?? 50;
+                  const isFull = spot.booked_count >= spot.capacity;
+                  const isSelected = selectedParkingSpotId === spot.id;
+
+                  return (
+                    <Box
+                      key={spot.id}
+                      onClick={() => !isFull && setSelectedParkingSpotId(spot.id)}
+                      sx={{
+                        position: "absolute",
+                        left: `${x}%`, top: `${y}%`,
+                        transform: "translate(-50%, -50%)",
+                        width: 38, height: 38, borderRadius: "50%",
+                        backgroundColor: isSelected
+                          ? "rgba(99,102,241,0.9)"
+                          : isFull
+                          ? "rgba(239,68,68,0.8)"
+                          : "rgba(16,185,129,0.85)",
+                        border: isSelected ? "2px solid #a5b4fc" : "2px solid rgba(255,255,255,0.4)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        cursor: isFull ? "not-allowed" : "pointer",
+                        boxShadow: isSelected ? "0 0 0 4px rgba(99,102,241,0.35)" : "0 2px 8px rgba(0,0,0,0.4)",
+                        transition: "all 0.15s ease",
+                        zIndex: isSelected ? 10 : 5,
+                      }}
+                    >
+                      <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "0.62rem", lineHeight: 1, pointerEvents: "none" }}>
+                        {spot.label}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Box>
+            ) : (
+              /* Without map image — list of spots */
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2, mb: 2 }}>
+                {parkingSpots.map((spot) => {
+                  const isFull = spot.booked_count >= spot.capacity;
+                  const isSelected = selectedParkingSpotId === spot.id;
+                  return (
+                    <Box
+                      key={spot.id}
+                      onClick={() => !isFull && setSelectedParkingSpotId(spot.id)}
+                      sx={{
+                        p: 2, borderRadius: "16px", cursor: isFull ? "not-allowed" : "pointer",
+                        backgroundColor: isSelected ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.04)",
+                        border: `1px solid ${isSelected ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
+                        opacity: isFull ? 0.5 : 1,
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                      }}
+                    >
+                      <Typography sx={{ color: "#fff", fontWeight: 700 }}>{spot.label}</Typography>
+                      <Chip
+                        label={isFull ? "Ocupada" : "Disponível"}
+                        size="small"
+                        sx={{
+                          backgroundColor: isFull ? "rgba(239,68,68,0.12)" : "rgba(16,185,129,0.12)",
+                          color: isFull ? "#ef4444" : "#10b981",
+                          fontWeight: 700, fontSize: "0.65rem",
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Box>
+            )}
+
+            {/* Legend */}
+            <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+              {[
+                { color: "rgba(16,185,129,0.85)", label: "Disponível" },
+                { color: "rgba(239,68,68,0.8)", label: "Ocupada" },
+                { color: "rgba(99,102,241,0.9)", label: "Selecionada" },
+              ].map((item) => (
+                <Box key={item.label} sx={{ display: "flex", alignItems: "center", gap: 0.6 }}>
+                  <Box sx={{ width: 12, height: 12, borderRadius: "50%", backgroundColor: item.color }} />
+                  <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.72rem" }}>{item.label}</Typography>
+                </Box>
+              ))}
+            </Box>
+
+            {selectedParking && (
+              <Box sx={{ backgroundColor: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)", borderRadius: "16px", p: 2, mb: 2 }}>
+                <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem" }}>Vaga selecionada</Typography>
+                <Typography sx={{ color: "#fff", fontWeight: 800, fontSize: "1.1rem" }}>{selectedParking.label}</Typography>
+              </Box>
+            )}
+
+            <Button
+              fullWidth
+              disabled={!selectedParkingSpotId || parkingBookingLoading}
+              onClick={handleParkingConfirm}
+              sx={{
+                backgroundColor: selectedParkingSpotId ? "#6366f1" : "rgba(255,255,255,0.08)",
+                color: "#fff", borderRadius: "14px", textTransform: "none",
+                fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+                "&:hover": { backgroundColor: selectedParkingSpotId ? "#4f46e5" : "rgba(255,255,255,0.08)" },
+              }}
+            >
+              {parkingBookingLoading
+                ? <CircularProgress size={20} sx={{ color: "#fff" }} />
+                : selectedParkingSpotId ? "Confirmar vaga" : "Selecione uma vaga no mapa"}
+            </Button>
+          </>
+        )}
+      </Box>
+    );
+  }
+
+  // ─── Parking Success ──────────────────────────────────────────────────────────
+
+  if (stage === "parkingSuccess") {
+    const parkingCode = myParkingBooking
+      ? `PARK-${myParkingBooking.qr_token.slice(0, 8).toUpperCase()}`
+      : "PARK-???";
+
+    return (
+      <Box sx={{ px: 2, pb: 12, pt: 4, maxWidth: 560, mx: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+        <Box sx={{
+          width: 80, height: 80, borderRadius: "50%",
+          backgroundColor: "#6366f1",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 0 0 16px rgba(99,102,241,0.12), 0 0 0 32px rgba(99,102,241,0.05)",
+        }}>
+          <Typography sx={{ color: "#fff", fontSize: "2.2rem" }}>🚗</Typography>
+        </Box>
+
+        <Box sx={{ textAlign: "center" }}>
+          <Typography sx={{ color: "#fff", fontWeight: 900, fontSize: "1.4rem", mb: 0.5 }}>
+            Vaga confirmada!
+          </Typography>
+          <Typography sx={{ color: "rgba(255,255,255,0.5)", fontSize: "0.85rem" }}>
+            Sua vaga de estacionamento foi reservada
+          </Typography>
+        </Box>
+
+        <Box sx={{
+          width: "100%", backgroundColor: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(99,102,241,0.2)", borderRadius: "20px", p: 2.5,
+        }}>
+          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 2.5 }}>
+            <Box sx={{ backgroundColor: "#fff", borderRadius: "12px", p: 1.5, display: "inline-block" }}>
+              <CampingQRCode value={parkingCode} size={120} />
+            </Box>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.75rem", mt: 1.2, letterSpacing: "0.12em", fontWeight: 700 }}>
+              {parkingCode}
+            </Typography>
+          </Box>
+
+          <Divider sx={{ borderColor: "rgba(255,255,255,0.08)", mb: 2 }} />
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <Typography sx={{ color: "rgba(255,255,255,0.45)", fontSize: "0.82rem" }}>Vaga</Typography>
+            <Chip
+              label={myParkingBooking?.spot_label ?? parkingSpots.find((s) => s.id === selectedParkingSpotId)?.label ?? "—"}
+              size="small"
+              sx={{ backgroundColor: "rgba(99,102,241,0.15)", color: "#a5b4fc", fontWeight: 700, fontSize: "0.7rem" }}
+            />
+          </Box>
+        </Box>
+
+        <Button fullWidth onClick={() => setStage("success")} sx={{
+          backgroundColor: "rgba(255,255,255,0.08)", color: "#fff",
+          border: "1px solid rgba(255,255,255,0.15)", borderRadius: "14px",
+          textTransform: "none", fontWeight: 700, fontSize: "0.95rem", py: 1.4,
+          "&:hover": { backgroundColor: "rgba(255,255,255,0.14)" },
+        }}>
+          Voltar ao resumo
         </Button>
       </Box>
     );

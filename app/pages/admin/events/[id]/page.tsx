@@ -17,6 +17,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import InfoIcon from "@mui/icons-material/Info";
 import MapIcon from "@mui/icons-material/Map";
 import NightShelterRoundedIcon from "@mui/icons-material/NightShelterRounded";
+import LocalParkingIcon from "@mui/icons-material/LocalParking";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import QueueMusicIcon from "@mui/icons-material/QueueMusic";
 import StorefrontIcon from "@mui/icons-material/Storefront";
@@ -126,6 +127,13 @@ export default function EventManagePage() {
       icon: <RestaurantMenuIcon sx={{ fontSize: 26 }} />,
       color: "#f97316",
       route: `/pages/admin/events/${eventId}/restaurantes`,
+    },
+    {
+      label: "Estacionamento",
+      description: "Mapa e vagas de trailers",
+      icon: <LocalParkingIcon sx={{ fontSize: 26 }} />,
+      color: "#6366f1",
+      route: `/pages/admin/events/${eventId}/estacionamento`,
     },
   ];
 
